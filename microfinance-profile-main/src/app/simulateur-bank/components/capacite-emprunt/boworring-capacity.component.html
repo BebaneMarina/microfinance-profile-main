@@ -1,0 +1,619 @@
+<!-- borrowing-capacity.component.html -->
+<div class="borrowing-capacity">
+  <!-- Header -->
+  <div class="borrowing-capacity__header">
+    <div class="container">
+      <div class="nav">
+        <button 
+          routerLink="/home" 
+          class="back-button">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+          </svg>
+        </button>
+        <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+        </svg>
+        <h1 class="title">Simulateur de Capacité d'Emprunt</h1>
+      </div>
+    </div>
+  </div>
+
+  <div class="borrowing-capacity__container">
+    <div class="borrowing-capacity__grid">
+      
+      <!-- Formulaire -->
+      <div class="borrowing-capacity__form">
+        <form [formGroup]="capacityForm" (ngSubmit)="calculateCapacity()">
+          <h2 class="form-title">Vos informations</h2>
+          
+          <!-- Revenus -->
+          <div class="form-sections">
+            <div class="section section--income">
+              <h3 class="section-title section-title--income">
+                <span class="emoji">💰</span>
+                Revenus mensuels
+              </h3>
+              
+              <div class="form-grid form-grid--2">
+                <div class="field">
+                  <label class="label">
+                    Revenus principaux nets <span class="required">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    formControlName="monthlyIncome"
+                    class="input"
+                    [class.input--error]="hasError('monthlyIncome')"
+                    placeholder="750 000">
+                  <div *ngIf="hasError('monthlyIncome')" class="error-message">
+                    {{ getErrorMessage('monthlyIncome') }}
+                  </div>
+                </div>
+                
+                <div class="field">
+                  <label class="label">
+                    Revenus additionnels
+                  </label>
+                  <input
+                    type="number"
+                    formControlName="additionalIncome"
+                    class="input"
+                    placeholder="0">
+                </div>
+              </div>
+              
+              <div class="form-grid form-grid--2">
+                <div class="field">
+                  <label class="label">Type de revenus</label>
+                  <select formControlName="incomeType" class="select">
+                    <option value="salary">Salarié</option>
+                    <option value="business">Chef d'entreprise</option>
+                    <option value="freelance">Profession libérale</option>
+                    <option value="pension">Retraité</option>
+                  </select>
+                </div>
+                
+                <div class="field">
+                  <label class="label">Stabilité</label>
+                  <select formControlName="incomeStability" class="select">
+                    <option value="very_stable">Très stable</option>
+                    <option value="stable">Stable</option>
+                    <option value="variable">Variable</option>
+                    <option value="unstable">Instable</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Charges actuelles -->
+            <div class="section section--expenses">
+              <h3 class="section-title section-title--expenses">
+                <span class="emoji">💳</span>
+                Charges mensuelles
+              </h3>
+              
+              <div class="form-grid form-grid--3">
+                <div class="field">
+                  <label class="label">
+                    Crédits actuels
+                  </label>
+                  <input
+                    type="number"
+                    formControlName="currentDebts"
+                    class="input"
+                    placeholder="0">
+                </div>
+                
+                <div class="field">
+                  <label class="label">
+                    Loyer/Prêt immobilier
+                  </label>
+                  <input
+                    type="number"
+                    formControlName="rentOrMortgage"
+                    class="input"
+                    placeholder="0">
+                </div>
+                
+                <div class="field">
+                  <label class="label">
+                    Charges courantes
+                  </label>
+                  <input
+                    type="number"
+                    formControlName="livingExpenses"
+                    class="input"
+                    placeholder="200 000">
+                </div>
+              </div>
+            </div>
+
+            <!-- Paramètres du crédit -->
+            <div class="section section--project">
+              <h3 class="section-title section-title--project">
+                <span class="emoji">🏠</span>
+                Projet immobilier
+              </h3>
+              
+              <div class="form-grid form-grid--3">
+                <div class="field">
+                  <label class="label">
+                    Durée du prêt <span class="required">*</span>
+                  </label>
+                  <select formControlName="duration" class="select">
+                    <option *ngFor="let option of durationOptions" [value]="option.value">
+                      {{ option.label }}
+                    </option>
+                  </select>
+                </div>
+                
+                <div class="field">
+                  <label class="label">
+                    Taux d'intérêt estimé (%)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    formControlName="interestRate"
+                    class="input"
+                    placeholder="6.5">
+                </div>
+                
+                <div class="field">
+                  <label class="label">
+                    Apport personnel
+                  </label>
+                  <input
+                    type="number"
+                    formControlName="downPayment"
+                    class="input"
+                    placeholder="0">
+                </div>
+              </div>
+            </div>
+
+            <!-- Assurance -->
+            <div class="section section--insurance">
+              <h3 class="section-title section-title--insurance">
+                <span class="emoji">🛡️</span>
+                Assurance emprunteur
+              </h3>
+              
+              <div class="checkbox-wrapper">
+                <input
+                  type="checkbox"
+                  formControlName="hasInsurance"
+                  id="hasInsurance"
+                  class="checkbox">
+                <label for="hasInsurance" class="checkbox-label">
+                  Inclure une assurance emprunteur
+                </label>
+              </div>
+              
+              <div *ngIf="capacityForm.get('hasInsurance')?.value" class="form-grid form-grid--2">
+                <div class="field">
+                  <label class="label">
+                    Taux d'assurance (% du capital)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    formControlName="insuranceRate"
+                    class="input"
+                    placeholder="0.36">
+                </div>
+              </div>
+            </div>
+
+            <!-- Options avancées -->
+            <div class="advanced-options-section">
+              <button
+                type="button"
+                (click)="toggleAdvancedOptions()"
+                class="advanced-toggle">
+                <svg class="icon" 
+                     [class.icon--rotated]="showAdvancedOptions" 
+                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+                Options avancées
+              </button>
+              
+              <div *ngIf="showAdvancedOptions" class="advanced-options">
+                <div class="advanced-section">
+                  <h4 class="advanced-title">Profil emprunteur</h4>
+                  <div class="form-grid form-grid--3">
+                    <div class="field">
+                      <label class="label">Âge</label>
+                      <input
+                        type="number"
+                        formControlName="age"
+                        class="input"
+                        placeholder="35">
+                    </div>
+                    <div class="field">
+                      <label class="label">Profession</label>
+                      <select formControlName="profession" class="select">
+                        <option value="employee">Salarié</option>
+                        <option value="civil_servant">Fonctionnaire</option>
+                        <option value="entrepreneur">Entrepreneur</option>
+                        <option value="freelance">Profession libérale</option>
+                        <option value="retired">Retraité</option>
+                      </select>
+                    </div>
+                    <div class="field">
+                      <label class="label">Ancienneté (années)</label>
+                      <input
+                        type="number"
+                        formControlName="workExperience"
+                        class="input"
+                        placeholder="5">
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="advanced-section">
+                  <h4 class="advanced-title">Coûts additionnels</h4>
+                  <div class="advanced-costs">
+                    <div class="checkbox-row">
+                      <div class="checkbox-wrapper">
+                        <input
+                          type="checkbox"
+                          formControlName="includePropertyTax"
+                          id="includePropertyTax"
+                          class="checkbox">
+                        <label for="includePropertyTax" class="checkbox-label">
+                          Inclure la taxe foncière
+                        </label>
+                      </div>
+                      <div *ngIf="capacityForm.get('includePropertyTax')?.value" class="checkbox-input">
+                        <input
+                          type="number"
+                          step="0.1"
+                          formControlName="propertyTaxRate"
+                          class="input"
+                          placeholder="1.2">
+                      </div>
+                    </div>
+                    
+                    <div class="checkbox-row">
+                      <div class="checkbox-wrapper">
+                        <input
+                          type="checkbox"
+                          formControlName="includeMaintenanceCosts"
+                          id="includeMaintenanceCosts"
+                          class="checkbox">
+                        <label for="includeMaintenanceCosts" class="checkbox-label">
+                          Frais d'entretien/syndic
+                        </label>
+                      </div>
+                      <div *ngIf="capacityForm.get('includeMaintenanceCosts')?.value" class="checkbox-input">
+                        <input
+                          type="number"
+                          step="0.1"
+                          formControlName="maintenanceRate"
+                          class="input"
+                          placeholder="1.0">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="actions">
+              <button
+                type="button"
+                (click)="calculateCapacity()"
+                [disabled]="!isFormValid || isCalculating"
+                class="button button--primary">
+                <span *ngIf="!isCalculating">Calculer ma capacité</span>
+                <span *ngIf="isCalculating" class="loading-content">
+                  <svg class="loading-icon" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Calcul en cours...
+                </span>
+              </button>
+              
+              <button
+                type="button"
+                (click)="resetForm()"
+                class="button button--secondary">
+                Réinitialiser
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- Résultats -->
+      <div class="borrowing-capacity__results">
+        <div *ngIf="results" class="results-card">
+          <!-- Onglets -->
+          <div class="tabs">
+            <nav class="tabs-nav" aria-label="Tabs">
+              <button
+                *ngFor="let tab of ['simulation', 'evolution', 'comparison', 'details']"
+                (click)="setActiveTab(tab)"
+                [class.tab--active]="activeTab === tab"
+                [class.tab--inactive]="activeTab !== tab"
+                class="tab">
+                <span [ngSwitch]="tab">
+                  <span *ngSwitchCase="'simulation'">📊 Résultats</span>
+                  <span *ngSwitchCase="'evolution'">📈 Évolution</span>
+                  <span *ngSwitchCase="'comparison'">⚖️ Comparaison</span>
+                  <span *ngSwitchCase="'details'">📋 Détails</span>
+                </span>
+              </button>
+            </nav>
+          </div>
+
+          <div class="tab-content">
+            <!-- Onglet Simulation -->
+            <div *ngIf="activeTab === 'simulation'">
+              <!-- Résultats principaux -->
+              <div class="main-results">
+                <div class="result-card result-card--capacity">
+                  <div class="result-header result-header--capacity">
+                    <svg class="result-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                    </svg>
+                    <h3 class="result-title result-title--capacity">Capacité d'emprunt</h3>
+                  </div>
+                  <div class="result-amount result-amount--capacity">{{ formatCurrency(results.borrowingCapacity) }}</div>
+                  <div class="result-description result-description--capacity">Maximum empruntable</div>
+                </div>
+
+                <div class="result-card result-card--total">
+                  <div class="result-header result-header--total">
+                    <svg class="result-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"></path>
+                    </svg>
+                    <h3 class="result-title result-title--total">Projet total</h3>
+                  </div>
+                  <div class="result-amount result-amount--total">{{ formatCurrency(results.totalProjectCapacity) }}</div>
+                  <div class="result-description result-description--total">Avec apport personnel</div>
+                </div>
+              </div>
+
+              <!-- Informations complémentaires -->
+              <div class="metrics">
+                <div class="metric">
+                  <div class="metric-value">{{ formatCurrency(results.maxMonthlyPayment) }}</div>
+                  <div class="metric-label">Mensualité maximale</div>
+                </div>
+                
+                <div class="metric">
+                  <div class="metric-value" [class]="'metric-value--' + results.riskLevel">
+                    {{ formatPercent(results.debtRatio) }}
+                  </div>
+                  <div class="metric-label">Taux d'endettement</div>
+                </div>
+                
+                <div class="metric">
+                  <div class="metric-value">{{ formatPercent(maxLoanToValueRatio) }}</div>
+                  <div class="metric-label">Financement du projet</div>
+                </div>
+              </div>
+
+              <!-- Niveau de risque -->
+              <div class="risk-level">
+                <div class="risk-header">
+                  <span class="risk-label">Niveau de risque</span>
+                  <span class="risk-badge" [class]="'risk-badge--' + results.riskLevel">
+                    {{ getRiskLabel(results.riskLevel) }}
+                  </span>
+                </div>
+                <div class="risk-bar">
+                  <div class="risk-fill" 
+                       [class]="'risk-fill--' + results.riskLevel"
+                       [style.width]="results.riskLevel === 'low' ? '33%' : results.riskLevel === 'medium' ? '66%' : '100%'">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Recommandations -->
+              <div *ngIf="results.recommendations.length > 0" class="recommendations">
+                <h4 class="recommendations-title">
+                  <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                  Nos recommandations
+                </h4>
+                <ul class="recommendations-list">
+                  <li *ngFor="let recommendation of results.recommendations" class="recommendation">
+                    <svg class="check-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4"></path>
+                    </svg>
+                    <span class="recommendation-text">{{ recommendation }}</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- Onglet Évolution -->
+            <div *ngIf="activeTab === 'evolution'">
+              <h3 class="section-title">Évolution selon la durée</h3>
+              
+              <div class="evolution-list">
+                <div *ngFor="let point of results.evolutionData" 
+                     class="list-item"
+                     [class.list-item--active]="point.duration === (capacityForm.get('duration')?.value / 12)">
+                  <div class="item-left">
+                    <div class="item-duration" 
+                         [class.item-duration--active]="point.duration === (capacityForm.get('duration')?.value / 12)">
+                      {{ point.duration }} ans
+                    </div>
+                    <div class="item-details">
+                      <div class="item-label">Capacité d'emprunt</div>
+                      <div class="item-value">{{ formatCurrency(point.capacity) }}</div>
+                    </div>
+                  </div>
+                  <div class="item-right">
+                    <div class="item-label">Coût total</div>
+                    <div class="item-value">{{ formatCurrency(point.totalCost) }}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Onglet Comparaison -->
+            <div *ngIf="activeTab === 'comparison'">
+              <h3 class="section-title">Impact du taux d'intérêt</h3>
+              
+              <div class="comparison-list">
+                <div *ngFor="let point of results.comparisonData" 
+                     class="list-item"
+                     [class.list-item--active]="point.rate === capacityForm.get('interestRate')?.value">
+                  <div class="item-left">
+                    <div class="item-duration"
+                         [class.item-duration--active]="point.rate === capacityForm.get('interestRate')?.value">
+                      {{ formatPercent(point.rate) }}
+                    </div>
+                    <div class="item-details">
+                      <div class="item-value">{{ formatCurrency(point.capacity) }}</div>
+                      <div class="item-label">Capacité d'emprunt</div>
+                    </div>
+                  </div>
+                  <div class="item-right">
+                    <div class="item-value" 
+                         [class.item-value--positive]="point.difference > 0"
+                         [class.item-value--negative]="point.difference < 0"
+                         [class.item-value--neutral]="point.difference === 0">
+                      <span *ngIf="point.difference > 0">+</span>{{ formatCurrency(point.difference) }}
+                    </div>
+                    <div class="item-label">vs taux actuel</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Onglet Détails -->
+            <div *ngIf="activeTab === 'details'">
+              <div class="details-sections">
+                <!-- Répartition du budget -->
+                <div class="details-section">
+                  <h3 class="section-title">Répartition du budget mensuel</h3>
+                  <div class="budget-breakdown">
+                    <div class="budget-item budget-item--income">
+                      <span class="budget-label">Revenus totaux</span>
+                      <span class="budget-value">{{ formatCurrency(results.budgetBreakdown.totalIncome) }}</span>
+                    </div>
+                    <div class="budget-item budget-item--expenses">
+                      <span class="budget-label">Charges actuelles</span>
+                      <span class="budget-value">{{ formatCurrency(results.budgetBreakdown.currentDebts) }}</span>
+                    </div>
+                    <div class="budget-item budget-item--available">
+                      <span class="budget-label">Disponible pour crédit</span>
+                      <span class="budget-value">{{ formatCurrency(results.budgetBreakdown.availableForCredit) }}</span>
+                    </div>
+                    <div class="budget-item budget-item--remaining">
+                      <span class="budget-label">Reste à vivre</span>
+                      <span class="budget-value">{{ formatCurrency(results.budgetBreakdown.remainingIncome) }}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Détails du financement -->
+                <div class="details-section">
+                  <h3 class="section-title">Détails du financement</h3>
+                  <div class="financing-details">
+                    <div class="detail-group">
+                      <div class="detail-item">
+                        <span class="detail-label">Capital emprunté</span>
+                        <span class="detail-value">{{ formatCurrency(results.borrowingCapacity) }}</span>
+                      </div>
+                      <div class="detail-item">
+                        <span class="detail-label">Apport personnel</span>
+                        <span class="detail-value">{{ formatCurrency(capacityForm.get('downPayment')?.value || 0) }}</span>
+                      </div>
+                      <div class="detail-item">
+                        <span class="detail-label">Taux nominal</span>
+                        <span class="detail-value">{{ formatPercent(capacityForm.get('interestRate')?.value || 0) }}</span>
+                      </div>
+                      <div class="detail-item">
+                        <span class="detail-label">Taux effectif</span>
+                        <span class="detail-value">{{ formatPercent(results.effectiveRate) }}</span>
+                      </div>
+                    </div>
+                    <div class="detail-group">
+                      <div class="detail-item">
+                        <span class="detail-label">Durée</span>
+                        <span class="detail-value">{{ capacityForm.get('duration')?.value / 12 }} ans</span>
+                      </div>
+                      <div class="detail-item">
+                        <span class="detail-label">Assurance mensuelle</span>
+                        <span class="detail-value">{{ formatCurrency(results.monthlyInsurance) }}</span>
+                      </div>
+                      <div class="detail-item">
+                        <span class="detail-label">Intérêts totaux</span>
+                        <span class="detail-value">{{ formatCurrency(results.totalInterest) }}</span>
+                      </div>
+                      <div class="detail-item">
+                        <span class="detail-label">Coût total</span>
+                        <span class="detail-value">{{ formatCurrency(results.borrowingCapacity + results.totalInterest) }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Actions en bas -->
+          <div class="result-actions">
+            <button
+              (click)="goToComparator()"
+              [disabled]="!canShare"
+              class="action-button action-button--primary">
+              <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+              </svg>
+              Comparer les banques
+            </button>
+            
+            <button
+              (click)="exportResults()"
+              [disabled]="!canExport"
+              class="action-button action-button--secondary">
+              <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+              </svg>
+              Télécharger PDF
+            </button>
+            
+            <button
+              (click)="shareResults()"
+              [disabled]="!canShare"
+              class="action-button action-button--secondary">
+              <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"></path>
+              </svg>
+              Partager
+            </button>
+          </div>
+        </div>
+
+        <!-- Aide contextuelle -->
+        <div class="borrowing-capacity__help">
+          <h3 class="help-title">
+            <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            Bon à savoir
+          </h3>
+          <ul class="help-list">
+            <li class="help-item">Le taux d'endettement ne doit généralement pas dépasser 33% des revenus</li>
+            <li class="help-item">Un apport personnel de 10-20% est recommandé pour obtenir de meilleures conditions</li>
+            <li class="help-item">L'assurance emprunteur est obligatoire pour la plupart des crédits immobiliers</li>
+            <li class="help-item">Les taux peuvent varier selon votre profil et la banque choisie</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

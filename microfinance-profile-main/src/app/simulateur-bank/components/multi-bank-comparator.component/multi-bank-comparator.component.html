@@ -1,0 +1,742 @@
+<div class="comparator-page">
+  <!-- Header Hero -->
+  <div class="hero-section">
+    <div class="container">
+      <div class="hero-content">
+        <h1 class="hero-title">
+          <i class="material-icons">compare_arrows</i>
+          Comparateur Multi-Banques Gabon
+        </h1>
+        <p class="hero-subtitle">
+          Trouvez la meilleure offre de crédit parmi {{ totalBanksCount }} banques gabonaises
+        </p>
+        <div class="hero-stats">
+          <div class="stat-item">
+            <span class="stat-number">{{ totalBanksCount }}</span>
+            <span class="stat-label">Banques</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-number">100%</span>
+            <span class="stat-label">Gratuit</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-number">< 3min</span>
+            <span class="stat-label">Comparaison</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Formulaire de Simulation -->
+  <div class="simulation-section">
+    <div class="container">
+      <div class="form-card">
+        <div class="form-header">
+          <h2>Votre Projet de Crédit</h2>
+          <p>Renseignez vos informations pour obtenir des offres personnalisées</p>
+        </div>
+
+        <form [formGroup]="simulationForm" (ngSubmit)="onSubmit()" class="simulation-form">
+          <!-- Type de Client -->
+          <div class="form-section">
+            <h3>Votre Profil</h3>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Type de profil</label>
+                <div class="radio-group">
+                  <label class="radio-option">
+                    <input type="radio" formControlName="clientType" value="particulier">
+                    <span class="radio-custom"></span>
+                    <div class="radio-content">
+                      <i class="material-icons">person</i>
+                      <span>Particulier</span>
+                    </div>
+                  </label>
+                  <label class="radio-option">
+                    <input type="radio" formControlName="clientType" value="entreprise">
+                    <span class="radio-custom"></span>
+                    <div class="radio-content">
+                      <i class="material-icons">business</i>
+                      <span>Entreprise</span>
+                    </div>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="fullName" class="form-label">
+                  <i class="material-icons">person</i>
+                  Nom complet *
+                </label>
+                <input
+                  type="text"
+                  id="fullName"
+                  formControlName="fullName"
+                  class="form-control"
+                  [class.error]="hasError('fullName')"
+                  placeholder="Votre nom complet"
+                />
+                <div class="error-message" *ngIf="hasError('fullName')">
+                  {{ getErrorMessage('fullName') }}
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="phoneNumber" class="form-label">
+                  <i class="material-icons">phone</i>
+                  Téléphone *
+                </label>
+                <input
+                  type="tel"
+                  id="phoneNumber"
+                  formControlName="phoneNumber"
+                  class="form-control"
+                  [class.error]="hasError('phoneNumber')"
+                  placeholder="+241 XX XX XX XX"
+                />
+                <div class="error-message" *ngIf="hasError('phoneNumber')">
+                  {{ getErrorMessage('phoneNumber') }}
+                </div>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="email" class="form-label">
+                  <i class="material-icons">email</i>
+                  Email (optionnel)
+                </label>
+                <input
+                  type="email"
+                  id="email"
+                  formControlName="email"
+                  class="form-control"
+                  [class.error]="hasError('email')"
+                  placeholder="votre.email@exemple.com"
+                />
+                <div class="error-message" *ngIf="hasError('email')">
+                  {{ getErrorMessage('email') }}
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="monthlyIncome" class="form-label">
+                  <i class="material-icons">payments</i>
+                  Revenus mensuels (FCFA) *
+                </label>
+                <input
+                  type="number"
+                  id="monthlyIncome"
+                  formControlName="monthlyIncome"
+                  class="form-control"
+                  [class.error]="hasError('monthlyIncome')"
+                  placeholder="750 000"
+                />
+                <div class="error-message" *ngIf="hasError('monthlyIncome')">
+                  {{ getErrorMessage('monthlyIncome') }}
+                </div>
+              </div>
+            </div>
+
+            <div class="form-row" *ngIf="simulationForm.get('clientType')?.value === 'entreprise'">
+              <div class="form-group">
+                <label for="profession" class="form-label">
+                  <i class="material-icons">work</i>
+                  Secteur d'activité *
+                </label>
+                <input
+                  type="text"
+                  id="profession"
+                  formControlName="profession"
+                  class="form-control"
+                  [class.error]="hasError('profession')"
+                  placeholder="Ex: Commerce, BTP, Services..."
+                />
+                <div class="error-message" *ngIf="hasError('profession')">
+                  {{ getErrorMessage('profession') }}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Détails du Crédit -->
+          <div class="form-section">
+            <h3>Votre Crédit</h3>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="creditType" class="form-label">
+                  <i class="material-icons">category</i>
+                  Type de crédit *
+                </label>
+                <select
+                  id="creditType"
+                  formControlName="creditType"
+                  class="form-control"
+                  [class.error]="hasError('creditType')"
+                >
+                  <option value="" disabled>Choisissez un type</option>
+                  <option *ngFor="let type of creditTypes" [value]="type.id">
+                    {{ type.name }} - {{ type.description }}
+                  </option>
+                </select>
+                <div class="error-message" *ngIf="hasError('creditType')">
+                  {{ getErrorMessage('creditType') }}
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="requestedAmount" class="form-label">
+                  <i class="material-icons">monetization_on</i>
+                  Montant souhaité (FCFA) *
+                </label>
+                <input
+                  type="number"
+                  id="requestedAmount"
+                  formControlName="requestedAmount"
+                  class="form-control"
+                  [class.error]="hasError('requestedAmount')"
+                  placeholder="2 000 000"
+                />
+                <div class="error-message" *ngIf="hasError('requestedAmount')">
+                  {{ getErrorMessage('requestedAmount') }}
+                </div>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="duration" class="form-label">
+                  <i class="material-icons">schedule</i>
+                  Durée *
+                </label>
+                <select
+                  id="duration"
+                  formControlName="duration"
+                  class="form-control"
+                  [class.error]="hasError('duration')"
+                >
+                  <option value="" disabled>Choisissez une durée</option>
+                  <option *ngFor="let duration of durations" [value]="duration.value">
+                    {{ duration.label }}
+                  </option>
+                </select>
+                <div class="error-message" *ngIf="hasError('duration')">
+                  {{ getErrorMessage('duration') }}
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="purpose" class="form-label">
+                  <i class="material-icons">description</i>
+                  Objet du crédit *
+                </label>
+                <input
+                  type="text"
+                  id="purpose"
+                  formControlName="purpose"
+                  class="form-control"
+                  [class.error]="hasError('purpose')"
+                  placeholder="Ex: Achat véhicule, travaux..."
+                />
+                <div class="error-message" *ngIf="hasError('purpose')">
+                  {{ getErrorMessage('purpose') }}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sélection des Banques -->
+          <div class="form-section">
+            <h3>Banques à Comparer</h3>
+            <p class="section-subtitle">
+              Sélectionnez les banques que vous souhaitez comparer ({{ selectedBanksCount }}/{{ totalBanksCount }} sélectionnées)
+            </p>
+            
+            <div class="banks-selection">
+              <div class="selection-controls">
+                <button
+                  type="button"
+                  class="select-all-btn"
+                  (click)="toggleSelectAll()"
+                >
+                  <i class="material-icons">
+                    {{ allBanksSelected ? 'deselect' : 'select_all' }}
+                  </i>
+                  {{ allBanksSelected ? 'Désélectionner tout' : 'Sélectionner tout' }}
+                </button>
+              </div>
+
+              <div class="banks-grid">
+                <div
+                  *ngFor="let bank of availableBanks"
+                  class="bank-option"
+                  [class.selected]="isBankSelected(bank.id)"
+                  (click)="toggleBankSelection(bank.id)"
+                >
+                  <div class="bank-header">
+                    <div class="bank-logo" [style.background]="'linear-gradient(135deg, ' + bank.color + ', ' + bank.color + '90)'">
+                      <span>{{ bank.shortName }}</span>
+                    </div>
+                    <div class="selection-indicator">
+                      <i class="material-icons">
+                        {{ isBankSelected(bank.id) ? 'check_circle' : 'radio_button_unchecked' }}
+                      </i>
+                    </div>
+                  </div>
+                  <div class="bank-info">
+                    <h4>{{ bank.name }}</h4>
+                    <p>{{ bank.description }}</p>
+                    <div class="bank-stats">
+                      <span class="stat">
+                        <i class="material-icons">trending_up</i>
+                        {{ bank.marketShare }}% PDM
+                      </span>
+                      <span class="stat">
+                        <i class="material-icons">schedule</i>
+                        {{ getProcessingTimeText(bank.processingTime) }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bouton de Soumission -->
+          <div class="form-actions">
+            <div class="actions-content">
+              <div class="form-summary" *ngIf="isFormValid">
+                <p>
+                  <i class="material-icons">info</i>
+                  Comparaison de {{ selectedBanksCount }} banque{{ selectedBanksCount > 1 ? 's' : '' }} 
+                  pour un crédit {{ simulationForm.get('creditType')?.value }} 
+                  de {{ formatCurrency(simulationForm.get('requestedAmount')?.value) }}
+                </p>
+              </div>
+              
+              <button
+                type="submit"
+                class="submit-btn"
+                [disabled]="!isFormValid || isLoading"
+              >
+                <span *ngIf="!isLoading" class="btn-content">
+                  <i class="material-icons">compare</i>
+                  Comparer les Offres
+                </span>
+                <span *ngIf="isLoading" class="btn-loading">
+                  <div class="spinner"></div>
+                  Comparaison en cours...
+                </span>
+              </button>
+
+              <button
+                type="button"
+                class="reset-btn"
+                (click)="resetForm()"
+                [disabled]="isLoading"
+              >
+                <i class="material-icons">refresh</i>
+                Recommencer
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Message d'Erreur -->
+  <div class="error-section" *ngIf="hasFormError && !isLoading">
+    <div class="container">
+      <div class="error-card">
+        <div class="error-content">
+          <i class="material-icons">error_outline</i>
+          <h3>Erreur lors de la comparaison</h3>
+          <p>{{ errorMessage }}</p>
+          <button class="retry-btn" (click)="onSubmit()">
+            <i class="material-icons">refresh</i>
+            Réessayer
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-section" *ngIf="isLoading">
+    <div class="container">
+      <div class="loading-card">
+        <div class="loading-animation">
+          <div class="comparison-spinner">
+            <div class="spinner-ring" *ngFor="let bank of selectedBanks; let i = index" 
+                 [style.animation-delay]="i * 0.2 + 's'"></div>
+          </div>
+        </div>
+        <h3>Comparaison en cours...</h3>
+        <p>Analyse des offres de {{ selectedBanksCount }} banque{{ selectedBanksCount > 1 ? 's' : '' }}</p>
+        <div class="progress-steps">
+          <div class="step active">
+            <i class="material-icons">send</i>
+            <span>Envoi des données</span>
+          </div>
+          <div class="step active">
+            <i class="material-icons">psychology</i>
+            <span>Calcul du scoring</span>
+          </div>
+          <div class="step active">
+            <i class="material-icons">compare_arrows</i>
+            <span>Comparaison des offres</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Résultats de Comparaison -->
+  <div class="results-section" *ngIf="comparisonResults && !isLoading">
+    <div class="container">
+      <!-- Résumé des Résultats -->
+      <div class="results-summary">
+        <div class="summary-header">
+          <h2>Résultats de votre Comparaison</h2>
+          <div class="summary-actions">
+            <button class="action-btn" (click)="saveComparison()" title="Sauvegarder">
+              <i class="material-icons">bookmark</i>
+            </button>
+            <button class="action-btn" (click)="exportToPDF()" title="Exporter PDF">
+              <i class="material-icons">picture_as_pdf</i>
+            </button>
+            <button class="action-btn" (click)="shareComparison()" title="Partager">
+              <i class="material-icons">share</i>
+            </button>
+          </div>
+        </div>
+
+        <div class="summary-stats">
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="material-icons">local_offer</i>
+            </div>
+            <div class="stat-content">
+              <span class="stat-number">{{ comparisonResults.bankOffers.length }}</span>
+              <span class="stat-label">Offres reçues</span>
+            </div>
+          </div>
+
+          <div class="stat-card highlight">
+            <div class="stat-icon">
+              <i class="material-icons">trending_down</i>
+            </div>
+            <div class="stat-content">
+              <span class="stat-number">{{ formatPercent(comparisonResults.marketAnalysis.bestRate) }}</span>
+              <span class="stat-label">Meilleur taux</span>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="material-icons">schedule</i>
+            </div>
+            <div class="stat-content">
+              <span class="stat-number">{{ getProcessingTimeText(comparisonResults.marketAnalysis.averageProcessingTime) }}</span>
+              <span class="stat-label">Délai moyen</span>
+            </div>
+          </div>
+
+          <div class="stat-card success" *ngIf="bestOfferSavings > 0">
+            <div class="stat-icon">
+              <i class="material-icons">savings</i>
+            </div>
+            <div class="stat-content">
+              <span class="stat-number">{{ formatCurrency(bestOfferSavings) }}</span>
+              <span class="stat-label">Économies possibles</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Meilleure Offre -->
+      <div class="best-offer" *ngIf="comparisonResults.bestOffer">
+        <div class="best-offer-badge">
+          <i class="material-icons">star</i>
+          <span>Meilleure Offre</span>
+        </div>
+        
+        <div class="offer-card best" [style.border-left-color]="comparisonResults.bestOffer.bankColor">
+          <div class="offer-header">
+            <div class="bank-info">
+              <div class="bank-logo" [style.background]="comparisonResults.bestOffer.bankColor">
+                <span>{{ comparisonResults.bestOffer.bankName.split(' ')[0] }}</span>
+              </div>
+              <div class="bank-details">
+                <h3>{{ comparisonResults.bestOffer.bankName }}</h3>
+                <p>{{ comparisonResults.bestOffer.creditType | titlecase }}</p>
+              </div>
+            </div>
+            
+            <div class="offer-highlight">
+              <div class="highlight-rate">
+                <span class="rate-value">{{ formatPercent(comparisonResults.bestOffer.interestRate) }}</span>
+                <span class="rate-label">Taux d'intérêt</span>
+              </div>
+              <div class="highlight-approval">
+                <span class="approval-value">{{ comparisonResults.bestOffer.approvalChance }}%</span>
+                <span class="approval-label">Chance d'approbation</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="offer-details">
+            <div class="detail-grid">
+              <div class="detail-item">
+                <span class="label">Mensualité</span>
+                <span class="value primary">{{ formatCurrency(comparisonResults.bestOffer.monthlyPayment) }}</span>
+              </div>
+              <div class="detail-item">
+                <span class="label">Coût total</span>
+                <span class="value">{{ formatCurrency(comparisonResults.bestOffer.totalCost) }}</span>
+              </div>
+              <div class="detail-item">
+                <span class="label">Frais</span>
+                <span class="value">{{ formatCurrency(comparisonResults.bestOffer.fees.totalFees) }}</span>
+              </div>
+              <div class="detail-item">
+                <span class="label">Délai de traitement</span>
+                <span class="value">{{ getProcessingTimeText(comparisonResults.bestOffer.processingTime) }}</span>
+              </div>
+            </div>
+          </div>
+
+            <div class="offer-advantages" *ngIf="comparisonResults.bestOffer.competitiveAdvantages?.length">
+            <h4>Avantages</h4>
+            <ul class="advantages-list">
+                <li *ngFor="let advantage of comparisonResults.bestOffer.competitiveAdvantages || []">
+                <i class="material-icons">check_circle</i>
+                {{ advantage }}
+                </li>
+            </ul>
+            </div>
+
+          <div class="offer-actions">
+            <button class="apply-btn primary" (click)="applyToOffer(comparisonResults.bestOffer)">
+              <i class="material-icons">send</i>
+              Faire une Demande
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Toutes les Offres -->
+      <div class="all-offers">
+        <div class="offers-header">
+          <h3>Toutes les Offres Comparées</h3>
+          <div class="sort-controls">
+            <span class="sort-label">Trier par:</span>
+            <div class="sort-buttons">
+              <button
+                class="sort-btn"
+                [class.active]="sortBy === 'rate'"
+                (click)="setSortBy('rate')"
+              >
+                <i class="material-icons">trending_down</i>
+                Taux
+              </button>
+              <button
+                class="sort-btn"
+                [class.active]="sortBy === 'payment'"
+                (click)="setSortBy('payment')"
+              >
+                <i class="material-icons">payments</i>
+                Mensualité
+              </button>
+              <button
+                class="sort-btn"
+                [class.active]="sortBy === 'time'"
+                (click)="setSortBy('time')"
+              >
+                <i class="material-icons">schedule</i>
+                Rapidité
+              </button>
+              <button
+                class="sort-btn"
+                [class.active]="sortBy === 'approval'"
+                (click)="setSortBy('approval')"
+              >
+                <i class="material-icons">thumb_up</i>
+                Approbation
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="offers-grid">
+          <div
+            *ngFor="let offer of getSortedOffers(); let i = index"
+            class="offer-card"
+            [class.best]="i === 0"
+            [style.border-left-color]="offer.bankColor"
+          >
+            <div class="offer-header">
+              <div class="bank-info">
+                <div class="bank-logo" [style.background]="offer.bankColor">
+                  <span>{{ offer.bankName.split(' ')[0] }}</span>
+                </div>
+                <div class="bank-details">
+                  <h4>{{ offer.bankName }}</h4>
+                  <p>{{ offer.creditType | titlecase }}</p>
+                </div>
+              </div>
+              
+              <div class="offer-ranking" *ngIf="i < 3">
+                <div class="rank-badge" [class]="'rank-' + (i + 1)">
+                  #{{ i + 1 }}
+                </div>
+              </div>
+              
+              <div class="eligibility-badge" [ngClass]="getEligibilityClass(offer.eligibilityStatus)">
+                {{ getEligibilityText(offer.eligibilityStatus) }}
+              </div>
+            </div>
+
+            <div class="offer-metrics">
+              <div class="metric primary">
+                <span class="metric-value">{{ formatPercent(offer.interestRate) }}</span>
+                <span class="metric-label">Taux</span>
+              </div>
+              <div class="metric">
+                <span class="metric-value">{{ formatCurrency(offer.monthlyPayment) }}</span>
+                <span class="metric-label">Mensualité</span>
+              </div>
+              <div class="metric">
+                <span class="metric-value">{{ getProcessingTimeText(offer.processingTime) }}</span>
+                <span class="metric-label">Délai</span>
+              </div>
+              <div class="metric">
+                <span class="metric-value">{{ offer.approvalChance }}%</span>
+                <span class="metric-label">Approbation</span>
+              </div>
+            </div>
+
+            <div class="offer-details-toggle" (click)="toggleOfferDetails(offer.bankId)">
+              <span>{{ isOfferExpanded(offer.bankId) ? 'Moins de détails' : 'Plus de détails' }}</span>
+              <i class="material-icons">{{ isOfferExpanded(offer.bankId) ? 'expand_less' : 'expand_more' }}</i>
+            </div>
+
+            <div class="offer-details-expanded" *ngIf="isOfferExpanded(offer.bankId)">
+              <div class="expanded-content">
+                <div class="detail-section">
+                  <h5>Conditions Financières</h5>
+                  <div class="detail-list">
+                    <div class="detail-row">
+                      <span class="label">Montant approuvé:</span>
+                      <span class="value">{{ formatCurrency(offer.approvedAmount) }}</span>
+                    </div>
+                    <div class="detail-row">
+                      <span class="label">Coût total:</span>
+                      <span class="value">{{ formatCurrency(offer.totalCost) }}</span>
+                    </div>
+                    <div class="detail-row">
+                      <span class="label">Frais:</span>
+                      <span class="value">{{ formatCurrency(offer.fees.totalFees) }}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="offer-advantages" *ngIf="offer.competitiveAdvantages?.length">
+                    <h4>Avantages</h4>
+                    <ul class="advantages-list">
+                    <li *ngFor="let advantage of offer.competitiveAdvantages || []">
+                        <i class="material-icons">check_circle</i>
+                        {{ advantage }}
+                    </li>
+                    </ul>
+                </div>
+
+                <div class="detail-section" *ngIf="offer.requiredDocuments?.length">
+                  <h5>Documents Requis</h5>
+                  <ul class="documents-list">
+                    <li *ngFor="let doc of offer.requiredDocuments">
+                      <i class="material-icons">description</i>
+                      {{ doc }}
+                    </li>
+                  </ul>
+                </div>
+
+                <div class="detail-section" *ngIf="offer.specialConditions?.length">
+                  <h5>Conditions Spéciales</h5>
+                  <ul class="conditions-list">
+                    <li *ngFor="let condition of offer.specialConditions">
+                      <i class="material-icons">star</i>
+                      {{ condition }}
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <div class="offer-actions">
+              <button
+                class="apply-btn"
+                [class.primary]="i === 0"
+                (click)="applyToOffer(offer)"
+                [disabled]="offer.eligibilityStatus === 'not_eligible'"
+              >
+                <i class="material-icons">send</i>
+                {{ offer.eligibilityStatus === 'not_eligible' ? 'Non éligible' : 'Faire une Demande' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recommandations -->
+      <div class="recommendations" *ngIf="comparisonResults.recommendations?.length">
+        <div class="recommendations-header">
+          <h3>
+            <i class="material-icons">lightbulb</i>
+            Nos Recommandations
+          </h3>
+        </div>
+        <div class="recommendations-content">
+          <div
+            *ngFor="let recommendation of comparisonResults.recommendations"
+            class="recommendation-item"
+          >
+            <div class="recommendation-icon">
+              <i class="material-icons">tips_and_updates</i>
+            </div>
+            <div class="recommendation-text">
+              <p>{{ recommendation }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions Finales -->
+      <div class="final-actions">
+        <div class="actions-content">
+          <div class="action-group">
+            <h4>Besoin d'aide ?</h4>
+            <p>Nos conseillers sont là pour vous accompagner</p>
+            <button class="contact-btn">
+              <i class="material-icons">support_agent</i>
+              Contacter un Conseiller
+            </button>
+          </div>
+          
+          <div class="action-group">
+            <h4>Nouvelle simulation ?</h4>
+            <p>Testez d'autres montants ou durées</p>
+            <button class="new-simulation-btn" (click)="resetForm()">
+              <i class="material-icons">refresh</i>
+              Nouvelle Comparaison
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

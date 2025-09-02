@@ -1,0 +1,31 @@
+{
+  "automated_credit_types": [
+    "consommation_generale",
+    "avance_salaire",
+    "depannage"
+  ],
+  "training_date": "2025-07-23T09:55:46.665390",
+  "features": [
+    "age",
+    "job_seniority",
+    "monthly_income",
+    "other_income",
+    "monthly_charges",
+    "existing_debts",
+    "loan_amount",
+    "loan_duration",
+    "debt_ratio",
+    "disposable_income",
+    "dependents",
+    "type_credit",
+    "employment_status",
+    "marital_status",
+    "education",
+    "urgency_justification",
+    "liquidity_problem",
+    "cash_flow_status",
+    "salary_domiciliation",
+    "employer_convention"
+  ],
+  "model_type": "RandomForestClassifier"
+}

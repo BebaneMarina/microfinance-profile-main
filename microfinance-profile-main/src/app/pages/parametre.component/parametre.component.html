@@ -1,0 +1,350 @@
+<div class="settings-container">
+  <div class="settings-header">
+    <h1>Paramètres</h1>
+    <p>Personnalisez votre expérience Bamboo EMF</p>
+  </div>
+
+  <div class="settings-layout">
+    <!-- Menu latéral -->
+    <div class="settings-sidebar">
+      <button class="sidebar-item" [class.active]="activeSection === 'notifications'" 
+              (click)="activeSection = 'notifications'">
+        <i class="material-icons">notifications</i>
+        <span>Notifications</span>
+      </button>
+      
+      <button class="sidebar-item" [class.active]="activeSection === 'security'"
+              (click)="activeSection = 'security'">
+        <i class="material-icons">security</i>
+        <span>Sécurité</span>
+      </button>
+      
+      <button class="sidebar-item" [class.active]="activeSection === 'privacy'"
+              (click)="activeSection = 'privacy'">
+        <i class="material-icons">privacy_tip</i>
+        <span>Confidentialité</span>
+      </button>
+      
+      <button class="sidebar-item" [class.active]="activeSection === 'preferences'"
+              (click)="activeSection = 'preferences'">
+        <i class="material-icons">tune</i>
+        <span>Préférences</span>
+      </button>
+      
+      <button class="sidebar-item" [class.active]="activeSection === 'help'"
+              (click)="activeSection = 'help'">
+        <i class="material-icons">help</i>
+        <span>Aide & Support</span>
+      </button>
+    </div>
+
+    <!-- Contenu principal -->
+    <div class="settings-content">
+      <!-- Section Notifications -->
+      <div *ngIf="activeSection === 'notifications'" class="settings-section">
+        <h2>Préférences de notifications</h2>
+        <p class="section-description">Choisissez comment vous souhaitez recevoir vos notifications</p>
+        
+        <div class="notification-list">
+          <div class="notification-item" *ngFor="let notif of notifications">
+            <div class="notification-header">
+              <div class="notification-info">
+                <h3>{{ notif.label }}</h3>
+                <p>{{ notif.description }}</p>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" [(ngModel)]="notif.enabled" 
+                       (change)="toggleNotification(notif)">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            
+            <div class="notification-channels" *ngIf="notif.enabled">
+              <label class="channel-option">
+                <input type="checkbox" [(ngModel)]="notif.channels.email"
+                       (change)="toggleChannel(notif, 'email')">
+                <i class="material-icons">email</i>
+                <span>Email</span>
+              </label>
+              
+              <label class="channel-option">
+                <input type="checkbox" [(ngModel)]="notif.channels.sms"
+                       (change)="toggleChannel(notif, 'sms')">
+                <i class="material-icons">sms</i>
+                <span>SMS</span>
+              </label>
+              
+              <label class="channel-option">
+                <input type="checkbox" [(ngModel)]="notif.channels.push"
+                       (change)="toggleChannel(notif, 'push')">
+                <i class="material-icons">notifications_active</i>
+                <span>Push</span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section Sécurité -->
+      <div *ngIf="activeSection === 'security'" class="settings-section">
+        <h2>Sécurité du compte</h2>
+        <p class="section-description">Protégez votre compte avec ces options de sécurité</p>
+        
+        <div class="security-options">
+          <div class="security-item">
+            <div class="security-info">
+              <h3>Authentification à deux facteurs</h3>
+              <p>Ajoutez une couche de sécurité supplémentaire à votre compte</p>
+            </div>
+            <button class="btn-primary" *ngIf="!twoFactorEnabled" (click)="enable2FA()">
+              Activer
+            </button>
+            <span class="status-badge active" *ngIf="twoFactorEnabled">
+              <i class="material-icons">check</i>
+              Activé
+            </span>
+          </div>
+          
+          <div class="security-item">
+            <div class="security-info">
+              <h3>Authentification biométrique</h3>
+              <p>Utilisez votre empreinte digitale ou Face ID</p>
+            </div>
+            <button class="btn-primary" *ngIf="!biometricEnabled" (click)="enableBiometric()">
+              Configurer
+            </button>
+            <span class="status-badge active" *ngIf="biometricEnabled">
+              <i class="material-icons">check</i>
+              Configuré
+            </span>
+          </div>
+          
+          <div class="security-item">
+            <div class="security-info">
+              <h3>Expiration de session</h3>
+              <p>Déconnexion automatique après inactivité</p>
+            </div>
+            <select [(ngModel)]="sessionTimeout" class="form-select">
+              <option value="15">15 minutes</option>
+              <option value="30">30 minutes</option>
+              <option value="60">1 heure</option>
+              <option value="120">2 heures</option>
+            </select>
+          </div>
+          
+          <div class="security-item">
+            <div class="security-info">
+              <h3>Changer le mot de passe</h3>
+              <p>Utilisez un mot de passe fort et unique</p>
+            </div>
+            <button class="btn-secondary" (click)="changePassword()">
+              Modifier
+            </button>
+          </div>
+        </div>
+        
+        <div class="security-logs">
+          <h3>Activité récente</h3>
+          <div class="log-list">
+            <div class="log-item" *ngFor="let log of securityLogs">
+              <div class="log-icon">
+                <i class="material-icons">{{ log.action.includes('Connexion') ? 'login' : 'vpn_key' }}</i>
+              </div>
+              <div class="log-details">
+                <h4>{{ log.action }}</h4>
+                <p>{{ log.device }} - {{ log.location }}</p>
+                <p class="log-date">{{ formatDate(log.date) }} - IP: {{ log.ip }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section Confidentialité -->
+      <div *ngIf="activeSection === 'privacy'" class="settings-section">
+        <h2>Confidentialité</h2>
+        <p class="section-description">Gérez vos données personnelles et votre confidentialité</p>
+        
+        <div class="privacy-options">
+          <div class="privacy-item">
+            <h3>Données personnelles</h3>
+            <p>Téléchargez une copie de vos données personnelles</p>
+            <button class="btn-secondary" (click)="downloadData()">
+              <i class="material-icons">download</i>
+              Télécharger mes données
+            </button>
+          </div>
+          
+          <div class="privacy-item">
+            <h3>Partage des données</h3>
+            <p>Contrôlez comment vos données sont utilisées</p>
+            <div class="privacy-toggles">
+              <label class="privacy-toggle">
+                <input type="checkbox" checked>
+                <span>Autoriser l'analyse pour améliorer les services</span>
+              </label>
+              <label class="privacy-toggle">
+                <input type="checkbox">
+                <span>Partager les données anonymisées pour les statistiques</span>
+              </label>
+            </div>
+          </div>
+          
+          <div class="privacy-item danger">
+            <h3>Supprimer le compte</h3>
+            <p>Supprimez définitivement votre compte et toutes vos données</p>
+            <button class="btn-danger" (click)="deleteAccount()">
+              <i class="material-icons">delete_forever</i>
+              Supprimer mon compte
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section Préférences -->
+      <div *ngIf="activeSection === 'preferences'" class="settings-section">
+        <h2>Préférences générales</h2>
+        <p class="section-description">Personnalisez l'affichage et le comportement de l'application</p>
+        
+        <div class="preference-list">
+          <div class="preference-item">
+            <label>Langue</label>
+            <select [(ngModel)]="language" class="form-select">
+              <option value="fr">Français</option>
+              <option value="en">English</option>
+            </select>
+          </div>
+          
+          <div class="preference-item">
+            <label>Devise</label>
+            <select [(ngModel)]="currency" class="form-select">
+              <option value="XAF">XAF - Franc CFA</option>
+              <option value="EUR">EUR - Euro</option>
+              <option value="USD">USD - Dollar US</option>
+            </select>
+          </div>
+          
+          <div class="preference-item">
+            <label>Format de date</label>
+            <select [(ngModel)]="dateFormat" class="form-select">
+              <option value="DD/MM/YYYY">JJ/MM/AAAA</option>
+              <option value="MM/DD/YYYY">MM/JJ/AAAA</option>
+              <option value="YYYY-MM-DD">AAAA-MM-JJ</option>
+            </select>
+          </div>
+          
+          <div class="preference-item">
+            <label>Thème</label>
+            <div class="theme-options">
+              <label class="theme-option">
+                <input type="radio" name="theme" value="light" [(ngModel)]="theme">
+                <span class="theme-preview light">
+                  <i class="material-icons">light_mode</i>
+                  Clair
+                </span>
+              </label>
+              <label class="theme-option">
+                <input type="radio" name="theme" value="dark" [(ngModel)]="theme">
+                <span class="theme-preview dark">
+                  <i class="material-icons">dark_mode</i>
+                  Sombre
+                </span>
+              </label>
+              <label class="theme-option">
+                <input type="radio" name="theme" value="auto" [(ngModel)]="theme">
+                <span class="theme-preview auto">
+                  <i class="material-icons">brightness_auto</i>
+                  Auto
+                </span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section Aide -->
+      <div *ngIf="activeSection === 'help'" class="settings-section">
+        <h2>Aide & Support</h2>
+        <p class="section-description">Trouvez de l'aide et contactez notre équipe support</p>
+        
+        <div class="help-options">
+          <a href="#" class="help-item">
+            <i class="material-icons">help_outline</i>
+            <div>
+              <h3>Centre d'aide</h3>
+              <p>Consultez notre FAQ et guides</p>
+            </div>
+            <i class="material-icons">arrow_forward</i>
+          </a>
+          
+          <a href="#" class="help-item">
+            <i class="material-icons">chat</i>
+            <div>
+              <h3>Chat en direct</h3>
+              <p>Discutez avec un conseiller</p>
+            </div>
+            <i class="material-icons">arrow_forward</i>
+          </a>
+          
+          <a href="tel:+24177000000" class="help-item">
+            <i class="material-icons">phone</i>
+            <div>
+              <h3>Appelez-nous</h3>
+              <p>+241 77 00 00 00</p>
+            </div>
+            <i class="material-icons">arrow_forward</i>
+          </a>
+          
+            <a href="mailto:support&#64;bamboo-emf.ga" class="help-item">
+            <i class="material-icons">email</i>
+            <div>
+                <h3>Email</h3>
+                <p>support&#64;bamboo-emf.ga</p> 
+            </div>
+            <i class="material-icons">arrow_forward</i>
+            </a>
+        </div>
+        
+        <div class="app-info">
+          <h3>À propos</h3>
+          <div class="info-list">
+            <div class="info-item">
+              <span>Version</span>
+              <span>2.0.0</span>
+            </div>
+            <div class="info-item">
+              <span>Dernière mise à jour</span>
+              <span>14 Juillet 2025</span>
+            </div>
+            <div class="info-item">
+              <span>Conditions d'utilisation</span>
+              <a href="#">Voir</a>
+            </div>
+            <div class="info-item">
+              <span>Politique de confidentialité</span>
+              <a href="#">Voir</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Barre d'actions -->
+  <div class="settings-actions">
+    <button class="btn-secondary" (click)="logout()">
+      <i class="material-icons">logout</i>
+      Se déconnecter
+    </button>
+    <button class="btn-primary" (click)="saveSettings()" [disabled]="isSaving">
+      <i class="material-icons">{{ isSaving ? 'hourglass_empty' : 'save' }}</i>
+      {{ isSaving ? 'Enregistrement...' : 'Enregistrer' }}
+    </button>
+  </div>
+
+  <!-- Message de succès -->
+  <div class="success-message" *ngIf="showSuccessMessage">
+    <i class="material-icons">check_circle</i>
+    Paramètres enregistrés avec succès
+  </div>
+</div>

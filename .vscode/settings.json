@@ -1,0 +1,5 @@
+{
+    "python.analysis.extraPaths": [
+        "./microfinance-profile-main/credit_app/models"
+    ]
+}

@@ -1,0 +1,4 @@
+credit_type,amount,duration,purpose,monthly_income,income_type,other_income,monthly_expenses,existing_debts,guarantor_name,guarantor_phone,guarantor_address,collateral,collateral_value,has_id_document,has_income_proof,has_guarantor_id,has_proof_of_residence,score,risk_level,status
+personal,500000,12,Achat équipement,300000,salary,50000,150000,0,Jean Dupont,+24101234567,"123 Rue Principale, Libreville",Voiture,2000000,true,true,true,true,750,low,approved
+business,2000000,24,Financement entreprise,800000,business,0,400000,500000,Pierre Mboma,+24102345678,"456 Avenue du Commerce, Port-Gentil",Bâtiment,5000000,true,true,true,true,680,medium,pending
+personal,300000,6,Frais médicaux,250000,salary,0,120000,100000,,,"",,,false,true,false,false,450,high,rejected

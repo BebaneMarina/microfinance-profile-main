@@ -1,0 +1,540 @@
+// Variables réutilisées
+$primary-color: #2C3E50;
+$primary-gradient: linear-gradient(135deg, #27b311 0%, #175c07 100%);
+$secondary-color: #27AE60;
+$accent-color: #E74C3C;
+$background-color: #F5F7FA;
+$card-background: #FFFFFF;
+$text-color: #2C3E50;
+$text-secondary: #7F8C8D;
+$border-color: #E0E6ED;
+$shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.04);
+$shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+$shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+$shadow-xl: 0 12px 48px rgba(0, 0, 0, 0.16);
+$transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+// Mixins
+@mixin glass-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+}
+
+@mixin hover-glow {
+  transition: $transition;
+  &:hover {
+    box-shadow: 0 8px 32px rgba($primary-color, 0.15);
+    transform: translateY(-2px);
+  }
+}
+
+// Container
+.profile-container {
+  background: linear-gradient(180deg, #F5F7FA 0%, #FFFFFF 100%);
+  min-height: 100vh;
+  padding: 30px;
+  position: relative;
+  width: 80%;
+  margin-left: 20%;
+  
+  @media (max-width: 768px) {
+    padding: 15px;
+  }
+}
+
+// Profile Header avec effet parallax
+.profile-header {
+  @include glass-card;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: $shadow-xl;
+  margin-bottom: 40px;
+  position: relative;
+}
+
+.profile-cover {
+  height: 260px;
+  background: $primary-gradient;
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -25%;
+    width: 150%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 40%);
+    animation: coverFloat 20s ease-in-out infinite;
+  }
+  
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 100px;
+    background: linear-gradient(to top, rgba(0,0,0,0.1), transparent);
+  }
+}
+
+@keyframes coverFloat {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(30px, -30px) scale(1.1); }
+  66% { transform: translate(-20px, 20px) scale(0.9); }
+}
+
+.profile-info {
+  display: flex;
+  align-items: flex-end;
+  padding: 0 50px 50px;
+  margin-top: -80px;
+  position: relative;
+  z-index: 2;
+  
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 0 20px 30px;
+    margin-top: -60px;
+  }
+}
+
+// Avatar avec animation
+.profile-avatar {
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  border: 6px solid white;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  position: relative;
+  overflow: hidden;
+  background: white;
+  animation: avatarPulse 3s ease-in-out infinite;
+  
+  @media (max-width: 768px) {
+    width: 140px;
+    height: 140px;
+  }
+  
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+  }
+  
+  &:hover img {
+    transform: scale(1.1);
+  }
+  
+  .avatar-edit {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    background: $primary-gradient;
+    color: white;
+    border: 3px solid white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: $transition;
+    box-shadow: 0 4px 12px rgba($primary-color, 0.3);
+    
+    &:hover {
+      transform: scale(1.1) rotate(10deg);
+      box-shadow: 0 6px 20px rgba($primary-color, 0.4);
+    }
+    
+    &:active {
+      transform: scale(0.95);
+    }
+  }
+}
+
+@keyframes avatarPulse {
+  0%, 100% { box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15); }
+  50% { box-shadow: 0 8px 40px rgba($primary-color, 0.2); }
+}
+
+.profile-details {
+  flex: 1;
+  margin-left: 40px;
+  
+  @media (max-width: 768px) {
+    margin-left: 0;
+    margin-top: 20px;
+  }
+  
+  h1 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: $text-color;
+    margin: 0 0 12px 0;
+    letter-spacing: -0.02em;
+    
+    @media (max-width: 768px) {
+      font-size: 2rem;
+    }
+  }
+  
+  .account-number {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1.1rem;
+    color: $text-secondary;
+    margin: 0 0 24px 0;
+    padding: 8px 16px;
+    background: rgba($primary-color, 0.05);
+    border-radius: 20px;
+    font-family: 'Monaco', monospace;
+    
+    &::before {
+      content: '#';
+      color: $primary-color;
+      font-weight: 600;
+    }
+  }
+}
+
+// Profile tabs avec indicateur animé
+.profile-tabs {
+  display: flex;
+  @include glass-card;
+  border-radius: 20px;
+  padding: 6px;
+  margin-bottom: 40px;
+  box-shadow: $shadow-md;
+  position: relative;
+  overflow: hidden;
+}
+
+.tab {
+  flex: 1;
+  padding: 16px 32px;
+  border: none;
+  background: transparent;
+  color: $text-secondary;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 14px;
+  transition: $transition;
+  position: relative;
+  z-index: 1;
+  
+  &:hover:not(.active) {
+    color: $text-color;
+    background: rgba($primary-color, 0.05);
+  }
+  
+  &.active {
+    color: white;
+    background: $primary-gradient;
+    box-shadow: 0 4px 12px rgba($primary-color, 0.3);
+    
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(45deg, transparent, rgba(255,255,255,0.2), transparent);
+      animation: shimmer 2s ease-in-out infinite;
+    }
+  }
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+// Content area
+.profile-content {
+  @include glass-card;
+  border-radius: 24px;
+  padding: 48px;
+  box-shadow: $shadow-lg;
+  animation: contentFadeIn 0.6s ease-out;
+  
+  @media (max-width: 768px) {
+    padding: 24px;
+  }
+}
+
+@keyframes contentFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Form grid
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 30px;
+  
+  .full-width {
+    grid-column: 1 / -1;
+  }
+}
+
+// Form fields avec style moderne
+.info-item {
+  position: relative;
+  
+  label {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: $text-secondary;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    transition: $transition;
+  }
+  
+  input,
+  select,
+  textarea {
+    width: 100%;
+    padding: 14px 20px;
+    border: 2px solid transparent;
+    border-radius: 12px;
+    font-size: 1rem;
+    color: $text-color;
+    background: rgba($background-color, 0.5);
+    transition: $transition;
+    
+    &:hover:not([readonly]):not(:disabled) {
+      border-color: rgba($primary-color, 0.2);
+      background: white;
+    }
+    
+    &:focus {
+      outline: none;
+      border-color: $primary-color;
+      background: white;
+      box-shadow: 0 0 0 4px rgba($primary-color, 0.1);
+      
+      & + label {
+        color: $primary-color;
+      }
+    }
+    
+    &[readonly],
+    &:disabled {
+      background: rgba($background-color, 0.3);
+      cursor: not-allowed;
+      opacity: 0.7;
+    }
+  }
+  
+  textarea {
+    min-height: 120px;
+    resize: vertical;
+  }
+  
+  select {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%237F8C8D' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+    padding-right: 40px;
+  }
+}
+
+// Buttons avec animations
+.profile-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  
+  @media (max-width: 768px) {
+    justify-content: center;
+  }
+}
+
+.btn-primary,
+.btn-secondary,
+.btn-success {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 32px;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: $transition;
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+  }
+  
+  &:hover::before {
+    width: 300px;
+    height: 300px;
+  }
+  
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    
+    .material-icons {
+      transform: rotate(10deg) scale(1.1);
+    }
+  }
+  
+  &:active {
+    transform: translateY(-1px);
+  }
+  
+  .material-icons {
+    font-size: 20px;
+    transition: $transition;
+  }
+}
+
+.btn-primary {
+  background: $primary-gradient;
+  color: white;
+  box-shadow: 0 4px 12px rgba($primary-color, 0.2);
+}
+
+.btn-secondary {
+  background: linear-gradient(135deg, #BDC3C7 0%, #95A5A6 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(#95A5A6, 0.2);
+}
+
+.btn-success {
+  background: linear-gradient(135deg, $secondary-color 0%, darken($secondary-color, 10%) 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba($secondary-color, 0.2);
+}
+
+// Success message avec confettis
+.success-message {
+  position: fixed;
+  bottom: 40px;
+  right: 40px;
+  background: linear-gradient(135deg, $secondary-color 0%, darken($secondary-color, 10%) 100%);
+  color: white;
+  padding: 20px 32px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 8px 32px rgba($secondary-color, 0.3);
+  animation: successBounceIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  
+  @media (max-width: 768px) {
+    bottom: 20px;
+    right: 20px;
+    left: 20px;
+  }
+  
+  .material-icons {
+    font-size: 28px;
+    animation: iconSpin 0.6s ease-out;
+  }
+  
+  &::after {
+    content: '🎉';
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    font-size: 24px;
+    animation: confetti 1s ease-out;
+  }
+}
+
+@keyframes successBounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) translateY(100px);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05) translateY(0);
+  }
+  100% {
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes iconSpin {
+  0% { transform: rotate(-180deg) scale(0); }
+  100% { transform: rotate(0deg) scale(1); }
+}
+
+@keyframes confetti {
+  0% {
+    opacity: 1;
+    transform: translateY(0) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-50px) rotate(720deg);
+  }
+}
+
+// Tab animations
+.tab-content {
+  animation: tabSlideIn 0.4s ease-out;
+}
+
+@keyframes tabSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+// Responsive improvements
+@media (max-width: 480px) {
+  .info-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  
+  .profile-tabs {
+    flex-direction: column;
+    
+    .tab {
+      padding: 14px 20px;
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "credit-requests": [
+    {
+      "id": "1",
+      "clientName": "Client Test",
+      "status": "En attente",
+      "amount": 50000,
+      "riskLevel": "Moyen"
+    }
+  ],
+  "stats": {
+    "totalRequests": 1,
+    "pendingRequests": 1,
+    "approvedRequests": 0,
+    "rejectedRequests": 0
+  }
+}

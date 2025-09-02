@@ -1,0 +1,766 @@
+// Variables de couleurs - Palette Blanc et Vert
+$primary-green: #10b981;
+$primary-green-dark: #059669;
+$primary-green-light: #34d399;
+$secondary-green: #16a34a;
+$accent-green: #22c55e;
+$light-green: #dcfce7;
+$very-light-green: #f0fdf4;
+
+$white: #ffffff;
+$gray-50: #f9fafb;
+$gray-100: #f3f4f6;
+$gray-200: #e5e7eb;
+$gray-300: #d1d5db;
+$gray-400: #9ca3af;
+$gray-500: #6b7280;
+$gray-600: #4b5563;
+$gray-700: #374151;
+$gray-800: #1f2937;
+$gray-900: #111827;
+
+// Variables de typographie
+$font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+$font-size-sm: 0.875rem;
+$font-size-base: 1rem;
+$font-size-lg: 1.125rem;
+$font-size-xl: 1.25rem;
+$font-size-2xl: 1.5rem;
+$font-size-3xl: 1.875rem;
+$font-size-4xl: 2.25rem;
+$font-size-5xl: 3rem;
+$font-size-6xl: 3.75rem;
+
+// Variables d'espacement
+$spacing-2: 0.5rem;
+$spacing-3: 0.75rem;
+$spacing-4: 1rem;
+$spacing-6: 1.5rem;
+$spacing-8: 2rem;
+$spacing-12: 3rem;
+$spacing-16: 4rem;
+$spacing-20: 5rem;
+
+// Variables de border-radius
+$rounded-lg: 0.5rem;
+$rounded-xl: 0.75rem;
+$rounded-2xl: 1rem;
+$rounded-full: 9999px;
+
+// Mixins
+@mixin button-base {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  border-radius: $rounded-xl;
+  
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba($primary-green, 0.2);
+  }
+}
+
+@mixin button-primary {
+  @include button-base;
+  background-color: $primary-green;
+  color: $white;
+  padding: $spacing-4 $spacing-8;
+  font-size: $font-size-lg;
+  
+  &:hover {
+    background-color: $primary-green-dark;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba($primary-green, 0.3);
+  }
+}
+
+@mixin button-secondary {
+  @include button-base;
+  background-color: $white;
+  color: $gray-700;
+  border: 1px solid $gray-300;
+  padding: $spacing-4 $spacing-8;
+  font-size: $font-size-lg;
+  
+  &:hover {
+    border-color: $primary-green;
+    color: $primary-green;
+    box-shadow: 0 2px 8px rgba($primary-green, 0.15);
+  }
+}
+
+@mixin card-shadow {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+@mixin gradient-green {
+  background: linear-gradient(135deg, $primary-green 0%, $secondary-green 100%);
+}
+
+// Animations
+@keyframes fadeIn {
+  from { 
+    opacity: 0; 
+    transform: translateY(20px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
+}
+
+@keyframes slideUp {
+  from { 
+    opacity: 0; 
+    transform: translateY(40px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
+}
+
+// Reset et styles de base
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: $font-family;
+  background-color: $gray-50;
+  color: $gray-900;
+  line-height: 1.5;
+  margin: 0;
+  padding: 0;
+}
+
+// Classes d'animation
+.fade-in {
+  animation: fadeIn 0.6s ease-in-out;
+}
+
+.slide-up {
+  animation: slideUp 0.8s ease-out;
+}
+
+.hover-scale {
+  transition: transform 0.3s ease;
+  
+  &:hover {
+    transform: scale(1.05);
+  }
+}
+
+// Container responsive
+.container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 $spacing-4;
+  
+  @media (min-width: 640px) {
+    padding: 0 $spacing-6;
+  }
+  
+  @media (min-width: 1024px) {
+    padding: 0 $spacing-8;
+  }
+}
+
+// Header
+.header {
+  background-color: $white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  
+  .header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 4rem;
+  }
+  
+  .logo {
+    display: flex;
+    align-items: center;
+    
+    .logo-icon {
+      width: 2rem;
+      height: 2rem;
+      background-color: $primary-green;
+      border-radius: $rounded-lg;
+      margin-right: $spacing-3;
+    }
+    
+    .logo-text {
+      font-size: $font-size-xl;
+      font-weight: 700;
+      color: $gray-900;
+    }
+  }
+  
+  .nav {
+    display: none;
+    gap: $spacing-8;
+    
+    @media (min-width: 768px) {
+      display: flex;
+    }
+    
+    a {
+      color: $gray-700;
+      text-decoration: none;
+      transition: color 0.2s;
+      
+      &:hover {
+        color: $primary-green;
+      }
+    }
+  }
+  
+  .btn-login {
+    @include button-base;
+    background-color: $primary-green;
+    color: $white;
+    padding: $spacing-2 $spacing-4;
+    
+    &:hover {
+      background-color: $primary-green-dark;
+    }
+  }
+}
+
+// Section Hero
+.hero {
+  background: linear-gradient(135deg, $very-light-green 0%, $light-green 100%);
+  padding: $spacing-20 0;
+  
+  .hero-content {
+    text-align: center;
+  }
+  
+  h1 {
+    font-size: $font-size-5xl;
+    font-weight: 700;
+    color: $gray-900;
+    margin-bottom: $spacing-6;
+    
+    @media (min-width: 768px) {
+      font-size: $font-size-6xl;
+    }
+    
+    .highlight {
+      color: $primary-green;
+    }
+  }
+  
+  .subtitle {
+    font-size: $font-size-xl;
+    color: $gray-600;
+    margin-bottom: $spacing-8;
+    max-width: 48rem;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  
+  .cta-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-4;
+    justify-content: center;
+    
+    @media (min-width: 640px) {
+      flex-direction: row;
+    }
+    
+    .btn-primary {
+      @include button-primary;
+      
+      &:hover {
+        transform: scale(1.05);
+      }
+    }
+    
+    .btn-secondary {
+      @include button-secondary;
+    }
+  }
+}
+
+// Section Taux du jour
+.rates-section {
+  padding: $spacing-8 0;
+  background-color: $white;
+  border-bottom: 1px solid $gray-200;
+  
+  .rates-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: $spacing-4;
+  }
+  
+  h3 {
+    font-size: $font-size-lg;
+    font-weight: 600;
+    color: $gray-900;
+    margin: 0;
+  }
+  
+  .rates-list {
+    display: flex;
+    gap: $spacing-8;
+    font-size: $font-size-sm;
+    flex-wrap: wrap;
+    
+    .rate-item {
+      text-align: center;
+      
+      .rate-label {
+        color: $gray-600;
+        margin-bottom: 2px;
+      }
+      
+      .rate-value {
+        font-weight: 700;
+        color: $primary-green;
+        
+        &.rate-auto {
+          color: $accent-green;
+        }
+        
+        &.rate-immo {
+          color: $secondary-green;
+        }
+      }
+    }
+  }
+}
+
+// Section Simulateurs
+.simulators-section {
+  padding: $spacing-20 0;
+  background-color: $white;
+  
+  .section-header {
+    text-align: center;
+    margin-bottom: $spacing-16;
+    
+    h2 {
+      font-size: $font-size-4xl;
+      font-weight: 700;
+      color: $gray-900;
+      margin-bottom: $spacing-4;
+    }
+    
+    p {
+      font-size: $font-size-xl;
+      color: $gray-600;
+      margin: 0;
+    }
+  }
+  
+  .simulators-grid {
+    display: grid;
+    gap: $spacing-8;
+    
+    @media (min-width: 768px) {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+  
+  .simulator-card {
+    border-radius: $rounded-2xl;
+    padding: $spacing-6;
+    color: $white;
+    cursor: pointer;
+    @include card-shadow;
+    transition: transform 0.3s ease;
+    
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: $spacing-4;
+      
+      .icon-wrapper {
+        padding: $spacing-3;
+        background-color: rgba($white, 0.2);
+        border-radius: $rounded-xl;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        
+        i {
+          width: 1.5rem;
+          height: 1.5rem;
+        }
+      }
+      
+      .arrow-icon {
+        transition: transform 0.2s;
+        width: 1.25rem;
+        height: 1.25rem;
+      }
+    }
+    
+    &:hover .arrow-icon {
+      transform: translateX(4px);
+    }
+    
+    h3 {
+      font-size: $font-size-xl;
+      font-weight: 700;
+      margin: 0 0 $spacing-2 0;
+    }
+    
+    .card-description {
+      color: rgba($white, 0.9);
+      font-size: $font-size-sm;
+      margin-bottom: $spacing-4;
+    }
+    
+    .features-list {
+      display: flex;
+      flex-direction: column;
+      gap: $spacing-2;
+      
+      .feature-item {
+        display: flex;
+        align-items: center;
+        font-size: $font-size-sm;
+        
+        .check-icon {
+          margin-right: $spacing-2;
+          color: rgba($white, 0.8);
+          width: 1rem;
+          height: 1rem;
+        }
+        
+        span {
+          color: rgba($white, 0.9);
+        }
+      }
+    }
+    
+    // Variantes de couleur
+    &.capacity {
+      background: linear-gradient(135deg, $primary-green 0%, $primary-green-dark 100%);
+    }
+    
+    &.payment {
+      background: linear-gradient(135deg, $accent-green 0%, $secondary-green 100%);
+    }
+    
+    &.rate {
+      background: linear-gradient(135deg, $secondary-green 0%, $primary-green-dark 100%);
+    }
+  }
+}
+
+// Section Stats
+.stats-section {
+  padding: $spacing-16 0;
+  background-color: $gray-50;
+  
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: $spacing-8;
+    
+    @media (min-width: 768px) {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+  
+  .stat-item {
+    text-align: center;
+    padding: $spacing-6;
+    
+    .stat-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 4rem;
+      height: 4rem;
+      background-color: rgba($primary-green, 0.1);
+      border-radius: $rounded-full;
+      margin-bottom: $spacing-4;
+      
+      i {
+        color: $primary-green;
+        width: 1.5rem;
+        height: 1.5rem;
+      }
+    }
+    
+    .stat-number {
+      font-size: $font-size-3xl;
+      font-weight: 700;
+      color: $gray-900;
+      margin-bottom: $spacing-2;
+    }
+    
+    .stat-label {
+      color: $gray-600;
+      margin: 0;
+    }
+  }
+}
+
+// Section Avantages
+.advantages-section {
+  padding: $spacing-20 0;
+  background-color: $white;
+  
+  .section-header {
+    text-align: center;
+    margin-bottom: $spacing-16;
+    
+    h2 {
+      font-size: $font-size-4xl;
+      font-weight: 700;
+      color: $gray-900;
+      margin-bottom: $spacing-4;
+    }
+  }
+  
+  .advantages-grid {
+    display: grid;
+    gap: $spacing-8;
+    
+    @media (min-width: 768px) {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+  
+  .advantage-item {
+    text-align: center;
+    padding: $spacing-6;
+    
+    .advantage-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 4rem;
+      height: 4rem;
+      background-color: rgba($primary-green, 0.1);
+      border-radius: $rounded-full;
+      margin-bottom: $spacing-4;
+      
+      i {
+        color: $primary-green;
+        width: 1.5rem;
+        height: 1.5rem;
+      }
+    }
+    
+    h3 {
+      font-size: $font-size-xl;
+      font-weight: 600;
+      color: $gray-900;
+      margin: 0 0 $spacing-2 0;
+    }
+    
+    p {
+      color: $gray-600;
+      margin: 0;
+    }
+  }
+}
+
+// Section CTA
+.cta-section {
+  padding: $spacing-20 0;
+  @include gradient-green;
+  
+  .container {
+    text-align: center;
+  }
+  
+  h2 {
+    font-size: $font-size-4xl;
+    font-weight: 700;
+    color: $white;
+    margin-bottom: $spacing-4;
+  }
+  
+  p {
+    font-size: $font-size-xl;
+    color: rgba($white, 0.9);
+    margin-bottom: $spacing-8;
+  }
+  
+  .cta-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-4;
+    justify-content: center;
+    
+    @media (min-width: 640px) {
+      flex-direction: row;
+    }
+    
+    .btn-white {
+      @include button-base;
+      background-color: $white;
+      color: $primary-green;
+      padding: $spacing-4 $spacing-8;
+      font-size: $font-size-lg;
+      
+      &:hover {
+        background-color: $gray-100;
+        transform: scale(1.05);
+      }
+    }
+    
+    .btn-outline {
+      @include button-base;
+      background-color: transparent;
+      color: $white;
+      border: 1px solid rgba($white, 0.4);
+      padding: $spacing-4 $spacing-8;
+      font-size: $font-size-lg;
+      
+      &:hover {
+        background-color: rgba($white, 0.1);
+        border-color: $white;
+      }
+    }
+  }
+}
+
+// Footer
+.footer {
+  background-color: $gray-900;
+  color: $white;
+  padding: $spacing-12 0;
+  
+  .footer-grid {
+    display: grid;
+    gap: $spacing-8;
+    margin-bottom: $spacing-8;
+    
+    @media (min-width: 768px) {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+  
+  .footer-logo {
+    display: flex;
+    align-items: center;
+    margin-bottom: $spacing-4;
+    
+    .logo-icon {
+      width: 2rem;
+      height: 2rem;
+      background-color: $primary-green;
+      border-radius: $rounded-lg;
+      margin-right: $spacing-3;
+    }
+    
+    .logo-text {
+      font-size: $font-size-xl;
+      font-weight: 700;
+    }
+  }
+  
+  .footer-description {
+    color: $gray-400;
+    margin: 0;
+  }
+  
+  h3 {
+    font-weight: 600;
+    margin: 0 0 $spacing-4 0;
+  }
+  
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    
+    li {
+      margin-bottom: $spacing-2;
+      
+      &:last-child {
+        margin-bottom: 0;
+      }
+      
+      a {
+        color: $gray-400;
+        text-decoration: none;
+        transition: color 0.2s;
+        
+        &:hover {
+          color: $white;
+        }
+      }
+    }
+  }
+  
+  .footer-bottom {
+    border-top: 1px solid $gray-800;
+    padding-top: $spacing-8;
+    text-align: center;
+    
+    p {
+      color: $gray-400;
+      margin: 0;
+    }
+  }
+}
+
+// Responsive utilities
+@media (max-width: 767px) {
+  .hidden-mobile {
+    display: none;
+  }
+  
+  // Adaptations mobile
+  .rates-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: $spacing-4;
+  }
+  
+  .rates-list {
+    gap: $spacing-4;
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .hero h1 {
+    font-size: $font-size-4xl;
+  }
+}
+
+@media (min-width: 768px) {
+  .hidden-desktop {
+    display: none;
+  }
+}
+
+// États de focus pour l'accessibilité
+button:focus,
+a:focus {
+  outline: 2px solid $primary-green;
+  outline-offset: 2px;
+}
+
+// Styles pour les icones Lucide
+[data-lucide] {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  stroke-width: 2;
+  stroke: currentColor;
+  fill: none;
+}

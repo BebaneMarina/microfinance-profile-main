@@ -1,0 +1,1457 @@
+<!-- profile.component.html - Enhanced avec gestion complète des crédits -->
+
+<div class="dashboard-container">
+  <!-- Header avec profil utilisateur et restrictions -->
+  <header class="dashboard-header">
+    <div class="user-section">
+      <div class="user-avatar" (click)="triggerFileInput()">
+        <img *ngIf="client?.ProfileImage" [src]="client.ProfileImage" alt="Photo de profil">
+        <div *ngIf="!client?.ProfileImage" class="avatar-placeholder">
+          <i class="material-icons">person</i>
+        </div>
+        <div class="avatar-overlay">
+          <i class="material-icons">camera_alt</i>
+        </div>
+        <input type="file" accept="image/*" (change)="onFileSelected($event)" style="display: none;">
+      </div>
+      <div class="user-info">
+        <h1>Bienvenue, {{ client?.name || 'Client' }}</h1>
+        <p>Votre partenaire financier de confiance</p>
+        
+        <!-- NOUVEAU: Indicateur de restrictions de crédit -->
+        <div class="credit-eligibility-badge" [ngClass]="{'blocked': !canApplyForCredit, 'eligible': canApplyForCredit}">
+          <i class="material-icons">{{ canApplyForCredit ? 'verified' : 'block' }}</i>
+          <span>{{ canApplyForCredit ? 'Éligible aux crédits' : 'Restrictions actives' }}</span>
+          <div class="restriction-tooltip" *ngIf="!canApplyForCredit">
+            {{ creditBlockReason }}
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Score de crédit amélioré -->
+    <div class="credit-score-card" [style.background]="getCreditScoreColor() + '22'">
+      <div class="score-header">
+        <h3>Votre score de crédit</h3>
+        <button class="refresh-btn" (click)="refreshCreditScore()" [disabled]="isScoreUpdating">
+          <i class="material-icons" [class.rotating]="isScoreUpdating">refresh</i>
+        </button>
+      </div>
+      <div class="score-display">
+        <div class="score-value">{{ getCurrentScore() | number:'1.1-1' }}</div>
+        <div class="score-status">{{ getCreditScoreStatus() }}</div>
+        <div class="score-change" *ngIf="getScoreChange() !== 0" 
+             [ngClass]="{'positive': getScoreChange() > 0, 'negative': getScoreChange() < 0}">
+          {{ getScoreChange() > 0 ? '+' : '' }}{{ getScoreChange() | number:'1.1-1' }}
+        </div>
+      </div>
+      <div class="score-details">
+        <div class="detail-item">
+          <span>Montant éligible</span>
+          <strong>{{ formatCurrency(globalStats?.eligibleAmount) }}</strong>
+        </div>
+        <div class="detail-item">
+          <span>Niveau de risque</span>
+          <strong>{{ getRiskLevelText() }}</strong>
+        </div>
+        <div class="detail-item" *ngIf="isScoreRealTime()">
+          <span>Temps réel</span>
+          <strong class="realtime-indicator">{{ getLastScoreUpdate() }}</strong>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- NOUVELLE SECTION: Vue d'ensemble financière avec dettes -->
+  <section class="financial-overview">
+    <!-- Solde de crédit disponible -->
+    <div class="overview-card primary">
+      <i class="material-icons">account_balance_wallet</i>
+      <div class="card-content">
+        <span class="label">Solde disponible</span>
+        <span class="value">{{ formatCurrency(accountBalance?.currentBalance || 0) }}</span>
+        <span class="subtitle">Crédit utilisable</span>
+      </div>
+    </div>
+
+    <!-- NOUVELLE CARTE: Dettes actives -->
+    <div class="overview-card debt-card" [ngClass]="{'high-debt': shouldShowScoreDebtWarning()}">
+      <i class="material-icons">trending_down</i>
+      <div class="card-content">
+        <span class="label">Dettes actives</span>
+        <span class="value debt-amount">
+          {{ formatCurrency(getTotalActiveDebt()) }}
+        </span>
+        <span class="subtitle">
+          Ratio: {{ getFormattedDebtRatioFromService() }}%
+        </span>
+      </div>
+      <div class="debt-progress-mini">
+        <div class="progress-fill" 
+             [style.width.%]="getFormattedDebtRatioFromService()"
+             [ngClass]="getCurrentDebtRatioClasses()">
+        </div>
+      </div>
+    </div>
+    
+    <!-- Crédits actifs -->
+    <div class="overview-card">
+      <i class="material-icons">credit_card</i>
+      <div class="card-content">
+        <span class="label">Crédits actifs</span>
+        <span class="value">{{ getActiveCreditCount() }}/2</span>
+        <span class="subtitle">Maximum autorisé</span>
+      </div>
+    </div>
+
+    <!-- Total remboursé -->
+    <div class="overview-card">
+      <i class="material-icons">check_circle</i>
+      <div class="card-content">
+        <span class="label">Total remboursé</span>
+        <span class="value">{{ formatCurrency(globalStats?.totalReimbursed || 0) }}</span>
+        <span class="subtitle">Historique complet</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- NOUVELLE SECTION: Gestion des crédits actifs -->
+  <section class="credit-management-section" *ngIf="activeCreditsFromService.length > 0">
+    <div class="section-header">
+      <h2>
+        <i class="material-icons">account_balance</i>
+        Mes Crédits Enregistrés
+      </h2>
+      <div class="section-actions">
+        <button class="btn-secondary" (click)="openActiveCreditsModal()">
+          <i class="material-icons">visibility</i>
+          Voir tous
+        </button>
+      </div>
+    </div>
+    
+    <div class="credits-grid">
+      <div class="credit-card enhanced" *ngFor="let credit of getDisplayedCredits()" [attr.data-status]="credit.status">
+        <div class="credit-header">
+          <h3>{{ getCreditTypeName(credit.type) }}</h3>
+          <span class="credit-status-badge" [ngClass]="'status-' + credit.status">
+            <i class="material-icons">
+              {{ credit.status === 'active' ? 'account_balance' : (credit.status === 'paid' ? 'check_circle' : 'warning') }}
+            </i>
+            {{ getCreditStatusText(credit.status) }}
+          </span>
+        </div>
+        
+        <div class="credit-amounts">
+          <div class="amount-row">
+            <span class="amount-label">Montant emprunté :</span>
+            <span class="amount-value original">{{ formatCurrency(credit.amount) }}</span>
+          </div>
+          <div class="amount-row">
+            <span class="amount-label">Total à rembourser :</span>
+            <span class="amount-value total">{{ formatCurrency(credit.totalAmount) }}</span>
+          </div>
+          <div class="amount-row primary" *ngIf="isCreditActive(credit)">
+            <span class="amount-label">Restant à payer :</span>
+            <span class="amount-value remaining">{{ formatCurrency(credit.remainingAmount) }}</span>
+          </div>
+        </div>
+        
+        <div class="credit-progress" *ngIf="isCreditActive(credit)">
+          <div class="progress-bar">
+            <div class="progress-fill" 
+                 [style.width.%]="getCreditReimbursementPercentage(credit)">
+            </div>
+          </div>
+          <span class="progress-label">
+            {{ getCreditReimbursementPercentage(credit).toFixed(1) }}% remboursé
+          </span>
+        </div>
+        
+        <div class="credit-dates">
+          <div class="date-info">
+            <i class="material-icons">event_available</i>
+            <span>Accordé le {{ formatDate(credit.approvedDate) }}</span>
+          </div>
+          <div class="date-info due-date" *ngIf="isCreditActive(credit)">
+            <i class="material-icons">schedule</i>
+            <span>Échéance : {{ formatDate(credit.dueDate) }}</span>
+          </div>
+        </div>
+        
+        <div class="credit-actions" *ngIf="isCreditActive(credit)">
+          <button class="btn-primary" (click)="makePayment(credit.id)">
+            <i class="material-icons">payment</i>
+            Rembourser
+          </button>
+        </div>
+        
+        <!-- Impact sur les dettes -->
+        <div class="debt-impact-indicator">
+          <i class="material-icons">trending_up</i>
+          <span>Impact sur vos dettes : +{{ formatCurrency(credit.remainingAmount) }}</span>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Afficher un message s'il y a plus de 3 crédits -->
+    <div class="more-credits-notice" *ngIf="hasAdditionalCredits()">
+      <p>{{ getAdditionalCreditsCount() }} crédit(s) supplémentaire(s)</p>
+      <button class="btn-link" (click)="openActiveCreditsModal()">Voir tous les crédits</button>
+    </div>
+  </section>
+
+  <!-- NOUVELLE SECTION: Restrictions et prochaines demandes -->
+  <section class="credit-restrictions-section" *ngIf="creditRestrictions">
+    <div class="section-header">
+      <h2>
+        <i class="material-icons">security</i>
+        Conditions de Crédit
+      </h2>
+    </div>
+    
+    <div class="restrictions-grid">
+      <div class="restriction-card" [ngClass]="{'blocked': !canApplyForCredit}">
+        <div class="restriction-header">
+          <i class="material-icons">{{ canApplyForCredit ? 'check_circle' : 'block' }}</i>
+          <h3>{{ canApplyForCredit ? 'Éligible' : 'Restrictions' }}</h3>
+        </div>
+        
+        <div class="restriction-content">
+          <div class="restriction-item">
+            <span class="restriction-label">Crédits actifs :</span>
+            <span class="restriction-value" [ngClass]="getActiveCreditCountClasses()">
+              {{ creditRestrictions.activeCreditCount }}/2
+            </span>
+          </div>
+          
+          <div class="restriction-item">
+            <span class="restriction-label">Ratio d'endettement :</span>
+            <span class="restriction-value" [ngClass]="getCurrentDebtRatioClasses()">
+              {{ getCurrentDebtRatioPercentage().toFixed(1) }}%
+            </span>
+          </div>
+          
+          <div class="restriction-item" *ngIf="creditRestrictions.nextEligibleDate">
+            <span class="restriction-label">Prochaine demande :</span>
+            <span class="restriction-value">
+              {{ formatDate(creditRestrictions.nextEligibleDate) }}
+            </span>
+          </div>
+          
+          <div class="restriction-reasons" *ngIf="!canApplyForCredit">
+            <h4>Raisons du blocage :</h4>
+            <ul>
+              <li>{{ creditBlockReason }}</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Conseils pour améliorer l'éligibilité -->
+      <div class="improvement-suggestions">
+        <h3>
+          <i class="material-icons">lightbulb</i>
+          Conseils pour améliorer votre éligibilité
+        </h3>
+        <ul class="suggestions-list">
+          <li *ngIf="isRestrictedByMaxCredits()">
+            <i class="material-icons">payments</i>
+            Remboursez vos crédits actuels pour pouvoir en demander de nouveaux
+          </li>
+          <li *ngIf="isRestrictedByDebtRatio()">
+            <i class="material-icons">trending_down</i>
+            Réduisez votre ratio d'endettement en remboursant vos dettes
+          </li>
+          <li *ngIf="isScoreBelowThreshold()">
+            <i class="material-icons">trending_up</i>
+            Améliorez votre score en effectuant des paiements réguliers
+          </li>
+          <li>
+            <i class="material-icons">schedule</i>
+            Respectez les délais entre les demandes (30 jours minimum)
+          </li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section principale du solde de compte (existante, conservée) -->
+  <div class="account-balance-section">
+    <!-- Carte de solde de compte -->
+    <div class="account-balance-card" *ngIf="accountBalance">
+      <div class="card-header">
+        <h2>
+          <i class="material-icons">account_balance_wallet</i>
+          Mon Solde de Crédit
+        </h2>
+        <button class="toggle-btn" (click)="toggleAccountDetails()">
+          <i class="material-icons">{{ showAccountDetails ? 'expand_less' : 'expand_more' }}</i>
+        </button>
+      </div>
+      
+      <div class="balance-overview">
+        <div class="balance-grid">
+          <div class="balance-item current">
+            <div class="balance-icon">
+              <i class="material-icons">account_balance_wallet</i>
+            </div>
+            <div class="balance-content">
+              <span class="balance-label">Solde Actuel</span>
+              <span class="balance-value current">{{ formatCurrency(accountBalance.currentBalance) }}</span>
+              <span class="balance-status" 
+                    [class]="accountBalance.currentBalance > 0 ? 'positive' : 'zero'">
+                {{ accountBalance.currentBalance > 0 ? 'Disponible' : 'Aucun crédit' }}
+              </span>
+            </div>
+          </div>
+          
+          <div class="balance-item total-credited">
+            <div class="balance-icon">
+              <i class="material-icons">trending_up</i>
+            </div>
+            <div class="balance-content">
+              <span class="balance-label">Total Crédité</span>
+              <span class="balance-value credited">{{ formatCurrency(accountBalance.totalCredited) }}</span>
+              <span class="balance-info">Depuis l'ouverture</span>
+            </div>
+          </div>
+          
+          <div class="balance-item total-used">
+            <div class="balance-icon">
+              <i class="material-icons">trending_down</i>
+            </div>
+            <div class="balance-content">
+              <span class="balance-label">Total Utilisé</span>
+              <span class="balance-value used">{{ formatCurrency(accountBalance.totalUsed) }}</span>
+              <span class="balance-info">Achats effectués</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Barre de progression du solde -->
+        <div class="balance-progress" *ngIf="accountBalance.totalCredited > 0">
+          <div class="progress-label">
+            <span>Utilisation du crédit</span>
+            <span class="progress-percentage">
+              {{ ((accountBalance.totalUsed / accountBalance.totalCredited) * 100).toFixed(1) }}%
+            </span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" 
+                 [style.width.%]="(accountBalance.totalUsed / accountBalance.totalCredited) * 100">
+            </div>
+          </div>
+          <div class="progress-info">
+            <span class="available">
+              Disponible: {{ formatCurrency(accountBalance.currentBalance) }}
+            </span>
+            <span class="used">
+              Utilisé: {{ formatCurrency(accountBalance.totalUsed) }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Message si aucun crédit -->
+        <div class="no-credit-message" *ngIf="accountBalance.totalCredited === 0">
+          <div class="no-credit-icon">
+            <i class="material-icons">credit_card_off</i>
+          </div>
+          <h3>Aucun crédit actuel</h3>
+          <p>Demandez votre premier crédit pour commencer à utiliser nos services</p>
+          <button class="btn-primary" (click)="openQuickCreditModal()" [disabled]="!canApplyForCredit">
+            <i class="material-icons">add_card</i>
+            {{ canApplyForCredit ? 'Demander un crédit' : 'Demandes bloquées' }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Section des détails (existante, conservée) -->
+      <div class="account-details" *ngIf="showAccountDetails">
+        <!-- Le contenu existant reste identique -->
+        <div class="details-header">
+          <h3>
+            <i class="material-icons">history</i>
+            Historique des Transactions
+          </h3>
+          <div class="transaction-stats">
+            <span class="transaction-count">{{ accountBalance.transactions.length }} transaction(s)</span>
+            <span class="last-transaction" *ngIf="accountBalance.lastTransaction">
+              Dernière: {{ getTimeAgo(accountBalance.lastTransaction) }}
+            </span>
+          </div>
+        </div>
+        
+        <div class="transactions-container">
+          <div class="transactions-list" *ngIf="accountBalance.transactions.length > 0; else noTransactions">
+            <div class="transaction-item" 
+                 *ngFor="let transaction of accountBalance.transactions; let i = index"
+                 [class]="transaction.type">
+              <div class="transaction-icon">
+                <i class="material-icons" [style.color]="getTransactionColor(transaction.type)">
+                  {{ getTransactionIcon(transaction.type) }}
+                </i>
+              </div>
+              <div class="transaction-content">
+                <div class="transaction-info">
+                  <span class="transaction-description">{{ transaction.description }}</span>
+                  <span class="transaction-date">{{ formatTransactionDate(transaction.date) }}</span>
+                  <span class="transaction-id">ID: {{ transaction.id.slice(-8) }}</span>
+                </div>
+                <div class="transaction-amounts">
+                  <span class="transaction-amount" [style.color]="getTransactionColor(transaction.type)">
+                    {{ transaction.type === 'credit' ? '+' : '-' }}{{ formatCurrency(transaction.amount) }}
+                  </span>
+                  <span class="transaction-balance">
+                    Solde: {{ formatCurrency(transaction.balance) }}
+                  </span>
+                  <span class="transaction-type" [class]="transaction.type">
+                    {{ transaction.type === 'credit' ? 'Crédit' : 'Débit' }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <ng-template #noTransactions>
+            <div class="no-transactions">
+              <i class="material-icons">receipt_long</i>
+              <h4>Aucune transaction</h4>
+              <p>Vos transactions apparaîtront ici une fois que vous aurez effectué votre premier crédit</p>
+            </div>
+          </ng-template>
+        </div>
+        
+        <!-- Actions rapides (conservées) -->
+        <div class="quick-actions" *ngIf="accountBalance.currentBalance > 0">
+          <div class="actions-header">
+            <h4>
+              <i class="material-icons">flash_on</i>
+              Actions Rapides
+            </h4>
+            <span class="actions-subtitle">Simuler des achats avec votre crédit</span>
+          </div>
+          <div class="actions-grid">
+            <button class="action-btn" 
+                    (click)="useCredit(10000, 'Simulation achat 10k')"
+                    [disabled]="accountBalance.currentBalance < 10000">
+              <i class="material-icons">shopping_cart</i>
+              <span class="action-amount">{{ formatCurrency(10000) }}</span>
+              <span class="action-label">Petit achat</span>
+            </button>
+            <button class="action-btn" 
+                    (click)="useCredit(25000, 'Simulation achat 25k')"
+                    [disabled]="accountBalance.currentBalance < 25000">
+              <i class="material-icons">store</i>
+              <span class="action-amount">{{ formatCurrency(25000) }}</span>
+              <span class="action-label">Achat moyen</span>
+            </button>
+            <button class="action-btn" 
+                    (click)="useCredit(50000, 'Simulation achat 50k')"
+                    [disabled]="accountBalance.currentBalance < 50000">
+              <i class="material-icons">local_mall</i>
+              <span class="action-amount">{{ formatCurrency(50000) }}</span>
+              <span class="action-label">Gros achat</span>
+            </button>
+            <button class="action-btn custom-amount" 
+                    (click)="openCustomAmountModal()"
+                    [disabled]="accountBalance.currentBalance <= 0">
+              <i class="material-icons">edit</i>
+              <span class="action-amount">Montant</span>
+              <span class="action-label">Personnalisé</span>
+            </button>
+          </div>
+          
+          <!-- Bouton pour utiliser tout le solde -->
+          <div class="use-all-section" *ngIf="accountBalance.currentBalance > 0">
+            <button class="use-all-btn" 
+                    (click)="useCredit(accountBalance.currentBalance, 'Utilisation totale du crédit')">
+              <i class="material-icons">money_off</i>
+              <span>Utiliser tout le solde ({{ formatCurrency(accountBalance.currentBalance) }})</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Section de résumé (conservée) -->
+        <div class="account-summary" *ngIf="accountBalance.transactions.length > 0">
+          <h4>
+            <i class="material-icons">analytics</i>
+            Résumé du Compte
+          </h4>
+          <div class="summary-grid">
+            <div class="summary-item">
+              <span class="summary-label">Nombre de crédits:</span>
+              <span class="summary-value">
+                {{ filterTransactions(accountBalance.transactions, 'credit').length }}
+              </span>
+            </div>
+            <div class="summary-item">
+              <span class="summary-label">Nombre d'achats:</span>
+              <span class="summary-value">
+                {{ filterTransactions(accountBalance.transactions, 'debit').length }}
+              </span>
+            </div>
+            <div class="summary-item">
+              <span class="summary-label">Montant moyen par achat:</span>
+              <span class="summary-value" 
+                    *ngIf="filterTransactions(accountBalance.transactions, 'debit').length > 0">
+                {{ formatCurrency(accountBalance.totalUsed / filterTransactions(accountBalance.transactions, 'debit').length) }}
+              </span>
+              <span class="summary-value" *ngIf="filterTransactions(accountBalance.transactions, 'debit').length === 0">
+                -
+              </span>
+            </div>
+            <div class="summary-item">
+              <span class="summary-label">Taux d'utilisation:</span>
+              <span class="summary-value">
+                {{ accountBalance.totalCredited > 0 ? ((accountBalance.totalUsed / accountBalance.totalCredited) * 100).toFixed(1) : 0 }}%
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal pour montant personnalisé (conservé) -->
+<div class="custom-amount-modal" *ngIf="showCustomAmountModal">
+  <div class="modal-backdrop" (click)="closeCustomAmountModal()"></div>
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>
+        <i class="material-icons">edit</i>
+        Montant Personnalisé
+      </h3>
+      <button class="close-btn" (click)="closeCustomAmountModal()">
+        <i class="material-icons">close</i>
+      </button>
+    </div>
+    
+    <div class="modal-body">
+      <div class="balance-display">
+        <span class="balance-label">Solde disponible:</span>
+        <span class="balance-amount">{{ formatCurrency(accountBalance.currentBalance) }}</span>
+      </div>
+      
+      <div class="form-group">
+        <label for="customAmount">Montant à utiliser:</label>
+        <div class="amount-input-container">
+          <input 
+            type="number" 
+            id="customAmount"
+            [(ngModel)]="customAmount"
+            name="customAmount"
+            [min]="1000" 
+            [max]="accountBalance.currentBalance"
+            step="1000"
+            class="amount-input"
+            placeholder="Entrez le montant">
+          <span class="currency-suffix">FCFA</span>
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label for="customDescription">Description (optionnelle):</label>
+        <input 
+          type="text" 
+          id="customDescription"
+          [(ngModel)]="customDescription"
+          name="customDescription"
+          class="description-input"
+          placeholder="Ex: Achat en ligne, Paiement service...">
+      </div>
+      
+      <div class="amount-suggestions">
+        <span>Montants rapides:</span>
+        <div class="suggestion-buttons">
+          <button type="button" 
+                  class="suggestion-btn" 
+                  (click)="customAmount = 5000"
+                  [disabled]="accountBalance.currentBalance < 5000">
+            5k
+          </button>
+          <button type="button" 
+                  class="suggestion-btn" 
+                  (click)="customAmount = 15000"
+                  [disabled]="accountBalance.currentBalance < 15000">
+            15k
+          </button>
+          <button type="button" 
+                  class="suggestion-btn" 
+                  (click)="customAmount = 30000"
+                  [disabled]="accountBalance.currentBalance < 30000">
+            30k
+          </button>
+          <button type="button" 
+                  class="suggestion-btn" 
+                  (click)="customAmount = accountBalance.currentBalance">
+            Tout
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="closeCustomAmountModal()">
+        Annuler
+      </button>
+      <button class="btn-primary" 
+              (click)="useCustomAmount()"
+              [disabled]="!customAmount || customAmount <= 0 || customAmount > accountBalance.currentBalance">
+        <i class="material-icons">payment</i>
+        Utiliser {{ formatCurrency(customAmount || 0) }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DE CRÉDIT RAPIDE AMÉLIORÉ avec vérifications -->
+<div class="quick-credit-modal enhanced" *ngIf="showQuickCreditModal">
+  <div class="modal-backdrop" (click)="closeQuickCreditModal()"></div>
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>
+        <i class="material-icons">flash_on</i>
+        Demande de Crédit Rapide
+      </h2>
+      <button class="close-btn" (click)="closeQuickCreditModal()">
+        <i class="material-icons">close</i>
+      </button>
+    </div>
+    
+    <div class="modal-body">
+      <!-- NOUVEAU: Vérification des restrictions -->
+      <div class="restrictions-check" *ngIf="!canApplyForCredit">
+        <div class="restriction-alert">
+          <i class="material-icons">block</i>
+          <div class="restriction-content">
+            <h3>Demande bloquée</h3>
+            <p>{{ creditBlockReason }}</p>
+          </div>
+        </div>
+        <div class="restriction-actions">
+          <button class="btn-secondary" (click)="closeQuickCreditModal()">
+            Fermer
+          </button>
+        </div>
+      </div>
+
+      <!-- Formulaire de demande (visible seulement si éligible) -->
+      <div class="credit-form-container" *ngIf="canApplyForCredit">
+        <!-- Affichage du score de crédit -->
+        <div class="credit-score-display">
+          <div class="score-circle" [style.background]="getCreditScoreColor()">
+            <div class="score-value">{{ getCurrentScore() | number:'1.1-1' }}/10</div>
+          </div>
+          <div class="score-info">
+            <h3>{{ getCreditScoreStatus() }}</h3>
+            <p>{{ getRiskLevelText() }}</p>
+            <p class="debt-warning" *ngIf="shouldShowScoreDebtWarning()">
+              <i class="material-icons">warning</i>
+              Ratio d'endettement élevé: {{ getFormattedDebtRatioFromService() }}%
+            </p>
+          </div>
+        </div>
+        
+        <!-- NOUVEAU: Impact sur les dettes -->
+        <div class="debt-impact-preview" *ngIf="quickCredit.amount > 0">
+          <h4>
+            <i class="material-icons">trending_up</i>
+            Impact sur vos dettes
+          </h4>
+          <div class="impact-details">
+            <div class="impact-row">
+              <span>Dettes actuelles:</span>
+              <span class="current-debt">{{ formatCurrency(getTotalActiveDebt()) }}</span>
+            </div>
+            <div class="impact-row">
+              <span>Nouveau crédit (total):</span>
+              <span class="new-debt">+{{ formatCurrency(quickCredit.amount + (quickCredit.amount * 0.015)) }}</span>
+            </div>
+            <div class="impact-row total">
+              <span>Total après crédit:</span>
+              <span class="total-debt">{{ formatCurrency(getNewTotalDebtWithQuickCredit()) }}</span>
+            </div>
+            <div class="impact-row ratio">
+              <span>Nouveau ratio d'endettement:</span>
+              <span class="debt-ratio" [ngClass]="getDebtRatioClasses()">
+                {{ getNewDebtRatioWithQuickCredit().toFixed(1) }}%
+              </span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Montant approuvé -->
+        <div class="approved-amount">
+          <h3>Montant maximum approuvé</h3>
+          <div class="amount-value">{{ formatCurrency(globalStats.eligibleAmount) }}</div>
+          <p class="amount-note">
+            <i class="material-icons">info</i>
+            Vous pouvez choisir un montant inférieur à celui proposé
+          </p>
+          <div class="restrictions-summary" *ngIf="creditRestrictions">
+            <small>
+              Crédits actifs: {{ creditRestrictions.activeCreditCount }}/2 • 
+              Ratio dette: {{ getCurrentDebtRatioPercentage().toFixed(1) }}%
+            </small>
+          </div>
+        </div>
+        
+        <!-- Formulaire de demande rapide -->
+        <form class="quick-credit-form" (ngSubmit)="submitQuickCredit()">
+          <div class="form-group">
+            <label for="creditType">Type de crédit</label>
+            <select 
+              id="creditType" 
+              [(ngModel)]="quickCredit.type" 
+              name="creditType"
+              required>
+              <option 
+                *ngFor="let type of getAvailableCreditTypes()" 
+                [value]="type.id">
+                {{ type.name }}
+              </option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="amount">Montant souhaité</label>
+            <div class="amount-input-container">
+              <input 
+                type="number" 
+                id="amount"
+                [(ngModel)]="quickCredit.amount"
+                name="amount"
+                [min]="10000" 
+                [max]="globalStats.eligibleAmount"
+                step="5000"
+                class="amount-input"
+                placeholder="Entrez le montant souhaité">
+              <span class="currency-suffix">FCFA</span>
+            </div>
+            <div class="amount-slider-container">
+              <input 
+                type="range" 
+                [(ngModel)]="quickCredit.amount"
+                name="amountSlider"
+                [min]="10000" 
+                [max]="globalStats.eligibleAmount"
+                [step]="5000"
+                class="amount-slider">
+              <div class="slider-labels">
+                <span>{{ formatCurrency(10000) }}</span>
+                <span>{{ formatCurrency(globalStats.eligibleAmount) }}</span>
+              </div>
+            </div>
+            <div class="amount-suggestions">
+              <span>Montants suggérés:</span>
+              <div class="suggestion-buttons">
+                <button type="button" 
+                        class="suggestion-btn" 
+                        (click)="setQuickCreditAmount(0.25)">
+                  25%
+                </button>
+                <button type="button" 
+                        class="suggestion-btn" 
+                        (click)="setQuickCreditAmount(0.50)">
+                  50%
+                </button>
+                <button type="button" 
+                        class="suggestion-btn" 
+                        (click)="setQuickCreditAmount(0.75)">
+                  75%
+                </button>
+                <button type="button" 
+                        class="suggestion-btn" 
+                        (click)="setQuickCreditAmount(1.0)">
+                  Max
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="frequency">Fréquence de remboursement</label>
+            <select 
+              id="frequency" 
+              [(ngModel)]="quickCredit.frequency" 
+              name="frequency"
+              required>
+              <option value="mensuel">Mensuel</option>
+              <option value="bimensuel">Bi-mensuel</option>
+              <option value="fin_du_mois">Fin du mois</option>
+            </select>
+          </div>
+          
+          <!-- NOUVEAU: Avertissements conditionnels -->
+          <div class="credit-warnings" *ngIf="quickCredit.amount > 0">
+            <div class="warning-item" *ngIf="shouldShowHighDebtWarning()">
+              <i class="material-icons">error</i>
+              <span>⚠️ Ce crédit porterait votre ratio d'endettement au-dessus de 70%</span>
+            </div>
+            <div class="warning-item" *ngIf="shouldShowMultipleCreditInfo()">
+              <i class="material-icons">info</i>
+              <span>ℹ️ Vous aurez {{ getNewCreditCountAfterApplication() }}/2 crédits actifs après cette demande</span>
+            </div>
+          </div>
+          
+          <!-- Récapitulatif amélioré -->
+          <div class="credit-summary">
+            <h4>
+              <i class="material-icons">receipt</i>
+              Récapitulatif
+            </h4>
+            <div class="summary-item">
+              <span>Montant demandé:</span>
+              <span class="summary-value">{{ formatCurrency(quickCredit.amount) }}</span>
+            </div>
+            <div class="summary-item">
+              <span>Frais de dossier (1.5%):</span>
+              <span class="summary-value">{{ formatCurrency(quickCredit.amount * 0.015) }}</span>
+            </div>
+            <div class="summary-item total">
+              <span>Total à rembourser:</span>
+              <span class="summary-value">{{ formatCurrency(quickCredit.amount + (quickCredit.amount * 0.015)) }}</span>
+            </div>
+            <div class="summary-note">
+              <i class="material-icons">account_balance_wallet</i>
+              <span>Le montant sera crédité immédiatement sur votre compte</span>
+            </div>
+            <div class="summary-note debt-note">
+              <i class="material-icons">trending_up</i>
+              <span>Ce montant sera automatiquement ajouté à vos dettes enregistrées</span>
+            </div>
+            <div class="summary-note restriction-note">
+              <i class="material-icons">schedule</i>
+              <span>Prochaine demande possible dans 30 jours après approbation</span>
+            </div>
+          </div>
+          
+          <button 
+            type="submit" 
+            class="btn-primary submit-btn"
+            [class.loading]="isSubmitting"
+            [disabled]="isSubmitting || quickCredit.amount < 10000 || quickCredit.amount > globalStats.eligibleAmount">
+            <i class="material-icons" *ngIf="!isSubmitting">send</i>
+            <i class="material-icons spinning" *ngIf="isSubmitting">sync</i>
+            {{ isSubmitting ? 'Traitement en cours...' : 'Valider et enregistrer le crédit' }}
+          </button>
+          
+          <!-- NOUVEAU: Notice importante -->
+          <div class="important-notice">
+            <h5>
+              <i class="material-icons">info</i>
+              Important à savoir
+            </h5>
+            <ul>
+              <li>✅ Ce crédit sera automatiquement enregistré dans vos dettes</li>
+              <li>📊 Votre score de crédit sera recalculé avec les nouvelles dettes</li>
+              <li>🔒 Des restrictions s'appliqueront pour les prochaines demandes</li>
+              <li>⏰ Délai minimum de 30 jours avant la prochaine demande</li>
+              <li>📈 Maximum 2 crédits actifs simultanément</li>
+            </ul>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- NOUVEAU: Modal des crédits actifs détaillé -->
+<div class="active-credits-modal" *ngIf="showActiveCreditsModal">
+  <div class="modal-backdrop" (click)="closeActiveCreditsModal()"></div>
+  <div class="modal-content large">
+    <div class="modal-header">
+      <h2>
+        <i class="material-icons">account_balance</i>
+        Tous mes Crédits Enregistrés
+      </h2>
+      <button class="close-btn" (click)="closeActiveCreditsModal()">
+        <i class="material-icons">close</i>
+      </button>
+    </div>
+    
+    <div class="modal-body">
+      <div class="credits-summary">
+        <div class="summary-stats">
+          <div class="stat">
+            <span class="stat-value">{{ activeCreditsFromService.length }}</span>
+            <span class="stat-label">Total crédits</span>
+          </div>
+          <div class="stat">
+            <span class="stat-value">{{ getActiveCreditCount() }}</span>
+            <span class="stat-label">Actifs</span>
+          </div>
+          <div class="stat">
+            <span class="stat-value">{{ formatCurrency(getTotalActiveDebt()) }}</span>
+            <span class="stat-label">Dettes restantes</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="credits-list">
+        <div class="credit-item-detailed" *ngFor="let credit of activeCreditsFromService" [attr.data-status]="credit.status">
+          <div class="credit-main-info">
+            <div class="credit-header-detailed">
+              <h3>{{ getCreditTypeName(credit.type) }}</h3>
+              <span class="credit-status-badge-detailed" [ngClass]="'status-' + credit.status">
+                {{ getCreditStatusText(credit.status) }}
+              </span>
+            </div>
+            
+            <div class="credit-amounts-detailed">
+              <div class="amount-grid">
+                <div class="amount-item">
+                  <span class="amount-label">Emprunté:</span>
+                  <span class="amount-value">{{ formatCurrency(credit.amount) }}</span>
+                </div>
+                <div class="amount-item">
+                  <span class="amount-label">Total à rembourser:</span>
+                  <span class="amount-value">{{ formatCurrency(credit.totalAmount) }}</span>
+                </div>
+                <div class="amount-item" *ngIf="isCreditActive(credit)">
+                  <span class="amount-label">Restant:</span>
+                  <span class="amount-value remaining">{{ formatCurrency(credit.remainingAmount) }}</span>
+                </div>
+                <div class="amount-item">
+                  <span class="amount-label">Taux:</span>
+                  <span class="amount-value">{{ formatInterestRate(credit.interestRate) }}%</span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="credit-dates-detailed">
+              <div class="date-item">
+                <i class="material-icons">event_available</i>
+                <span>Accordé: {{ formatDateWithTime(credit.approvedDate) }}</span>
+              </div>
+              <div class="date-item">
+                <i class="material-icons">event_busy</i>
+                <span>Échéance: {{ formatDate(credit.dueDate) }}</span>
+              </div>
+            </div>
+            
+            <div class="credit-progress-detailed" *ngIf="isCreditActive(credit)">
+              <div class="progress-info">
+                <span>Progression du remboursement</span>
+                <span>{{ getCreditReimbursementPercentage(credit).toFixed(1) }}%</span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill" 
+                     [style.width.%]="getCreditReimbursementPercentage(credit)">
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="credit-actions-detailed" *ngIf="isCreditActive(credit)">
+            <button class="btn-primary" (click)="makePayment(credit.id)">
+              <i class="material-icons">payment</i>
+              Effectuer un paiement
+            </button>
+            <button class="btn-secondary" (click)="simulatePayment(credit.id)">
+              <i class="material-icons">calculate</i>
+              Simuler impact
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="no-credits" *ngIf="activeCreditsFromService.length === 0">
+        <i class="material-icons">credit_card_off</i>
+        <h3>Aucun crédit enregistré</h3>
+        <p>Vous n'avez pas encore de crédit enregistré dans le système</p>
+        <button class="btn-primary" (click)="closeActiveCreditsModal(); openQuickCreditModal()" [disabled]="!canApplyForCredit">
+          <i class="material-icons">add</i>
+          Demander un crédit
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Styles CSS pour les nouvelles fonctionnalités -->
+<style>
+/* Styles pour les restrictions de crédit */
+.credit-eligibility-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  position: relative;
+}
+
+.credit-eligibility-badge.eligible {
+  background: rgba(76, 175, 80, 0.1);
+  color: #2e7d32;
+  border: 1px solid rgba(76, 175, 80, 0.3);
+}
+
+.credit-eligibility-badge.blocked {
+  background: rgba(244, 67, 54, 0.1);
+  color: #c62828;
+  border: 1px solid rgba(244, 67, 54, 0.3);
+}
+
+.restriction-tooltip {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: #333;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  z-index: 1000;
+  margin-top: 4px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+/* Styles pour les cartes de dettes */
+.debt-card {
+  border-left: 4px solid #FF9800;
+}
+
+.debt-card.high-debt {
+  border-left-color: #F44336;
+  background: linear-gradient(135deg, rgba(244, 67, 54, 0.05), transparent);
+}
+
+.debt-amount {
+  color: #FF9800;
+}
+
+.debt-card.high-debt .debt-amount {
+  color: #F44336;
+}
+
+.debt-progress-mini {
+  margin-top: 8px;
+}
+
+.debt-progress-mini .progress-bar {
+  height: 4px;
+  background: rgba(0,0,0,0.1);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.debt-progress-mini .progress-fill {
+  height: 100%;
+  background: #FF9800;
+  transition: all 0.3s ease;
+}
+
+.debt-progress-mini .progress-fill.warning {
+  background: #FF9800;
+}
+
+.debt-progress-mini .progress-fill.danger {
+  background: #F44336;
+}
+
+/* Styles pour la section des restrictions */
+.credit-restrictions-section {
+  margin: 2rem 0;
+  padding: 1.5rem;
+  background: #f8f9fa;
+  border-radius: 12px;
+}
+
+.restrictions-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.restriction-card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+}
+
+.restriction-card.blocked {
+  border-color: #f44336;
+  background: linear-gradient(135deg, rgba(244, 67, 54, 0.05), white);
+}
+
+.restriction-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 1rem;
+}
+
+.restriction-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.restriction-value.warning {
+  color: #FF9800;
+  font-weight: 600;
+}
+
+.restriction-value.danger {
+  color: #F44336;
+  font-weight: 600;
+}
+
+.improvement-suggestions {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+}
+
+.suggestions-list {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0 0 0;
+}
+
+.suggestions-list li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 0.9rem;
+}
+
+.suggestions-list li:last-child {
+  border-bottom: none;
+}
+
+/* Styles pour la gestion des crédits */
+.credit-management-section {
+  margin: 2rem 0;
+}
+
+.credits-grid .credit-card.enhanced {
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.credits-grid .credit-card.enhanced:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  transform: translateY(-2px);
+}
+
+.credit-card.enhanced[data-status="paid"] {
+  opacity: 0.7;
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.05), white);
+}
+
+.credit-card.enhanced[data-status="overdue"] {
+  border-color: #f44336;
+  background: linear-gradient(135deg, rgba(244, 67, 54, 0.05), white);
+}
+
+.debt-impact-indicator {
+  margin-top: 1rem;
+  padding: 8px 12px;
+  background: rgba(255, 152, 0, 0.1);
+  border-radius: 6px;
+  font-size: 0.85rem;
+  color: #e65100;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Styles pour le modal de crédit amélioré */
+.quick-credit-modal.enhanced .modal-content {
+  max-width: 600px;
+}
+
+.debt-impact-preview {
+  background: rgba(255, 152, 0, 0.1);
+  padding: 1rem;
+  border-radius: 8px;
+  margin: 1rem 0;
+}
+
+.impact-details {
+  margin-top: 0.5rem;
+}
+
+.impact-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0;
+  font-size: 0.9rem;
+}
+
+.impact-row.total {
+  border-top: 1px solid #ddd;
+  padding-top: 8px;
+  margin-top: 8px;
+  font-weight: 600;
+}
+
+.impact-row.ratio {
+  color: #666;
+  font-size: 0.85rem;
+}
+
+.debt-ratio.warning {
+  color: #FF9800;
+  font-weight: 600;
+}
+
+.debt-ratio.danger {
+  color: #F44336;
+  font-weight: 600;
+}
+
+.credit-warnings {
+  margin: 1rem 0;
+}
+
+.warning-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(255, 152, 0, 0.1);
+  border-radius: 4px;
+  margin-bottom: 8px;
+  font-size: 0.85rem;
+  color: #e65100;
+}
+
+.important-notice {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: rgba(33, 150, 243, 0.1);
+  border-radius: 8px;
+  border: 1px solid rgba(33, 150, 243, 0.2);
+}
+
+.important-notice h5 {
+  margin: 0 0 0.5rem 0;
+  color: #1976d2;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.important-notice ul {
+  margin: 0;
+  padding-left: 1rem;
+}
+
+.important-notice li {
+  margin-bottom: 4px;
+  font-size: 0.85rem;
+  color: #424242;
+}
+
+/* Styles pour le modal des crédits actifs */
+.active-credits-modal .modal-content.large {
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.credits-summary {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.summary-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+.stat {
+  text-align: center;
+}
+
+.stat-value {
+  display: block;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #2e7d32;
+}
+
+.stat-label {
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.credit-item-detailed {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.credit-item-detailed[data-status="paid"] {
+  opacity: 0.7;
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.05), white);
+}
+
+.credit-header-detailed {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.amount-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.amount-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+}
+
+.amount-value.remaining {
+  color: #f44336;
+  font-weight: 600;
+}
+
+.credit-dates-detailed {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.date-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.credit-progress-detailed {
+  margin: 1rem 0;
+}
+
+.progress-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+}
+
+.credit-actions-detailed {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #f0f0f0;
+}
+
+.no-credits {
+  text-align: center;
+  padding: 2rem;
+  color: #666;
+}
+
+.no-credits i {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .restrictions-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .amount-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .credit-dates-detailed {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .credit-actions-detailed {
+    flex-direction: column;
+  }
+  
+  .summary-stats {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.credit-card.enhanced {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.restriction-card {
+  animation: fadeIn 0.4s ease-out;
+}
+
+.credit-item-detailed {
+  animation: fadeIn 0.2s ease-out;
+}
+
+/* Styles pour les indicateurs temps réel */
+.realtime-indicator {
+  color: #4CAF50;
+  font-size: 0.8rem;
+}
+
+.score-change {
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-left: 8px;
+}
+
+.score-change.positive {
+  color: #4CAF50;
+}
+
+.score-change.negative {
+  color: #f44336;
+}
+
+.rotating {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+</style>

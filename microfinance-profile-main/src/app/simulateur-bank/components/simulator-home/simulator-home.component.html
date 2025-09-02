@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bamboo Credit - Simulateur de Crédit</title>
+
+    
+    <!-- Lucide Icons -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/umd/lucide.min.js"></script>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <div class="logo-icon"></div>
+                    <span class="logo-text">Bamboo Credit</span>
+                </div>
+                <nav class="nav">
+                    <a href="#simulateurs">Simulateurs</a>
+                    <a href="#comparateur">Comparateur</a>
+                    <a href="#guides">Guides</a>
+                    <a href="#contact">Contact</a>
+                </nav>
+                <button class="btn-login">Mon espace</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content slide-up">
+                <h1>
+                    Trouvez le <span class="highlight">meilleur crédit</span> en 3 minutes
+                </h1>
+                <p class="subtitle">
+                    Comparez gratuitement les offres de crédit de toutes les banques du Gabon. 
+                    Simulez, comparez et choisissez la meilleure solution pour votre projet.
+                </p>
+                <div class="cta-buttons">
+                    <button onclick="scrollToSimulators()" class="btn-primary">
+                        Commencer ma simulation
+                    </button>
+                    <button class="btn-secondary">
+                        Voir les taux du jour
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Taux du jour -->
+    <section class="rates-section">
+        <div class="container">
+            <div class="rates-content">
+                <h3>Taux du jour</h3>
+                <div class="rates-list">
+                    <div class="rate-item">
+                        <div class="rate-label">Crédit Conso</div>
+                        <div class="rate-value">à partir de 8,5%</div>
+                    </div>
+                    <div class="rate-item">
+                        <div class="rate-label">Crédit Auto</div>
+                        <div class="rate-value rate-auto">à partir de 6,9%</div>
+                    </div>
+                    <div class="rate-item">
+                        <div class="rate-label">Crédit Immo</div>
+                        <div class="rate-value rate-immo">à partir de 5,2%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Simulateurs Section -->
+    <section id="simulateurs" class="simulators-section">
+        <div class="container">
+            <div class="section-header fade-in">
+                <h2>Nos outils de simulation</h2>
+                <p>Choisissez l'outil adapté à vos besoins</p>
+            </div>
+
+            <div class="simulators-grid">
+                <!-- Simulateur Capacité -->
+                <div class="simulator-card capacity hover-scale" onclick="navigateToCapacitySimulator()">
+                    <div class="card-header">
+                        <div class="icon-wrapper">
+                            <i data-lucide="trending-up"></i>
+                        </div>
+                        <i data-lucide="arrow-right" class="arrow-icon"></i>
+                    </div>
+                    
+                    <h3>Capacité d'emprunt</h3>
+                    <p class="card-description">Découvrez combien vous pouvez emprunter selon vos revenus</p>
+                    
+                    <div class="features-list">
+                        <div class="feature-item">
+                            <i data-lucide="check-circle" class="check-icon"></i>
+                            <span>Calcul instantané</span>
+                        </div>
+                        <div class="feature-item">
+                            <i data-lucide="check-circle" class="check-icon"></i>
+                            <span>Graphique d'évolution</span>
+                        </div>
+                        <div class="feature-item">
+                            <i data-lucide="check-circle" class="check-icon"></i>
+                            <span>Recommandations personnalisées</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Simulateur Mensualités -->
+                <div class="simulator-card payment hover-scale" onclick="navigateToPaymentSimulator()">
+                    <div class="card-header">
+                        <div class="icon-wrapper">
+                            <i data-lucide="calculator"></i>
+                        </div>
+                        <i data-lucide="arrow-right" class="arrow-icon"></i>
+                    </div>
+                    
+                    <h3>Calcul de mensualités</h3>
+                    <p class="card-description">Estimez vos mensualités selon le montant et la durée</p>
+                    
+                    <div class="features-list">
+                        <div class="feature-item">
+                            <i data-lucide="check-circle" class="check-icon"></i>
+                            <span>Tableau d'amortissement</span>
+                        </div>
+                        <div class="feature-item">
+                            <i data-lucide="check-circle" class="check-icon"></i>
+                            <span>Visualisation graphique</span>
+                        </div>
+                        <div class="feature-item">
+                            <i data-lucide="check-circle" class="check-icon"></i>
+                            <span>Optimisation durée</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Simulateur Taux -->
+                <div class="simulator-card rate hover-scale" onclick="navigateToRateSimulator()">
+                    <div class="card-header">
+                        <div class="icon-wrapper">
+                            <i data-lucide="dollar-sign"></i>
+                        </div>
+                        <i data-lucide="arrow-right" class="arrow-icon"></i>
+                    </div>
+                    
+                    <h3>Taux personnalisé</h3>
+                    <p class="card-description">Obtenez un taux adapté à votre profil</p>
+                    
+                    <div class="features-list">
+                        <div class="feature-item">
+                            <i data-lucide="check-circle" class="check-icon"></i>
+                            <span>Analyse du profil</span>
+                        </div>
+                        <div class="feature-item">
+                            <i data-lucide="check-circle" class="check-icon"></i>
+                            <span>Taux en temps réel</span>
+                        </div>
+                        <div class="feature-item">
+                            <i data-lucide="check-circle" class="check-icon"></i>
+                            <span>Comparaison banques</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats-section">
+        <div class="container">
+            <div class="stats-grid">
+                <div class="stat-item fade-in">
+                    <div class="stat-icon">
+                        <i data-lucide="users"></i>
+                    </div>
+                    <div class="stat-number">50K+</div>
+                    <div class="stat-label">Clients satisfaits</div>
+                </div>
+                <div class="stat-item fade-in">
+                    <div class="stat-icon">
+                        <i data-lucide="trending-up"></i>
+                    </div>
+                    <div class="stat-number">2.5M€</div>
+                    <div class="stat-label">Crédits financés</div>
+                </div>
+                <div class="stat-item fade-in">
+                    <div class="stat-icon">
+                        <i data-lucide="star"></i>
+                    </div>
+                    <div class="stat-number">4.8/5</div>
+                    <div class="stat-label">Note client</div>
+                </div>
+                <div class="stat-item fade-in">
+                    <div class="stat-icon">
+                        <i data-lucide="clock"></i>
+                    </div>
+                    <div class="stat-number">24h</div>
+                    <div class="stat-label">Réponse moyenne</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Avantages -->
+    <section class="advantages-section">
+        <div class="container">
+            <div class="section-header">
+                <h2>Pourquoi choisir Bamboo ?</h2>
+            </div>
+
+            <div class="advantages-grid">
+                <div class="advantage-item fade-in">
+                    <div class="advantage-icon">
+                        <i data-lucide="shield"></i>
+                    </div>
+                    <h3>Sécurisé et confidentiel</h3>
+                    <p>Vos données sont protégées et ne sont jamais partagées</p>
+                </div>
+                <div class="advantage-item fade-in">
+                    <div class="advantage-icon">
+                        <i data-lucide="clock"></i>
+                    </div>
+                    <h3>Réponse en 24h</h3>
+                    <p>Obtenez une réponse rapide de nos partenaires bancaires</p>
+                </div>
+                <div class="advantage-item fade-in">
+                    <div class="advantage-icon">
+                        <i data-lucide="check-circle"></i>
+                    </div>
+                    <h3>Sans engagement</h3>
+                    <p>Simulez gratuitement sans obligation d'achat</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="container">
+            <h2>Prêt à trouver votre crédit idéal ?</h2>
+            <p>Lancez votre simulation maintenant et comparez les meilleures offres</p>
+            <div class="cta-buttons">
+                <button onclick="navigateToCapacitySimulator()" class="btn-white">
+                    Simuler ma capacité d'emprunt
+                </button>
+                <button onclick="navigateToPaymentSimulator()" class="btn-outline">
+                    Calculer mes mensualités
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div>
+                    <div class="footer-logo">
+                        <div class="logo-icon"></div>
+                        <span class="logo-text">Bamboo Credit</span>
+                    </div>
+                    <p class="footer-description">La plateforme de référence pour vos projets de financement au Gabon.</p>
+                </div>
+                
+                <div>
+                    <h3>Simulateurs</h3>
+                    <ul>
+                        <li><a href="#" onclick="navigateToCapacitySimulator()">Capacité d'emprunt</a></li>
+                        <li><a href="#" onclick="navigateToPaymentSimulator()">Calcul mensualités</a></li>
+                        <li><a href="#" onclick="navigateToRateSimulator()">Taux personnalisé</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h3>Services</h3>
+                    <ul>
+                        <li><a href="#">Comparateur banques</a></li>
+                        <li><a href="#">Guides crédit</a></li>
+                        <li><a href="#">Actualités taux</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h3>Contact</h3>
+                    <ul>
+                        <li>+241 01 23 45 67</li>
+                        <li>contact&#64;bamboo.ga</li>
+                        <li>Libreville, Gabon</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2024 Bamboo Credit. Tous droits réservés.</p>
+            </div>
+        </div>
+    </footer>
+
+    <div class="simulator-home-links">
+      <ul>
+        <li>
+          <a routerLink="/payment-calculator" class="btn btn-primary">
+            Calculateur de mensualités
+          </a>
+        </li>
+        <li>
+          <a routerLink="/borrowing-capacity" class="btn btn-primary">
+            Simulateur de capacité d'emprunt
+          </a>
+        </li>
+        <li>
+          <a routerLink="/comparateur" class="btn btn-primary">
+            Comparateur multi-banques
+          </a>
+        </li>
+      </ul>
+    </div>
+
+    <script>
+        // Initialiser Lucide icons
+        lucide.createIcons();
+
+        // Fonctions de navigation
+        function scrollToSimulators() {
+            document.getElementById('simulateurs').scrollIntoView({ 
+                behavior: 'smooth' 
+            });
+        }
+
+        function navigateToCapacitySimulator() {
+            console.log('Navigation vers simulateur de capacité');
+            // window.location.href = '/borrowing-capacity';
+        }
+
+        function navigateToPaymentSimulator() {
+            console.log('Navigation vers simulateur de mensualités');
+            // window.location.href = '/payment-calculator';
+        }
+
+        function navigateToRateSimulator() {
+            console.log('Navigation vers simulateur de taux');
+            // window.location.href = '/simulators/rate';
+        }
+
+        // Animation des éléments au scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const fadeElements = document.querySelectorAll('.fade-in');
+            fadeElements.forEach(el => {
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(20px)';
+                el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+                observer.observe(el);
+            });
+        });
+    </script>
+</body>
+</html>

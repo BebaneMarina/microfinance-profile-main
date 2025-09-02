@@ -1,0 +1,91 @@
+<div class="sidebar" [class.collapsed]="isCollapsed" [class.mobile-open]="mobileMenuOpen">
+  <!-- Logo Section -->
+  <div class="sidebar-header">
+    <div class="logo-container">
+      <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+      <img src="assets/images/credit-types/bamboo.jpg" alt="Bamboo Logo" class="logo-image" />
+      <div class="logo-text" *ngIf="!isCollapsed">
+      </div>
+    </div>
+    <button class="collapse-btn" (click)="toggleSidebarState()" *ngIf="!mobileMenuOpen">
+      <i class="material-icons">{{ isCollapsed ? 'chevron_right' : 'chevron_left' }}</i>
+    </button>
+  </div>
+
+  <!-- User Profile Section -->
+  <div class="user-section" *ngIf="!isCollapsed">
+    <div class="user-profile-card">
+      <div class="profile-avatar" (click)="triggerFileInput()">
+        <img *ngIf="client.ProfileImage || client.profileImage" 
+             [src]="client.ProfileImage || client.profileImage" 
+             alt="Profile image" />
+        <div *ngIf="!client.ProfileImage && !client.profileImage" class="avatar-placeholder">
+          <i class="material-icons">person</i>
+        </div>
+        <div class="avatar-edit-overlay">
+          <i class="material-icons">camera_alt</i>
+        </div>
+      </div>
+      <div class="profile-info">
+        <h4 class="profile-name">{{ client.name || 'BEBANE MOUKOUMBI Marina Brunelle' }}</h4>
+        <p class="profile-account">ID: {{ client.clientId || 'BAMBOO-TB-2025' }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation Menu -->
+  <nav class="sidebar-nav">
+    <ul class="nav-list">
+      <li *ngFor="let item of getVisibleNavigationItems(); trackBy: trackByNavigationId" 
+          class="nav-item" 
+          [class.active]="item.isActive">
+        <a (click)="onNavigationClick(item)" 
+           class="nav-link"
+           [routerLink]="item.route"
+           routerLinkActive="active"
+           [class.has-submenu]="item.submenu && item.submenu.length > 0">
+          <span class="nav-icon">
+            <i class="material-icons">{{ item.icon }}</i>
+          </span>
+          <span class="nav-content" *ngIf="!isCollapsed">
+            <span class="nav-label">{{ item.label }}</span>
+            <span class="nav-badge" *ngIf="item.badge && item.badge > 0">
+              {{ item.badge }}
+            </span>
+          </span>
+          <i *ngIf="item.submenu && item.submenu.length > 0 && !isCollapsed" 
+             class="material-icons submenu-arrow">
+            expand_more
+          </i>
+        </a>
+        
+        <!-- Submenu -->
+        <ul *ngIf="item.submenu && item.submenu.length > 0 && !isCollapsed && item.isActive" 
+            class="submenu">
+          <li *ngFor="let subItem of item.submenu" 
+              class="submenu-item" 
+              [class.active]="subItem.isActive">
+            <a (click)="onNavigationClick(subItem)" 
+               class="submenu-link"
+               [routerLink]="subItem.route"
+               routerLinkActive="active">
+              <i class="material-icons submenu-icon">{{ subItem.icon }}</i>
+              <span class="submenu-label">{{ subItem.label }}</span>
+            </a>
+          </li>
+        </ul>
+      </li>
+    </ul>
+  </nav>
+
+  <!-- Hidden file input for profile image -->
+  <input #fileInput type="file" 
+         (change)="onFileSelected($event)" 
+         accept="image/*" 
+         style="display: none;">
+</div>
+
+<!-- Mobile Overlay -->
+<div class="mobile-overlay" 
+     *ngIf="mobileMenuOpen" 
+     (click)="closeMobileMenu()"></div>

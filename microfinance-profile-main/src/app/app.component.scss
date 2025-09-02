@@ -1,0 +1,25 @@
+.app-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.main-container {
+  display: flex;
+  flex: 1;
+  overflow: hidden; // évite scrolls inutiles
+}
+
+app-sidebar {
+  flex-shrink: 0;
+  height: 100%;
+}
+
+.main-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  background-color: #f9fbfa; // ou une couleur neutre claire
+  max-height: calc(100vh - 64px); // si header fait 64px
+}

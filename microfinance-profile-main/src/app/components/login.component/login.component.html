@@ -1,0 +1,489 @@
+<div class="login-page">
+  <!-- Header avec informations système -->
+  <div class="system-header">
+    <div class="system-info">
+      <div class="system-time">
+        <i class="material-icons">schedule</i>
+        <span>{{ currentDate }}</span>
+      </div>
+      <div class="system-name">
+        <i class="material-icons">account_balance</i>
+        <span>{{ currentUser }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="main-container">
+    <!-- Section Connexion (Gauche) -->
+    <div class="login-section">
+      <div class="login-content">
+        <!-- Logo et titre principal -->
+        <div class="login-header">
+          <div class="logo-container">
+            <div class="logo-circle">
+              <i class="material-icons">account_balance_wallet</i>
+            </div>
+          </div>
+          <h1>Connexion</h1>
+          <p class="subtitle">Accédez à votre espace personnel</p>
+        </div>
+
+        <!-- Formulaire de connexion -->
+        <div class="login-card">
+          <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
+            <!-- Champ Email -->
+            <div class="form-group">
+              <label for="email" class="form-label">
+                <i class="material-icons">email</i>
+                Adresse email
+              </label>
+              <input
+                type="email"
+                id="email"
+                formControlName="email"
+                class="form-input"
+                [class.error]="hasError('email', 'required') || hasError('email', 'email')"
+                placeholder="votre.email@exemple.com"
+              />
+              <div class="error-messages">
+                <div class="error-message" *ngIf="hasError('email', 'required')">
+                  <i class="material-icons">error_outline</i>
+                  L'email est requis
+                </div>
+                <div class="error-message" *ngIf="hasError('email', 'email')">
+                  <i class="material-icons">error_outline</i>
+                  Format d'email invalide
+                </div>
+              </div>
+            </div>
+
+            <!-- Champ Mot de passe -->
+            <div class="form-group">
+              <label for="password" class="form-label">
+                <i class="material-icons">lock</i>
+                Mot de passe
+              </label>
+              <div class="password-container">
+                <input
+                  [type]="showPassword ? 'text' : 'password'"
+                  id="password"
+                  formControlName="password"
+                  class="form-input"
+                  [class.error]="hasError('password', 'required') || hasError('password', 'minlength')"
+                  placeholder="••••••••"
+                />
+                <button 
+                  type="button" 
+                  class="password-toggle" 
+                  (click)="togglePasswordVisibility()"
+                >
+                  <i class="material-icons">
+                    {{ showPassword ? 'visibility_off' : 'visibility' }}
+                  </i>
+                </button>
+              </div>
+              <div class="error-messages">
+                <div class="error-message" *ngIf="hasError('password', 'required')">
+                  <i class="material-icons">error_outline</i>
+                  Le mot de passe est requis
+                </div>
+                <div class="error-message" *ngIf="hasError('password', 'minlength')">
+                  <i class="material-icons">error_outline</i>
+                  Minimum 6 caractères
+                </div>
+              </div>
+            </div>
+
+            <!-- Options supplémentaires -->
+            <div class="form-options">
+              <label class="remember-checkbox">
+                <input type="checkbox" formControlName="rememberMe">
+                <span class="checkmark"></span>
+                <span class="checkbox-text">Se souvenir de moi</span>
+              </label>
+              <a href="#" class="forgot-password">Mot de passe oublié ?</a>
+            </div>
+
+            <!-- Message d'erreur global -->
+            <div class="global-error" *ngIf="errorMessage">
+              <i class="material-icons">warning</i>
+              <span>{{ errorMessage }}</span>
+            </div>
+
+            <!-- Bouton de connexion -->
+            <button 
+              type="submit" 
+              [disabled]="loginForm.invalid || isLoading" 
+              class="login-btn"
+            >
+              <span *ngIf="!isLoading" class="btn-content">
+                <i class="material-icons">login</i>
+                Se connecter
+              </span>
+              <span *ngIf="isLoading" class="btn-loading">
+                <div class="spinner"></div>
+                Connexion en cours...
+              </span>
+            </button>
+          </form>
+
+          <!-- SECTION LIENS RAPIDES VERS SIMULATEUR ET COMPARATEUR -->
+          <div class="quick-access-section">
+            <h3 class="section-title">
+              <i class="material-icons">flash_on</i>
+              Accès Rapide
+            </h3>
+            <div class="quick-access-buttons">
+              <button 
+                type="button" 
+                class="quick-access-btn simulator-btn"
+                (click)="navigateToSimulator()"
+              >
+                <div class="btn-icon">
+                  <i class="material-icons">calculate</i>
+                </div>
+                <div class="btn-content">
+                  <h4>Simulateur de Crédit</h4>
+                  <p>Estimation personnalisée en 2 minutes</p>
+                </div>
+                <div class="btn-action">
+                  <i class="material-icons">arrow_forward</i>
+                </div>
+              </button>
+
+              <button 
+                type="button" 
+                class="quick-access-btn comparator-btn"
+                (click)="navigateToComparator()"
+              >
+                <div class="btn-icon">
+                  <i class="material-icons">compare_arrows</i>
+                </div>
+                <div class="btn-content">
+                  <h4>Comparateur Multi-Banques</h4>
+                  <p>Comparez les offres de 7 banques</p>
+                </div>
+                <div class="btn-action">
+                  <i class="material-icons">arrow_forward</i>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <!-- Actions supplémentaires -->
+          <div class="additional-actions">
+            <div class="action-divider">
+              <span>ou</span>
+            </div>
+            <div class="action-buttons">
+              <button 
+                type="button" 
+                class="action-btn demo-btn"
+                (click)="startDemoMode()"
+              >
+                <i class="material-icons">play_circle_outline</i>
+                Mode Démonstration
+              </button>
+              <button 
+                type="button" 
+                class="action-btn register-btn"
+                (click)="navigateToRegister()"
+              >
+                <i class="material-icons">person_add</i>
+                Créer un compte
+              </button>
+            </div>
+          </div>
+
+          <!-- Boutons de démonstration -->
+          <div class="demo-section" *ngIf="currentDate.includes('localhost')">
+            <div class="demo-title">
+              <i class="material-icons">settings</i>
+              Comptes de démonstration
+            </div>
+            <div class="demo-buttons">
+              <button 
+                type="button" 
+                (click)="fillDemoCredentials('theobawana')" 
+                class="demo-btn theo"
+              >
+                <i class="material-icons">code</i>
+                Theo
+              </button>
+              <button 
+                type="button" 
+                (click)="fillDemoCredentials('admin')" 
+                class="demo-btn admin"
+              >
+                <i class="material-icons">admin_panel_settings</i>
+                Admin
+              </button>
+              <button 
+                type="button" 
+                (click)="fillDemoCredentials('agent')" 
+                class="demo-btn agent"
+              >
+                <i class="material-icons">support_agent</i>
+                Agent
+              </button>
+              <button 
+                type="button" 
+                (click)="fillDemoCredentials('client')" 
+                class="demo-btn client"
+              >
+                <i class="material-icons">person</i>
+                Client
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section Simulateur (Droite) -->
+    <div class="simulator-section">
+      <div class="simulator-content">
+        <!-- Header simulateur -->
+        <div class="simulator-header">
+          <div class="simulator-icon">
+            <i class="material-icons">analytics</i>
+          </div>
+          <h2>Outils de Simulation</h2>
+          <p class="simulator-subtitle">Découvrez vos options de financement avant de vous connecter</p>
+        </div>
+
+        <!-- SECTION OUTILS PRINCIPAUX -->
+        <div class="main-tools">
+          <div class="tool-card primary-tool">
+            <div class="tool-header">
+              <div class="tool-icon simulator">
+                <i class="material-icons">calculate</i>
+              </div>
+              <h3>Simulateur de Crédit</h3>
+            </div>
+            <div class="tool-content">
+              <ul class="tool-features">
+                <li><i class="material-icons">check_circle</i> Calcul instantané</li>
+                <li><i class="material-icons">check_circle</i> Tous types de crédits</li>
+                <li><i class="material-icons">check_circle</i> Sans engagement</li>
+              </ul>
+              <button class="tool-btn" (click)="navigateToSimulator()">
+                <span>Démarrer la simulation</span>
+                <i class="material-icons">play_arrow</i>
+              </button>
+            </div>
+          </div>
+
+          <div class="tool-card primary-tool">
+            <div class="tool-header">
+              <div class="tool-icon comparator">
+                <i class="material-icons">compare_arrows</i>
+              </div>
+              <h3>Comparateur Multi-Banques</h3>
+            </div>
+            <div class="tool-content">
+              <ul class="tool-features">
+                <li><i class="material-icons">check_circle</i> 7 banques partenaires</li>
+                <li><i class="material-icons">check_circle</i> Comparaison en temps réel</li>
+                <li><i class="material-icons">check_circle</i> Meilleure offre garantie</li>
+              </ul>
+              <button class="tool-btn" (click)="navigateToComparator()">
+                <span>Comparer les offres</span>
+                <i class="material-icons">trending_up</i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Banques partenaires -->
+        <div class="partner-banks">
+          <h3>Nos Banques Partenaires</h3>
+          <div class="banks-grid">
+            <div 
+              *ngFor="let bank of getBankKeys().slice(0, 6)" 
+              class="bank-card"
+              (click)="navigateToBankSimulator(bank)"
+              [title]="'Simuler un crédit chez ' + getBankInfo(bank).name"
+            >
+              <div class="bank-logo" [style.background]="'linear-gradient(135deg, ' + getBankInfo(bank).color + ', ' + getBankInfo(bank).color + '90)'">
+                <span>{{ getBankInfo(bank).shortName }}</span>
+              </div>
+              <div class="bank-info">
+                <h4>{{ getBankInfo(bank).shortName }}</h4>
+                <p>{{ getBankInfo(bank).processingTime }}</p>
+              </div>
+              <div class="bank-action">
+                <i class="material-icons">arrow_forward</i>
+              </div>
+            </div>
+          </div>
+          <div class="banks-cta">
+            <button class="view-all-banks" (click)="navigateToComparator()">
+              <span>Voir toutes les banques</span>
+              <i class="material-icons">arrow_forward</i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Avantages du système -->
+        <div class="simulator-features">
+          <div class="feature-card">
+            <div class="feature-icon">
+              <i class="material-icons">speed</i>
+            </div>
+            <div class="feature-content">
+              <h4>Réponse Rapide</h4>
+              <p>Résultats en moins de 2 minutes</p>
+            </div>
+          </div>
+          
+          <div class="feature-card">
+            <div class="feature-icon">
+              <i class="material-icons">verified</i>
+            </div>
+            <div class="feature-content">
+              <h4>Sans Engagement</h4>
+              <p>Simulation gratuite et confidentielle</p>
+            </div>
+          </div>
+          
+          <div class="feature-card">
+            <div class="feature-icon">
+              <i class="material-icons">savings</i>
+            </div>
+            <div class="feature-content">
+              <h4>Économies Garanties</h4>
+              <p>Jusqu'à 30% d'économies sur votre crédit</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Statistiques -->
+        <div class="simulator-stats">
+          <div class="stats-grid">
+            <div class="stat-item">
+              <div class="stat-number">7</div>
+              <div class="stat-label">Banques Partenaires</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-number">98%</div>
+              <div class="stat-label">Taux d'Approbation</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-number">24h</div>
+              <div class="stat-label">Délai de Réponse</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-number">30%</div>
+              <div class="stat-label">Économies Moyennes</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Processus de simulation -->
+        <div class="simulation-process">
+          <h3>Comment ça marche ?</h3>
+          <div class="process-steps">
+            <div class="step">
+              <div class="step-number">1</div>
+              <div class="step-content">
+                <h5>Vos Informations</h5>
+                <p>Renseignez vos données financières</p>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-number">2</div>
+              <div class="step-content">
+                <h5>Analyse IA</h5>
+                <p>Calcul automatique de votre score</p>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-number">3</div>
+              <div class="step-content">
+                <h5>Comparaison</h5>
+                <p>Meilleures offres personnalisées</p>
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-number">4</div>
+              <div class="step-content">
+                <h5>Soumission Directe</h5>
+                <p>Candidature en un clic vers les banques</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section aide et support -->
+        <div class="help-section">
+          <div class="help-card">
+            <div class="help-icon">
+              <i class="material-icons">help_outline</i>
+            </div>
+            <div class="help-content">
+              <h4>Besoin d'aide ?</h4>
+              <p>Notre équipe est là pour vous accompagner</p>
+              <button class="help-btn" (click)="navigateToHelp()">
+                <i class="material-icons">support_agent</i>
+                Contacter le support
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Témoignages ou garanties -->
+        <div class="guarantees">
+          <h3>Nos Garanties</h3>
+          <div class="guarantee-items">
+            <div class="guarantee-item">
+              <i class="material-icons">security</i>
+              <span>Données sécurisées</span>
+            </div>
+            <div class="guarantee-item">
+              <i class="material-icons">visibility_off</i>
+              <span>Confidentialité totale</span>
+            </div>
+            <div class="guarantee-item">
+              <i class="material-icons">thumb_up</i>
+              <span>Sans frais cachés</span>
+            </div>
+            <div class="guarantee-item">
+              <i class="material-icons">schedule</i>
+              <span>Service 24h/7j</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="login-footer">
+    <div class="footer-content">
+      <div class="footer-left">
+        <p>&copy; 2025 Bamboo Credit System. Tous droits réservés.</p>
+      </div>
+      <div class="footer-center">
+        <div class="footer-tools">
+          <button class="footer-tool-btn" (click)="navigateToSimulator()">
+            <i class="material-icons">calculate</i>
+            Simulateur
+          </button>
+          <button class="footer-tool-btn" (click)="navigateToComparator()">
+            <i class="material-icons">compare_arrows</i>
+            Comparateur
+          </button>
+        </div>
+      </div>
+      <div class="footer-right">
+        <div class="footer-links">
+          <a href="#" (click)="navigateToHelp()">Aide</a>
+          <a href="#">Conditions d'utilisation</a>
+          <a href="#">Politique de confidentialité</a>
+          <a href="#">Contact</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

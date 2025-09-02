@@ -1,0 +1,75 @@
+// Colors
+$primary-color: #4CAF50;
+$secondary-color: #2196F3;
+$accent-color: #FF9800;
+$warning-color: #FFC107;
+$danger-color: #F44336;
+$success-color: #4CAF50;
+$info-color: #00BCD4;
+
+// Soft colors
+$soft-green: #E8F5E9;
+$soft-green-light: #F1F8E9;
+$soft-green-ultra-light: #F9FBF7;
+$soft-blue: #E3F2FD;
+$soft-orange: #FFF3E0;
+$soft-purple: #F3E5F5;
+$soft-red: #FFEBEE;
+$soft-yellow: #FFFDE7;
+
+// Grays
+$gray-50: #FAFAFA;
+$gray-100: #F5F5F5;
+$gray-200: #EEEEEE;
+$gray-300: #E0E0E0;
+$gray-400: #BDBDBD;
+$gray-500: #9E9E9E;
+$gray-600: #757575;
+$gray-700: #616161;
+$gray-800: #424242;
+$gray-900: #212121;
+
+// Typography
+$font-primary: 'Roboto', sans-serif;
+$font-secondary: 'Open Sans', sans-serif;
+
+// Shadows
+$shadow-sm: 0 2px 4px rgba(0,0,0,0.1);
+$shadow-md: 0 4px 8px rgba(0,0,0,0.12);
+$shadow-lg: 0 8px 16px rgba(0,0,0,0.15);
+$shadow-xl: 0 16px 32px rgba(0,0,0,0.2);
+
+// Border radius
+$radius-sm: 4px;
+$radius-md: 8px;
+$radius-lg: 12px;
+$radius-xl: 16px;
+$radius-round: 50%;
+
+// Spacing
+$spacing-xs: 4px;
+$spacing-sm: 8px;
+$spacing-md: 16px;
+$spacing-lg: 24px;
+$spacing-xl: 32px;
+$spacing-xxl: 48px;
+
+// Breakpoints
+$breakpoint-mobile: 576px;
+$breakpoint-tablet: 768px;
+$breakpoint-desktop: 992px;
+$breakpoint-large: 1200px;
+
+// Z-index layers
+$z-index-dropdown: 1000;
+$z-index-sticky: 1020;
+$z-index-fixed: 1030;
+$z-index-modal-backdrop: 1040;
+$z-index-modal: 1050;
+$z-index-popover: 1060;
+$z-index-tooltip: 1070;
+
+// Transitions
+$transition-base: all 0.3s ease;
+$transition-fast: all 0.15s ease;
+$transition-slow: all 0.5s ease;

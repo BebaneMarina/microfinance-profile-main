@@ -1,0 +1,30 @@
+<!-- src/app/layouts/app-layout.component/app-layout.component.html -->
+
+<div class="app-layout">
+  <app-sidebar
+    [client]="client"
+    [isCollapsed]="sidebarCollapsed"
+    [mobileMenuOpen]="mobileMenuOpen"
+    (tabChange)="onTabChange($event)"
+    (toggleSidebar)="onToggleSidebar($event)"
+    (creditFormOpen)="openCreditForm()"
+    (profileImageChange)="onProfileImageChange($event)">
+  </app-sidebar>
+
+  <div class="main-content" [class.sidebar-collapsed]="sidebarCollapsed">
+    <app-header
+      [client]="client"
+      [titrePage]="config.pageTitle || currentPageTitle"
+      [sidebarRepliee]="sidebarCollapsed"
+      [afficherMenuMobile]="isMobile"
+      [masquerTexteProfil]="sidebarCollapsed"
+      (mobileMenuToggle)="toggleMobileMenu()"
+      (searchChange)="onSearchChange($event)"
+      (logoutClick)="logout()">
+    </app-header>
+
+    <div class="content-wrapper">
+      <router-outlet></router-outlet>
+    </div>
+  </div>
+</div>

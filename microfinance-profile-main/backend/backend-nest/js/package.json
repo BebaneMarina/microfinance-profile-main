@@ -1,0 +1,28 @@
+{
+  "name": "microfinance-mongodb",
+  "version": "1.0.0",
+  "description": "Base de données MongoDB pour système de microfinance",
+  "main": "db.js",
+  "scripts": {
+    "start": "node import_data.js",
+    "import": "node import_data.js",
+    "test-connection": "node test_connection.js",
+    "stats": "node -e \"require('./import_data').displayStats().then(() => process.exit())\"",
+    "setup": "npm install && node import_data.js"
+  },
+  "dependencies": {
+    "csv-parser": "^3.2.0",
+    "mongodb": "^6.17.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  },
+  "keywords": [
+    "mongodb",
+    "microfinance",
+    "credit",
+    "scoring"
+  ],
+  "author": "Votre nom",
+  "license": "MIT"
+}

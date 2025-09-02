@@ -1,0 +1,35 @@
+const { MongoClient } = require('mongodb');
+const fs = require('fs');
+
+const uri = 'mongodb://localhost:27017';
+const dbName = 'bamboocredit_db';
+const collectionName = 'users';
+const filePath = './users.json';
+
+async function importData() {
+  const client = new MongoClient(uri);
+
+  try {
+    await client.connect();
+    const db = client.db(dbName);
+    const collection = db.collection(collectionName);
+
+    // Lire et parser le fichier JSON
+    const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+
+    if (!Array.isArray(data)) {
+      console.error('Le fichier JSON doit contenir un tableau de documents.');
+      return;
+    }
+
+    // Insérer les documents dans la collection
+    const result = await collection.insertMany(data);
+    console.log(`Import réussi : ${result.insertedCount} documents insérés.`);
+  } catch (error) {
+    console.error('Erreur lors de l\'import:', error);
+  } finally {
+    await client.close();
+  }
+}
+
+importData();

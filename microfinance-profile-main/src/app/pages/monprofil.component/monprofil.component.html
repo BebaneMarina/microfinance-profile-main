@@ -1,0 +1,168 @@
+<p>monprofil.component works!</p>
+<div class="profile-container">
+  <div class="profile-header">
+    <div class="profile-cover"></div>
+    <div class="profile-info">
+      <div class="profile-avatar-section">
+        <div class="profile-avatar">
+          <img [src]="client.profileImage || 'assets/default-avatar.png'" 
+               [alt]="client.name">
+          <button class="avatar-edit" (click)="changeProfileImage()" *ngIf="isEditing">
+            <i class="material-icons">camera_alt</i>
+          </button>
+        </div>
+      </div>
+      <div class="profile-details">
+        <h1>{{ client.fullName }}</h1>
+        <p class="account-number">N° Compte: {{ client.accountNumber }}</p>
+        <div class="profile-actions">
+          <button class="btn-primary" *ngIf="!isEditing" (click)="toggleEdit()">
+            <i class="material-icons">edit</i>
+            Modifier le profil
+          </button>
+          <button class="btn-success" *ngIf="isEditing" (click)="saveProfile()">
+            <i class="material-icons">save</i>
+            Enregistrer
+          </button>
+          <button class="btn-secondary" *ngIf="isEditing" (click)="cancelEdit()">
+            <i class="material-icons">close</i>
+            Annuler
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="profile-tabs">
+    <button class="tab" [class.active]="activeTab === 'personal'" 
+            (click)="activeTab = 'personal'">
+      Informations personnelles
+    </button>
+    <button class="tab" [class.active]="activeTab === 'professional'" 
+            (click)="activeTab = 'professional'">
+      Informations professionnelles
+    </button>
+    <button class="tab" [class.active]="activeTab === 'documents'" 
+            (click)="activeTab = 'documents'">
+      Documents
+    </button>
+  </div>
+
+  <div class="profile-content">
+    <!-- Informations personnelles -->
+    <div class="tab-content" *ngIf="activeTab === 'personal'">
+      <div class="info-grid">
+        <div class="info-item">
+          <label>Nom complet</label>
+          <input type="text" [(ngModel)]="client.fullName" [readonly]="!isEditing">
+        </div>
+        <div class="info-item">
+          <label>Date de naissance</label>
+          <input type="date" [(ngModel)]="client.birthDate" [readonly]="!isEditing">
+        </div>
+        <div class="info-item">
+          <label>Lieu de naissance</label>
+          <input type="text" [(ngModel)]="client.birthPlace" [readonly]="!isEditing">
+        </div>
+        <div class="info-item">
+          <label>Genre</label>
+          <select [(ngModel)]="client.gender" [disabled]="!isEditing">
+            <option value="Masculin">Masculin</option>
+            <option value="Féminin">Féminin</option>
+          </select>
+        </div>
+        <div class="info-item">
+          <label>Situation matrimoniale</label>
+          <select [(ngModel)]="client.maritalStatus" [disabled]="!isEditing">
+            <option value="Célibataire">Célibataire</option>
+            <option value="Marié">Marié(e)</option>
+            <option value="Divorcé">Divorcé(e)</option>
+            <option value="Veuf">Veuf/Veuve</option>
+          </select>
+        </div>
+        <div class="info-item">
+          <label>Nombre d'enfants</label>
+          <input type="number" [(ngModel)]="client.children" [readonly]="!isEditing">
+        </div>
+        <div class="info-item">
+          <label>Téléphone principal</label>
+          <input type="tel" [(ngModel)]="client.phone1" [readonly]="!isEditing">
+        </div>
+        <div class="info-item">
+          <label>Téléphone secondaire</label>
+          <input type="tel" [(ngModel)]="client.phone2" [readonly]="!isEditing">
+        </div>
+        <div class="info-item">
+          <label>Email</label>
+          <input type="email" [(ngModel)]="client.email" [readonly]="!isEditing">
+        </div>
+        <div class="info-item">
+          <label>Ville</label>
+          <input type="text" [(ngModel)]="client.city" [readonly]="!isEditing">
+        </div>
+        <div class="info-item">
+          <label>Quartier</label>
+          <input type="text" [(ngModel)]="client.district" [readonly]="!isEditing">
+        </div>
+        <div class="info-item full-width">
+          <label>Adresse complète</label>
+          <textarea [(ngModel)]="client.address" [readonly]="!isEditing"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- Informations professionnelles -->
+    <div class="tab-content" *ngIf="activeTab === 'professional'">
+      <div class="info-grid">
+        <div class="info-item">
+          <label>Profession</label>
+          <input type="text" [(ngModel)]="client.profession" [readonly]="!isEditing">
+        </div>
+        <div class="info-item">
+          <label>Employeur</label>
+          <input type="text" [(ngModel)]="client.employer" [readonly]="!isEditing">
+        </div>
+        <div class="info-item">
+          <label>Revenu mensuel</label>
+          <input type="number" [(ngModel)]="client.monthlyIncome" [readonly]="!isEditing">
+        </div>
+        <div class="info-item">
+          <label>Années d'expérience</label>
+          <input type="number" [(ngModel)]="client.workExperience" [readonly]="!isEditing">
+        </div>
+      </div>
+    </div>
+
+    <!-- Documents -->
+    <div class="tab-content" *ngIf="activeTab === 'documents'">
+      <div class="info-grid">
+        <div class="info-item">
+          <label>Type de pièce d'identité</label>
+          <select [(ngModel)]="client.idType" [disabled]="!isEditing">
+            <option value="CNI">Carte Nationale d'Identité</option>
+            <option value="Passeport">Passeport</option>
+            <option value="Permis">Permis de conduire</option>
+          </select>
+        </div>
+        <div class="info-item">
+          <label>Numéro de pièce</label>
+          <input type="text" [(ngModel)]="client.idNumber" [readonly]="!isEditing">
+        </div>
+        <div class="info-item">
+          <label>Date de délivrance</label>
+          <input type="date" [(ngModel)]="client.idIssueDate" [readonly]="!isEditing">
+        </div>
+        <div class="info-item">
+          <label>Date d'expiration</label>
+          <input type="date" [(ngModel)]="client.idExpiryDate" [readonly]="!isEditing">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Message de succès -->
+  <div class="success-message" *ngIf="showSuccessMessage">
+    <i class="material-icons">check_circle</i>
+    Profil mis à jour avec succès
+  </div>
+</div>

@@ -1,0 +1,35 @@
+[
+  {
+    "username": "admin",
+    "email": "admin@example.com",
+    "password": "$2b$10$CwTycUXWue0Thq9StjUM0uJ8HJm7fuz2cEl2jStiU1Db4F/ZK0vGa",
+    "role": "admin",
+    "profile": null,
+    "is_active": true,
+    "created_at": { "$date": "2025-06-18T09:52:24.024Z" },
+    "updated_at": { "$date": "2025-06-18T09:52:24.024Z" },
+    "last_login": { "$date": "2025-06-18T09:52:24.024Z" }
+  },
+  {
+    "username": "user1",
+    "email": "user1@example.com",
+    "password": "$2b$10$hD56XvZKfS7DoC/e7P3MeOJf1HZYCGZzVnm5Iprhbgw7uZZ6kzKpW",
+    "role": "customer_service",
+    "profile": null,
+    "is_active": true,
+    "created_at": { "$date": "2025-06-17T08:45:00.000Z" },
+    "updated_at": { "$date": "2025-06-17T08:45:00.000Z" },
+    "last_login": { "$date": "2025-06-17T08:45:00.000Z" }
+  },
+  {
+    "username": "marchand1",
+    "email": "marchand@example.com",
+    "password": "$2b$10$N9qo8uLOickgx2ZMRZoMyeIjZGHFzXxlV3bWiAT2M81f2P9VY2xTa",
+    "role": "marchand",
+    "profile": null,
+    "is_active": true,
+    "created_at": { "$date": "2025-06-16T10:30:00.000Z" },
+    "updated_at": { "$date": "2025-06-16T10:30:00.000Z" },
+    "last_login": { "$date": "2025-06-16T10:30:00.000Z" }
+  }
+]

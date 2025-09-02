@@ -1,0 +1,1865 @@
+<!-- credit-long-request.component.html -->
+<div class="credit-long-container">
+  <!-- En-tête avec progression -->
+  <header class="request-header">
+    <div class="header-content">
+      <h1>
+        <i class="fas fa-file-contract"></i>
+        Demande de Crédit Personnalisé
+      </h1>
+      <p class="subtitle">Obtenez un crédit adapté à vos besoins avec des conditions préférentielles</p>
+    </div>
+    
+    <!-- Barre de progression -->
+    <div class="progress-container">
+      <div class="progress-bar">
+        <div class="progress-fill" [style.width.%]="getProgressPercentage()"></div>
+      </div>
+      <div class="progress-steps">
+        <div *ngFor="let title of stepTitles; let i = index" 
+             [class]="getStepClass(i + 1)"
+             class="step">
+          <div class="step-number">
+            <i *ngIf="currentStep > (i + 1)" class="fas fa-check"></i>
+            <span *ngIf="currentStep <= (i + 1)">{{ i + 1 }}</span>
+          </div>
+          <span class="step-title">{{ title }}</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Contenu principal -->
+  <main class="request-main">
+    
+    <!-- ÉTAPE 1: SIMULATION -->
+    <section *ngIf="isSimulationStep" class="step-content simulation-step">
+      <div class="step-header">
+        <h2>
+          <i class="fas fa-calculator"></i>
+          Simulation de votre crédit
+        </h2>
+        <p>Configurez votre crédit et découvrez vos conditions</p>
+      </div>
+
+      <form [formGroup]="simulationForm" class="simulation-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="requestedAmount">
+              <i class="fas fa-coins"></i>
+              Montant souhaité (FCFA)
+            </label>
+            <input type="number" 
+                   id="requestedAmount" 
+                   formControlName="requestedAmount"
+                   placeholder="2 000 000"
+                   class="form-control"
+                   [class.error]="simulationForm.get('requestedAmount')?.invalid && simulationForm.get('requestedAmount')?.touched">
+            <small class="helper-text">Minimum: 100 000 FCFA - Maximum: 100 000 000 FCFA</small>
+          </div>
+
+          <div class="form-group">
+            <label for="duration">
+              <i class="fas fa-calendar-alt"></i>
+              Durée (mois)
+            </label>
+            <input type="number" 
+                   id="duration" 
+                   formControlName="duration"
+                   placeholder="12"
+                   class="form-control"
+                   [class.error]="simulationForm.get('duration')?.invalid && simulationForm.get('duration')?.touched">
+            <small class="helper-text">De 3 à 120 mois</small>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="purpose">
+              <i class="fas fa-comment-alt"></i>
+              Objet du crédit
+            </label>
+            <textarea id="purpose" 
+                      formControlName="purpose"
+                      rows="3"
+                      placeholder="Décrivez l'utilisation prévue des fonds..."
+                      class="form-control"
+                      [class.error]="simulationForm.get('purpose')?.invalid && simulationForm.get('purpose')?.touched"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="repaymentFrequency">
+              <i class="fas fa-sync-alt"></i>
+              Fréquence de remboursement
+            </label>
+            <select id="repaymentFrequency" 
+                    formControlName="repaymentFrequency"
+                    class="form-control">
+              <option value="mensuel">Mensuel</option>
+              <option value="trimestriel">Trimestriel</option>
+              <option value="semestriel">Semestriel</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="simulation-actions">
+          <button type="button" 
+                  class="btn btn-primary btn-large"
+                  [disabled]="!simulationForm.valid || isLoading"
+                  (click)="runSimulation()">
+            <i class="fas fa-play" *ngIf="!isLoading"></i>
+            <div class="spinner" *ngIf="isLoading"></div>
+            {{ isLoading ? 'Calcul en cours...' : 'Lancer la simulation' }}
+          </button>
+        </div>
+      </form>
+
+      <!-- Résultats de simulation -->
+      <div *ngIf="showSimulation && simulation" class="simulation-results">
+        <h3>
+          <i class="fas fa-chart-line"></i>
+          Résultats de votre simulation
+        </h3>
+
+        <div class="results-grid">
+          <!-- Score et risque -->
+          <div class="result-card score-card">
+            <div class="card-header">
+              <h4>Votre Score</h4>
+              <div class="score-circle" [style.background]="getRiskLevelColor(simulation.results.riskLevel)">
+                <span class="score-value">{{ simulation.results.score }}/10</span>
+              </div>
+            </div>
+            <div class="card-body">
+              <p class="risk-level" [style.color]="getRiskLevelColor(simulation.results.riskLevel)">
+                <i class="fas fa-shield-alt"></i>
+                Risque : {{ simulation.results.riskLevel }}
+              </p>
+              <p class="approval-probability">
+                <i class="fas fa-percentage"></i>
+                Probabilité d'approbation : {{ (simulation.results.approvalProbability * 100).toFixed(0) }}%
+              </p>
+            </div>
+          </div>
+
+          <!-- Conditions proposées -->
+          <div class="result-card conditions-card">
+            <div class="card-header">
+              <h4>Conditions Proposées</h4>
+            </div>
+            <div class="card-body">
+              <div class="condition-item">
+                <span class="label">Montant recommandé :</span>
+                <span class="value highlight">{{ formatAmount(simulation.results.recommendedAmount) }}</span>
+              </div>
+              <div class="condition-item">
+                <span class="label">Taux suggéré :</span>
+                <span class="value">{{ simulation.results.suggestedRate }}% / an</span>
+              </div>
+              <div class="condition-item">
+                <span class="label">Mensualité :</span>
+                <span class="value">{{ formatAmount(simulation.results.monthlyPayment) }}</span>
+              </div>
+              <div class="condition-item">
+                <span class="label">Coût total :</span>
+                <span class="value">{{ formatAmount(simulation.results.totalInterest) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Capacité d'endettement -->
+          <div class="result-card debt-card">
+            <div class="card-header">
+              <h4>Analyse d'Endettement</h4>
+            </div>
+            <div class="card-body">
+              <div class="debt-ratio-display">
+                <div class="ratio-circle" 
+                     [class.good]="simulation.results.debtToIncomeRatio <= 30"
+                     [class.medium]="simulation.results.debtToIncomeRatio > 30 && simulation.results.debtToIncomeRatio <= 45"
+                     [class.high]="simulation.results.debtToIncomeRatio > 45">
+                  <span class="ratio-value">{{ simulation.results.debtToIncomeRatio.toFixed(0) }}%</span>
+                </div>
+                <p class="ratio-label">Taux d'endettement projeté</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Facteurs clés -->
+        <div class="key-factors" *ngIf="simulation.results.keyFactors?.length">
+          <h4>Facteurs Clés de Votre Dossier</h4>
+          <div class="factors-list">
+            <div *ngFor="let factor of simulation.results.keyFactors" 
+                 class="factor-item"
+                 [class]="factor.impact">
+              <div class="factor-icon">
+                <i class="fas fa-arrow-up" *ngIf="factor.impact === 'positive'"></i>
+                <i class="fas fa-arrow-down" *ngIf="factor.impact === 'negative'"></i>
+                <i class="fas fa-minus" *ngIf="factor.impact === 'neutral'"></i>
+              </div>
+              <div class="factor-content">
+                <h5>{{ factor.factor }}</h5>
+                <p>{{ factor.description }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recommandations -->
+        <div class="recommendations" *ngIf="simulation.results.recommendations?.length">
+          <h4>
+            <i class="fas fa-lightbulb"></i>
+            Nos Recommandations
+          </h4>
+          <ul class="recommendations-list">
+            <li *ngFor="let recommendation of simulation.results.recommendations">
+              <i class="fas fa-check-circle"></i>
+              {{ recommendation }}
+            </li>
+          </ul>
+        </div>
+
+        <!-- Warnings -->
+        <div class="warnings" *ngIf="warnings.length">
+          <h4>
+            <i class="fas fa-exclamation-triangle"></i>
+            Points d'Attention
+          </h4>
+          <ul class="warnings-list">
+            <li *ngFor="let warning of warnings">
+              <i class="fas fa-exclamation-circle"></i>
+              {{ warning }}
+            </li>
+          </ul>
+        </div>
+
+        <div class="simulation-actions">
+          <button type="button" 
+                  class="btn btn-success btn-large"
+                  (click)="acceptSimulation()">
+            <i class="fas fa-check"></i>
+            Continuer avec ces conditions
+          </button>
+          <button type="button" 
+                  class="btn btn-secondary"
+                  (click)="showSimulation = false">
+            <i class="fas fa-edit"></i>
+            Modifier la simulation
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ÉTAPE 2: INFORMATIONS PERSONNELLES -->
+    <section *ngIf="isPersonalStep" class="step-content personal-step">
+      <div class="step-header">
+        <h2>
+          <i class="fas fa-user"></i>
+          Informations personnelles
+        </h2>
+        <p>Vos données sont sécurisées et confidentielles</p>
+      </div>
+
+      <form [formGroup]="personalForm" class="personal-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="fullName">
+              <i class="fas fa-user"></i>
+              Nom complet *
+            </label>
+            <input type="text" 
+                   id="fullName" 
+                   formControlName="fullName"
+                   placeholder="Ex: Jean Dupont"
+                   class="form-control"
+                   [class.error]="personalForm.get('fullName')?.invalid && personalForm.get('fullName')?.touched">
+          </div>
+
+          <div class="form-group">
+            <label for="email">
+              <i class="fas fa-envelope"></i>
+              Email *
+            </label>
+            <input type="email" 
+                   id="email" 
+                   formControlName="email"
+                   placeholder="jean@example.com"
+                   class="form-control"
+                   [class.error]="personalForm.get('email')?.invalid && personalForm.get('email')?.touched">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="phone">
+              <i class="fas fa-phone"></i>
+              Téléphone *
+            </label>
+            <input type="tel" 
+                   id="phone" 
+                   formControlName="phone"
+                   placeholder="077123456"
+                   class="form-control"
+                   [class.error]="personalForm.get('phone')?.invalid && personalForm.get('phone')?.touched">
+          </div>
+
+          <div class="form-group">
+            <label for="profession">
+              <i class="fas fa-briefcase"></i>
+              Profession *
+            </label>
+            <input type="text" 
+                   id="profession" 
+                   formControlName="profession"
+                   placeholder="Ex: Ingénieur"
+                   class="form-control"
+                   [class.error]="personalForm.get('profession')?.invalid && personalForm.get('profession')?.touched">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group full-width">
+            <label for="address">
+              <i class="fas fa-map-marker-alt"></i>
+              Adresse complète *
+            </label>
+            <textarea id="address" 
+                      formControlName="address"
+                      rows="2"
+                      placeholder="Quartier Louis, Libreville, Gabon"
+                      class="form-control"
+                      [class.error]="personalForm.get('address')?.invalid && personalForm.get('address')?.touched"></textarea>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="company">
+              <i class="fas fa-building"></i>
+              Entreprise *
+            </label>
+            <input type="text" 
+                   id="company" 
+                   formControlName="company"
+                   placeholder="Ex: Total Gabon"
+                   class="form-control"
+                   [class.error]="personalForm.get('company')?.invalid && personalForm.get('company')?.touched">
+          </div>
+
+          <div class="form-group">
+            <label for="maritalStatus">
+              <i class="fas fa-heart"></i>
+              Situation matrimoniale
+            </label>
+            <select id="maritalStatus" 
+                    formControlName="maritalStatus"
+                    class="form-control">
+              <option value="">Sélectionnez</option>
+              <option value="celibataire">Célibataire</option>
+              <option value="marie">Marié(e)</option>
+              <option value="divorce">Divorcé(e)</option>
+              <option value="veuf">Veuf/Veuve</option>
+              <option value="concubinage">Concubinage</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="dependents">
+              <i class="fas fa-users"></i>
+              Personnes à charge
+            </label>
+            <input type="number" 
+                   id="dependents" 
+                   formControlName="dependents"
+                   placeholder="0"
+                   min="0"
+                   class="form-control">
+          </div>
+        </div>
+      </form>
+    </section>
+
+    <!-- ÉTAPE 3: INFORMATIONS FINANCIÈRES -->
+    <section *ngIf="isFinancialStep" class="step-content financial-step">
+      <div class="step-header">
+        <h2>
+          <i class="fas fa-chart-line"></i>
+          Situation financière détaillée
+        </h2>
+        <p>Une analyse précise pour vous proposer les meilleures conditions</p>
+      </div>
+
+      <form [formGroup]="financialForm" class="financial-form">
+        
+        <!-- Revenus principaux -->
+        <div class="form-section">
+          <h3>
+            <i class="fas fa-money-bill-wave"></i>
+            Revenus principaux
+          </h3>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="monthlyIncome">
+                <i class="fas fa-coins"></i>
+                Revenu mensuel net (FCFA) *
+              </label>
+              <input type="number" 
+                     id="monthlyIncome" 
+                     formControlName="monthlyIncome"
+                     placeholder="500 000"
+                     class="form-control"
+                     [class.error]="financialForm.get('monthlyIncome')?.invalid && financialForm.get('monthlyIncome')?.touched">
+              <small class="helper-text">Votre salaire net après déductions</small>
+            </div>
+
+            <div class="form-group">
+              <label for="monthlyExpenses">
+                <i class="fas fa-receipt"></i>
+                Charges mensuelles (FCFA) *
+              </label>
+              <input type="number" 
+                     id="monthlyExpenses" 
+                     formControlName="monthlyExpenses"
+                     placeholder="200 000"
+                     class="form-control"
+                     [class.error]="financialForm.get('monthlyExpenses')?.invalid && financialForm.get('monthlyExpenses')?.touched">
+              <small class="helper-text">Logement, transport, alimentation, etc.</small>
+            </div>
+          </div>
+        </div>
+
+        <!-- Autres revenus -->
+        <div class="form-section">
+          <div class="section-header">
+            <h3>
+              <i class="fas fa-plus-circle"></i>
+              Autres sources de revenus
+            </h3>
+            <button type="button" 
+                    class="btn btn-outline-primary btn-sm"
+                    (click)="addOtherIncome()">
+              <i class="fas fa-plus"></i>
+              Ajouter
+            </button>
+          </div>
+
+          <div class="other-incomes-list" formArrayName="otherIncomes">
+            <div *ngFor="let income of otherIncomes.controls; let i = index" 
+                 [formGroupName]="i" 
+                 class="income-item">
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Source</label>
+                  <input type="text" 
+                         formControlName="source"
+                         placeholder="Ex: Consulting, Location..."
+                         class="form-control">
+                </div>
+                <div class="form-group">
+                  <label>Montant</label>
+                  <input type="number" 
+                         formControlName="amount"
+                         placeholder="0"
+                         class="form-control">
+                </div>
+                <div class="form-group">
+                  <label>Fréquence</label>
+                  <select formControlName="frequency" class="form-control">
+                    <option value="hebdomadaire">Hebdomadaire</option>
+                    <option value="bimensuel">Bimensuel</option>
+                    <option value="mensuel">Mensuel</option>
+                    <option value="trimestriel">Trimestriel</option>
+                    <option value="semestriel">Semestriel</option>
+                    <option value="annuel">Annuel</option>
+                  </select>
+                </div>
+                <div class="form-group actions">
+                  <button type="button" 
+                          class="btn btn-danger btn-sm"
+                          (click)="removeOtherIncome(i)">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Détails emploi -->
+        <div class="form-section" formGroupName="employmentDetails">
+          <h3>
+            <i class="fas fa-id-badge"></i>
+            Détails de l'emploi
+          </h3>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="employer">
+                <i class="fas fa-building"></i>
+                Employeur *
+              </label>
+              <input type="text" 
+                     id="employer" 
+                     formControlName="employer"
+                     placeholder="Nom de l'entreprise"
+                     class="form-control">
+            </div>
+
+            <div class="form-group">
+              <label for="position">
+                <i class="fas fa-user-tie"></i>
+                Poste occupé *
+              </label>
+              <input type="text" 
+                     id="position" 
+                     formControlName="position"
+                     placeholder="Ex: Responsable Marketing"
+                     class="form-control">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="seniority">
+                <i class="fas fa-calendar"></i>
+                Ancienneté (années) *
+              </label>
+              <input type="number" 
+                     id="seniority" 
+                     formControlName="seniority"
+                     placeholder="5"
+                     min="0"
+                     step="0.5"
+                     class="form-control">
+            </div>
+
+            <div class="form-group">
+              <label for="contractType">
+                <i class="fas fa-file-contract"></i>
+                Type de contrat *
+              </label>
+              <select id="contractType" 
+                      formControlName="contractType"
+                      class="form-control">
+                <option value="CDI">CDI</option>
+                <option value="CDD">CDD</option>
+                <option value="Freelance">Freelance</option>
+                <option value="Fonctionnaire">Fonctionnaire</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="netSalary">
+                <i class="fas fa-money-check"></i>
+                Salaire net (FCFA) *
+              </label>
+              <input type="number" 
+                     id="netSalary" 
+                     formControlName="netSalary"
+                     placeholder="500 000"
+                     class="form-control">
+            </div>
+
+            <div class="form-group">
+              <label for="grossSalary">
+                <i class="fas fa-money-bill"></i>
+                Salaire brut (FCFA) *
+              </label>
+              <input type="number" 
+                     id="grossSalary" 
+                     formControlName="grossSalary"
+                     placeholder="650 000"
+                     class="form-control">
+            </div>
+          </div>
+        </div>
+
+        <!-- Engagements existants -->
+        <div class="form-section">
+          <div class="section-header">
+            <h3>
+              <i class="fas fa-credit-card"></i>
+              Crédits en cours
+            </h3>
+            <button type="button" 
+                    class="btn btn-outline-primary btn-sm"
+                    (click)="addExistingLoan()">
+              <i class="fas fa-plus"></i>
+              Ajouter
+            </button>
+          </div>
+
+          <div class="existing-loans-list" formArrayName="existingLoans">
+            <div *ngFor="let loan of existingLoans.controls; let i = index" 
+                 [formGroupName]="i" 
+                 class="loan-item">
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Prêteur</label>
+                  <input type="text" 
+                         formControlName="lender"
+                         placeholder="Ex: Banque ABC"
+                         class="form-control">
+                </div>
+                <div class="form-group">
+                  <label>Capital restant dû</label>
+                  <input type="number" 
+                         formControlName="amount"
+                         placeholder="0"
+                         class="form-control">
+                </div>
+                <div class="form-group">
+                  <label>Mensualité</label>
+                  <input type="number" 
+                         formControlName="monthlyPayment"
+                         placeholder="0"
+                         class="form-control">
+                </div>
+                <div class="form-group">
+                  <label>Mois restants</label>
+                  <input type="number" 
+                         formControlName="remainingMonths"
+                         placeholder="0"
+                         min="0"
+                         class="form-control">
+                </div>
+                <div class="form-group actions">
+                  <button type="button" 
+                          class="btn btn-danger btn-sm"
+                          (click)="removeExistingLoan(i)">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Patrimoine -->
+        <div class="form-section">
+          <div class="section-header">
+            <h3>
+              <i class="fas fa-home"></i>
+              Patrimoine et biens
+            </h3>
+            <button type="button" 
+                    class="btn btn-outline-primary btn-sm"
+                    (click)="addAsset()">
+              <i class="fas fa-plus"></i>
+              Ajouter
+            </button>
+          </div>
+
+          <div class="assets-list" formArrayName="assets">
+            <div *ngFor="let asset of assets.controls; let i = index" 
+                 [formGroupName]="i" 
+                 class="asset-item">
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Type de bien</label>
+                  <select formControlName="type" class="form-control">
+                    <option value="">Sélectionnez</option>
+                    <option value="immobilier">Immobilier</option>
+                    <option value="vehicule">Véhicule</option>
+                    <option value="terrain">Terrain</option>
+                    <option value="investissement">Investissement</option>
+                    <option value="autre">Autre</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Description</label>
+                  <input type="text" 
+                         formControlName="description"
+                         placeholder="Ex: Appartement 3 pièces"
+                         class="form-control">
+                </div>
+                <div class="form-group">
+                  <label>Valeur estimée</label>
+                  <input type="number" 
+                         formControlName="estimatedValue"
+                         placeholder="0"
+                         class="form-control">
+                </div>
+                <div class="form-group actions">
+                  <button type="button" 
+                          class="btn btn-danger btn-sm"
+                          (click)="removeAsset(i)">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Récapitulatif financier -->
+        <div class="financial-summary">
+          <h3>
+            <i class="fas fa-chart-pie"></i>
+            Récapitulatif de votre situation
+          </h3>
+          
+          <div class="summary-grid">
+            <div class="summary-item">
+              <label>Revenus mensuels totaux</label>
+              <span class="value positive">{{ formatAmount(totalMonthlyIncome) }}</span>
+            </div>
+            <div class="summary-item">
+              <label>Charges mensuelles</label>
+              <span class="value">{{ formatAmount(financialForm.value.monthlyExpenses || 0) }}</span>
+            </div>
+            <div class="summary-item">
+              <label>Revenus disponibles</label>
+              <span class="value" [class.positive]="netDisposableIncome > 0" [class.negative]="netDisposableIncome <= 0">
+                {{ formatAmount(netDisposableIncome) }}
+              </span>
+            </div>
+            <div class="summary-item">
+              <label>Taux d'endettement actuel</label>
+              <span class="value" 
+                    [class.good]="currentDebtRatio <= 30"
+                    [class.medium]="currentDebtRatio > 30 && currentDebtRatio <= 45"
+                    [class.high]="currentDebtRatio > 45">
+                {{ currentDebtRatio.toFixed(1) }}%
+              </span>
+            </div>
+          </div>
+        </div>
+      </form>
+    </section>
+
+    <!-- ÉTAPE 4: DOCUMENTS -->
+    <section *ngIf="isDocumentsStep" class="step-content documents-step">
+      <div class="step-header">
+        <h2>
+          <i class="fas fa-paperclip"></i>
+          Documents justificatifs
+        </h2>
+        <p>Téléchargez les documents nécessaires à l'étude de votre dossier</p>
+      </div>
+
+      <form [formGroup]="documentsForm" class="documents-form">
+        
+        <!-- Documents obligatoires -->
+        <div class="documents-section required">
+          <h3>
+            <i class="fas fa-exclamation-circle"></i>
+            Documents obligatoires
+          </h3>
+          
+          <div class="documents-grid">
+            <div class="document-item required" 
+                 [class.uploaded]="isDocumentUploaded('identityProof')">
+              <div class="document-icon">
+                <i class="fas fa-id-card"></i>
+              </div>
+              <div class="document-info">
+                <h4>Pièce d'identité</h4>
+                <p>CNI, Passeport ou Carte de séjour</p>
+                <div class="upload-actions">
+                  <input type="file" 
+                         id="identityProof" 
+                         accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                         style="display: none;"
+                         (change)="onFileSelected($event, 'identityProof')">
+                  <button type="button" 
+                          class="btn btn-outline-primary btn-sm"
+                          (click)="triggerFileInput('identityProof')">>
+                    <i class="fas fa-upload"></i>
+                    {{ isDocumentUploaded('identityProof') ? 'Modifier' : 'Télécharger' }}
+                  </button>
+                  <button type="button" 
+                          *ngIf="isDocumentUploaded('identityProof')"
+                          class="btn btn-outline-danger btn-sm"
+                          (click)="removeDocument('identityProof')">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="document-status">
+                <i class="fas fa-check-circle" *ngIf="isDocumentUploaded('identityProof')"></i>
+                <i class="fas fa-clock" *ngIf="!isDocumentUploaded('identityProof')"></i>
+              </div>
+            </div>
+
+            <div class="document-item required" 
+                 [class.uploaded]="isDocumentUploaded('incomeProof')">
+              <div class="document-icon">
+                <i class="fas fa-money-check"></i>
+              </div>
+              <div class="document-info">
+                <h4>Justificatif de revenus</h4>
+                <p>3 derniers bulletins de salaire</p>
+                <div class="upload-actions">
+                  <input type="file" 
+                         id="incomeProof" 
+                         accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                         multiple
+                         style="display: none;"
+                         (change)="onFileSelected($event, 'incomeProof')">
+                  <button type="button" 
+                          class="btn btn-outline-primary btn-sm"
+                          (click)="triggerFileInput('incomeProof')">>
+                    <i class="fas fa-upload"></i>
+                    {{ isDocumentUploaded('incomeProof') ? 'Modifier' : 'Télécharger' }}
+                  </button>
+                  <button type="button" 
+                          *ngIf="isDocumentUploaded('incomeProof')"
+                          class="btn btn-outline-danger btn-sm"
+                          (click)="removeDocument('incomeProof')">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="document-status">
+                <i class="fas fa-check-circle" *ngIf="isDocumentUploaded('incomeProof')"></i>
+                <i class="fas fa-clock" *ngIf="!isDocumentUploaded('incomeProof')"></i>
+              </div>
+            </div>
+
+            <div class="document-item required" 
+                 [class.uploaded]="isDocumentUploaded('bankStatements')">
+              <div class="document-icon">
+                <i class="fas fa-university"></i>
+              </div>
+              <div class="document-info">
+                <h4>Relevés bancaires</h4>
+                <p>3 derniers mois</p>
+                <div class="upload-actions">
+                  <input type="file" 
+                         id="bankStatements" 
+                         accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                         multiple
+                         style="display: none;"
+                         (change)="onFileSelected($event, 'bankStatements')">
+                  <button type="button" 
+                          class="btn btn-outline-primary btn-sm"
+                          (click)="triggerFileInput('bankStatements')">>
+                    <i class="fas fa-upload"></i>
+                    {{ isDocumentUploaded('bankStatements') ? 'Modifier' : 'Télécharger' }}
+                  </button>
+                  <button type="button" 
+                          *ngIf="isDocumentUploaded('bankStatements')"
+                          class="btn btn-outline-danger btn-sm"
+                          (click)="removeDocument('bankStatements')">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="document-status">
+                <i class="fas fa-check-circle" *ngIf="isDocumentUploaded('bankStatements')"></i>
+                <i class="fas fa-clock" *ngIf="!isDocumentUploaded('bankStatements')"></i>
+              </div>
+            </div>
+
+            <div class="document-item required" 
+                 [class.uploaded]="isDocumentUploaded('employmentCertificate')">
+              <div class="document-icon">
+                <i class="fas fa-certificate"></i>
+              </div>
+              <div class="document-info">
+                <h4>Attestation de travail</h4>
+                <p>Délivrée par l'employeur</p>
+                <div class="upload-actions">
+                  <input type="file" 
+                         id="employmentCertificate" 
+                         accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                         style="display: none;"
+                         (change)="onFileSelected($event, 'employmentCertificate')">
+                  <button type="button" 
+                          class="btn btn-outline-primary btn-sm"
+                          (click)="triggerFileInput('employmentCertificate')">>
+                    <i class="fas fa-upload"></i>
+                    {{ isDocumentUploaded('employmentCertificate') ? 'Modifier' : 'Télécharger' }}
+                  </button>
+                  <button type="button" 
+                          *ngIf="isDocumentUploaded('employmentCertificate')"
+                          class="btn btn-outline-danger btn-sm"
+                          (click)="removeDocument('employmentCertificate')">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="document-status">
+                <i class="fas fa-check-circle" *ngIf="isDocumentUploaded('employmentCertificate')"></i>
+                <i class="fas fa-clock" *ngIf="!isDocumentUploaded('employmentCertificate')"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Documents optionnels -->
+        <div class="documents-section optional">
+          <h3>
+            <i class="fas fa-info-circle"></i>
+            Documents optionnels (selon le projet)
+          </h3>
+          
+          <div class="documents-grid">
+            <div class="document-item optional" 
+                 [class.uploaded]="isDocumentUploaded('businessPlan')">
+              <div class="document-icon">
+                <i class="fas fa-chart-line"></i>
+              </div>
+              <div class="document-info">
+                <h4>Plan d'affaires</h4>
+                <p>Pour les crédits d'investissement</p>
+                <div class="upload-actions">
+                  <input type="file" 
+                         id="businessPlan" 
+                         accept=".pdf,.doc,.docx"
+                         style="display: none;"
+                         (change)="onFileSelected($event, 'businessPlan')">
+                  <button type="button" 
+                          class="btn btn-outline-secondary btn-sm"
+                          (click)="triggerFileInput('businessPlan')">>
+                    <i class="fas fa-upload"></i>
+                    {{ isDocumentUploaded('businessPlan') ? 'Modifier' : 'Télécharger' }}
+                  </button>
+                  <button type="button" 
+                          *ngIf="isDocumentUploaded('businessPlan')"
+                          class="btn btn-outline-danger btn-sm"
+                          (click)="removeDocument('businessPlan')">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="document-item optional" 
+                 [class.uploaded]="isDocumentUploaded('propertyDeeds')">
+              <div class="document-icon">
+                <i class="fas fa-home"></i>
+              </div>
+              <div class="document-info">
+                <h4>Titre de propriété</h4>
+                <p>Pour les garanties hypothécaires</p>
+                <div class="upload-actions">
+                  <input type="file" 
+                         id="propertyDeeds" 
+                         accept=".pdf,.jpg,.jpeg,.png"
+                         style="display: none;"
+                         (change)="onFileSelected($event, 'propertyDeeds')">
+                  <button type="button" 
+                          class="btn btn-outline-secondary btn-sm"
+                          (click)="triggerFileInput('propertyDeeds')">>
+                    <i class="fas fa-upload"></i>
+                    {{ isDocumentUploaded('propertyDeeds') ? 'Modifier' : 'Télécharger' }}
+                  </button>
+                  <button type="button" 
+                          *ngIf="isDocumentUploaded('propertyDeeds')"
+                          class="btn btn-outline-danger btn-sm"
+                          (click)="removeDocument('propertyDeeds')">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="document-item optional" 
+                 [class.uploaded]="isDocumentUploaded('guarantorDocuments')">
+              <div class="document-icon">
+                <i class="fas fa-user-shield"></i>
+              </div>
+              <div class="document-info">
+                <h4>Documents du garant</h4>
+                <p>Si vous avez un garant</p>
+                <div class="upload-actions">
+                  <input type="file" 
+                         id="guarantorDocuments" 
+                         accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                         multiple
+                         style="display: none;"
+                         (change)="onFileSelected($event, 'guarantorDocuments')">
+                  <button type="button" 
+                          class="btn btn-outline-secondary btn-sm"
+                          (click)="triggerFileInput('guarantorDocuments')">>
+                    <i class="fas fa-upload"></i>
+                    {{ isDocumentUploaded('guarantorDocuments') ? 'Modifier' : 'Télécharger' }}
+                  </button>
+                  <button type="button" 
+                          *ngIf="isDocumentUploaded('guarantorDocuments')"
+                          class="btn btn-outline-danger btn-sm"
+                          (click)="removeDocument('guarantorDocuments')">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Informations sur les documents -->
+        <div class="documents-info">
+          <h4>
+            <i class="fas fa-info-circle"></i>
+            Informations importantes
+          </h4>
+          <ul>
+            <li>Formats acceptés : PDF, JPG, PNG, DOC, DOCX</li>
+            <li>Taille maximale par fichier : 10 MB</li>
+            <li>Les documents doivent être lisibles et récents (moins de 3 mois)</li>
+            <li>Assurez-vous que toutes les informations sont visibles</li>
+          </ul>
+        </div>
+      </form>
+    </section>
+
+    <!-- ÉTAPE 5: CONFIRMATION -->
+    <section *ngIf="isConfirmationStep" class="step-content confirmation-step">
+      <div class="step-header">
+        <h2>
+          <i class="fas fa-check-double"></i>
+          Confirmation et soumission
+        </h2>
+        <p>Vérifiez toutes les informations avant de soumettre votre demande</p>
+      </div>
+
+      <!-- Erreurs de validation -->
+      <div *ngIf="validationErrors.length" class="validation-errors">
+        <h4>
+          <i class="fas fa-exclamation-triangle"></i>
+          Erreurs à corriger
+        </h4>
+        <ul>
+          <li *ngFor="let error of validationErrors">{{ error }}</li>
+        </ul>
+      </div>
+
+      <!-- Récapitulatif complet -->
+      <div class="confirmation-summary">
+        
+        <!-- Simulation -->
+        <div class="summary-section" *ngIf="simulation">
+          <h3>
+            <i class="fas fa-calculator"></i>
+            Conditions de votre crédit
+          </h3>
+          <div class="summary-grid">
+            <div class="summary-item">
+              <label>Montant demandé</label>
+              <span class="value">{{ formatAmount(simulationForm.value.requestedAmount) }}</span>
+            </div>
+            <div class="summary-item">
+              <label>Montant recommandé</label>
+              <span class="value highlight">{{ formatAmount(simulation.results.recommendedAmount) }}</span>
+            </div>
+            <div class="summary-item">
+              <label>Durée</label>
+              <span class="value">{{ simulationForm.value.duration }} mois</span>
+            </div>
+            <div class="summary-item">
+              <label>Taux proposé</label>
+              <span class="value">{{ simulation.results.suggestedRate }}% / an</span>
+            </div>
+            <div class="summary-item">
+              <label>Mensualité</label>
+              <span class="value">{{ formatAmount(simulation.results.monthlyPayment) }}</span>
+            </div>
+            <div class="summary-item">
+              <label>Coût total du crédit</label>
+              <span class="value">{{ formatAmount(simulation.results.totalInterest) }}</span>
+            </div>
+            <div class="summary-item">
+              <label>Taux d'endettement projeté</label>
+              <span class="value" 
+                    [class.good]="projectedDebtRatio <= 30"
+                    [class.medium]="projectedDebtRatio > 30 && projectedDebtRatio <= 45"
+                    [class.high]="projectedDebtRatio > 45">
+                {{ projectedDebtRatio.toFixed(1) }}%
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Informations personnelles -->
+        <div class="summary-section">
+          <h3>
+            <i class="fas fa-user"></i>
+            Informations personnelles
+          </h3>
+          <div class="summary-grid">
+            <div class="summary-item">
+              <label>Nom complet</label>
+              <span class="value">{{ personalForm.value.fullName }}</span>
+            </div>
+            <div class="summary-item">
+              <label>Email</label>
+              <span class="value">{{ personalForm.value.email }}</span>
+            </div>
+            <div class="summary-item">
+              <label>Téléphone</label>
+              <span class="value">{{ personalForm.value.phone }}</span>
+            </div>
+            <div class="summary-item">
+              <label>Profession</label>
+              <span class="value">{{ personalForm.value.profession }}</span>
+            </div>
+            <div class="summary-item">
+              <label>Entreprise</label>
+              <span class="value">{{ personalForm.value.company }}</span>
+            </div>
+            <div class="summary-item">
+              <label>Situation matrimoniale</label>
+              <span class="value">{{ personalForm.value.maritalStatus || 'Non renseigné' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Situation financière -->
+        <div class="summary-section">
+          <h3>
+            <i class="fas fa-chart-line"></i>
+            Situation financière
+          </h3>
+          <div class="summary-grid">
+            <div class="summary-item">
+              <label>Revenu mensuel net</label>
+              <span class="value">{{ formatAmount(financialForm.value.monthlyIncome) }}</span>
+            </div>
+            <div class="summary-item">
+              <label>Revenus totaux</label>
+              <span class="value">{{ formatAmount(totalMonthlyIncome) }}</span>
+            </div>
+            <div class="summary-item">
+              <label>Charges mensuelles</label>
+              <span class="value">{{ formatAmount(financialForm.value.monthlyExpenses) }}</span>
+            </div>
+            <div class="summary-item">
+              <label>Revenus disponibles</label>
+              <span class="value" [class.positive]="netDisposableIncome > 0">
+                {{ formatAmount(netDisposableIncome) }}
+              </span>
+            </div>
+            <div class="summary-item">
+              <label>Employeur</label>
+              <span class="value">{{ financialForm.value.employmentDetails?.employer }}</span>
+            </div>
+            <div class="summary-item">
+              <label>Type de contrat</label>
+              <span class="value">{{ financialForm.value.employmentDetails?.contractType }}</span>
+            </div>
+          </div>
+
+          <!-- Autres revenus -->
+          <div *ngIf="otherIncomes.length > 0" class="subsection">
+            <h4>Autres revenus</h4>
+            <div class="income-list">
+              <div *ngFor="let income of otherIncomes.controls" class="income-item">
+                {{ income.value.source }} : {{ formatAmount(income.value.amount) }} ({{ income.value.frequency }})
+              </div>
+            </div>
+          </div>
+
+          <!-- Crédits existants -->
+          <div *ngIf="existingLoans.length > 0" class="subsection">
+            <h4>Crédits en cours</h4>
+            <div class="loans-list">
+              <div *ngFor="let loan of existingLoans.controls" class="loan-item">
+                {{ loan.value.lender }} : {{ formatAmount(loan.value.monthlyPayment) }}/mois 
+                ({{ loan.value.remainingMonths }} mois restants)
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Documents -->
+        <div class="summary-section">
+          <h3>
+            <i class="fas fa-paperclip"></i>
+            Documents fournis
+          </h3>
+          <div class="documents-summary">
+            <div class="document-status-item" 
+                 [class.completed]="isDocumentUploaded('identityProof')">
+              <i class="fas fa-check-circle" *ngIf="isDocumentUploaded('identityProof')"></i>
+              <i class="fas fa-times-circle" *ngIf="!isDocumentUploaded('identityProof')"></i>
+              <span>Pièce d'identité</span>
+            </div>
+            <div class="document-status-item" 
+                 [class.completed]="isDocumentUploaded('incomeProof')">
+              <i class="fas fa-check-circle" *ngIf="isDocumentUploaded('incomeProof')"></i>
+              <i class="fas fa-times-circle" *ngIf="!isDocumentUploaded('incomeProof')"></i>
+              <span>Justificatifs de revenus</span>
+            </div>
+            <div class="document-status-item" 
+                 [class.completed]="isDocumentUploaded('bankStatements')">
+              <i class="fas fa-check-circle" *ngIf="isDocumentUploaded('bankStatements')"></i>
+              <i class="fas fa-times-circle" *ngIf="!isDocumentUploaded('bankStatements')"></i>
+              <span>Relevés bancaires</span>
+            </div>
+            <div class="document-status-item" 
+                 [class.completed]="isDocumentUploaded('employmentCertificate')">
+              <i class="fas fa-check-circle" *ngIf="isDocumentUploaded('employmentCertificate')"></i>
+              <i class="fas fa-times-circle" *ngIf="!isDocumentUploaded('employmentCertificate')"></i>
+              <span>Attestation de travail</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Déclarations et acceptations -->
+        <div class="summary-section">
+          <h3>
+            <i class="fas fa-balance-scale"></i>
+            Déclarations et engagements
+          </h3>
+          <div class="declarations">
+            <label class="checkbox-container">
+              <input type="checkbox" [(ngModel)]="declarationsAccepted" required>
+              <span class="checkmark"></span>
+              Je certifie que toutes les informations fournies sont exactes et complètes.
+            </label>
+            <label class="checkbox-container">
+              <input type="checkbox" [(ngModel)]="termsAccepted" required>
+              <span class="checkmark"></span>
+              J'accepte les <a href="#" target="_blank">conditions générales</a> et la 
+              <a href="#" target="_blank">politique de confidentialité</a>.
+            </label>
+            <label class="checkbox-container">
+              <input type="checkbox" [(ngModel)]="dataProcessingAccepted" required>
+              <span class="checkmark"></span>
+              J'autorise le traitement de mes données personnelles pour l'étude de ma demande.
+            </label>
+          </div>
+        </div>
+
+        <!-- Actions de soumission -->
+        <div class="submission-actions">
+          <div class="submission-info">
+            <h4>
+              <i class="fas fa-info-circle"></i>
+              Que se passe-t-il après la soumission ?
+            </h4>
+            <ol>
+              <li>Votre demande sera examinée par nos conseillers (24-48h)</li>
+              <li>Nous vérifierons vos documents et votre situation financière</li>
+              <li>Vous recevrez une notification de décision par email/SMS</li>
+              <li>Si approuvée, nous vous contacterons pour finaliser le contrat</li>
+              <li>Le déblocage des fonds se fait sous 48h après signature</li>
+            </ol>
+          </div>
+
+          <button type="button" 
+                  class="btn btn-success btn-large btn-submit"
+                  [disabled]="!canSubmit || isSubmitting || validationErrors.length > 0"
+                  (click)="submitRequest()">
+            <i class="fas fa-paper-plane" *ngIf="!isSubmitting"></i>
+            <div class="spinner" *ngIf="isSubmitting"></div>
+            {{ isSubmitting ? 'Soumission en cours...' : 'Soumettre ma demande' }}
+          </button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Navigation -->
+  <nav class="request-navigation">
+    <button type="button" 
+            class="btn btn-secondary"
+            *ngIf="canGoPrevious"
+            [disabled]="isSubmitting"
+            (click)="previousStep()">
+      <i class="fas fa-arrow-left"></i>
+      Précédent
+    </button>
+
+    <div class="nav-center">
+      <span class="step-indicator">
+        Étape {{ currentStep }} sur {{ totalSteps }}
+      </span>
+      <div class="auto-save-indicator" *ngIf="currentStep > 1 && currentStep < totalSteps">
+        <i class="fas fa-save"></i>
+        Sauvegarde automatique
+      </div>
+    </div>
+
+    <button type="button" 
+            class="btn btn-primary"
+            *ngIf="canGoNext && !isConfirmationStep"
+            [disabled]="!canProceedToNextStep() || isSubmitting"
+            (click)="nextStep()">
+      Suivant
+      <i class="fas fa-arrow-right"></i>
+    </button>
+  </nav>
+</div>
+
+<!-- Modal de résultat -->
+<div *ngIf="showResultModal" class="modal-overlay" (click)="closeResultModal()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Demande soumise avec succès !</h2>
+      <button type="button" class="close-btn" (click)="closeResultModal()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    
+    <div class="modal-body">
+      <div class="success-message">
+        <i class="fas fa-check-circle"></i>
+        <p>Votre demande de crédit a été envoyée avec succès.</p>
+        <p>Un conseiller vous contactera sous 24-48h pour l'étude de votre dossier.</p>
+      </div>
+      
+      <div class="request-summary" *ngIf="submissionResult">
+        <h4>Récapitulatif de votre demande :</h4>
+        <div class="summary-item">
+          <span>Référence :</span>
+          <span>{{ submissionResult.applicationId || 'En cours d\'attribution' }}</span>
+        </div>
+        <div class="summary-item">
+          <span>Montant demandé :</span>
+          <span>{{ formatAmount(simulationForm.get('requestedAmount')?.value || 0) }}</span>
+        </div>
+        <div class="summary-item">
+          <span>Durée :</span>
+          <span>{{ formatDuration(simulationForm.get('duration')?.value || 12) }}</span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="modal-footer">
+      <button type="button" class="btn btn-primary" (click)="closeResultModal()">
+        Fermer
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Styles intégrés pour un aperçu rapide -->
+<style>
+.credit-long-container {
+  max-width: 70%;
+  margin-left: 70%;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* En-tête */
+.request-header {
+  background: linear-gradient(135deg, #029c3a 0%, #006c21 100%);
+  color: white;
+  padding: 40px;
+  border-radius: 12px;
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.header-content h1 {
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+.subtitle {
+  font-size: 1.2rem;
+  opacity: 0.9;
+  margin-bottom: 30px;
+}
+
+/* Barre de progression */
+.progress-container {
+  margin-top: 30px;
+}
+
+.progress-bar {
+  height: 4px;
+  background: rgba(255,255,255,0.3);
+  border-radius: 2px;
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: #4CAF50;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.progress-steps {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+}
+
+.step-number {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.step.active .step-number {
+  background: #4CAF50;
+  transform: scale(1.1);
+}
+
+.step.completed .step-number {
+  background: #4CAF50;
+}
+
+.step-title {
+  font-size: 0.9rem;
+  text-align: center;
+  opacity: 0.8;
+}
+
+.step.active .step-title {
+  opacity: 1;
+  font-weight: 600;
+}
+
+/* Contenu principal */
+.request-main {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  margin-bottom: 20px;
+}
+
+.step-content {
+  padding: 40px;
+  min-height: 600px;
+}
+
+.step-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.step-header h2 {
+  font-size: 2rem;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.step-header p {
+  color: #666;
+  font-size: 1.1rem;
+}
+
+/* Formulaires */
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group.full-width {
+  grid-column: 1 / -1;
+}
+
+.form-group label {
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.form-control {
+  padding: 12px 16px;
+  border: 2px solid #e1e5e9;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.3s ease;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.form-control.error {
+  border-color: #dc3545;
+}
+
+.helper-text {
+  color: #666;
+  font-size: 0.9rem;
+  margin-top: 4px;
+}
+
+/* Simulation */
+.simulation-results {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 30px;
+  margin-top: 30px;
+}
+
+.results-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.result-card {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.score-circle {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+}
+
+.condition-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.condition-item:last-child {
+  border-bottom: none;
+}
+
+.value.highlight {
+  color: #4CAF50;
+  font-weight: bold;
+}
+
+/* Documents */
+.documents-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.document-item {
+  border: 2px solid #e1e5e9;
+  border-radius: 8px;
+  padding: 20px;
+  transition: all 0.3s ease;
+}
+
+.document-item.uploaded {
+  border-color: #4CAF50;
+  background: #f8fff8;
+}
+
+.document-item.required {
+  border-left: 4px solid #dc3545;
+}
+
+.document-icon {
+  font-size: 2rem;
+  color: #667eea;
+  margin-bottom: 15px;
+}
+
+.upload-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+/* Navigation */
+.request-navigation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 40px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+}
+
+.nav-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.step-indicator {
+  font-weight: 600;
+  color: #333;
+}
+
+.auto-save-indicator {
+  font-size: 0.8rem;
+  color: #4CAF50;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Boutons */
+.btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: #667eea;
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #5a6fd8;
+  transform: translateY(-2px);
+}
+
+.btn-success {
+  background: #4CAF50;
+  color: white;
+}
+
+.btn-success:hover:not(:disabled) {
+  background: #45a049;
+  transform: translateY(-2px);
+}
+
+.btn-secondary {
+  background: #6c757d;
+  color: white;
+}
+
+.btn-outline-primary {
+  background: transparent;
+  color: #667eea;
+  border: 2px solid #667eea;
+}
+
+.btn-large {
+  padding: 16px 32px;
+  font-size: 1.1rem;
+}
+
+/* Animations */
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* États */
+.positive { color: #4CAF50; }
+.negative { color: #dc3545; }
+.good { color: #4CAF50; }
+.medium { color: #ffc107; }
+.high { color: #dc3545; }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .credit-long-container {
+    padding: 10px;
+  }
+  
+  .request-header {
+    padding: 20px;
+  }
+  
+  .step-content {
+    padding: 20px;
+  }
+  
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+  
+  .results-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .documents-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-container {
+  background: white;
+  border-radius: 12px;
+  max-width: 500px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-header {
+  padding: 20px;
+  border-bottom: 1px solid #e1e5e9;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h2 {
+  margin: 0;
+  color: #4CAF50;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #999;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+}
+
+.close-btn:hover {
+  background-color: #f5f5f5;
+}
+
+.modal-body {
+  padding: 20px;
+}
+
+.success-message {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.success-message i {
+  font-size: 4rem;
+  color: #4CAF50;
+  margin-bottom: 20px;
+}
+
+.success-message p {
+  margin: 10px 0;
+  font-size: 1.1rem;
+}
+
+.request-summary {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+}
+
+.request-summary h4 {
+  margin: 0 0 15px 0;
+  color: #333;
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  padding: 5px 0;
+}
+
+.summary-item:last-child {
+  margin-bottom: 0;
+}
+
+.summary-item span:first-child {
+  font-weight: 600;
+  color: #666;
+}
+
+.summary-item span:last-child {
+  color: #333;
+}
+
+.modal-footer {
+  padding: 20px;
+  border-top: 1px solid #e1e5e9;
+  text-align: center;
+}
+</style>

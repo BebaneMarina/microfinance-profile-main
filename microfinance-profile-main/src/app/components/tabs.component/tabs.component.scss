@@ -1,0 +1,52 @@
+.tabs-container {
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 4px 20px rgba(45, 90, 39, 0.1);
+  overflow: hidden;
+}
+
+.tabs-header {
+  background: linear-gradient(135deg, #2d5a27 0%, #4a7c59 100%);
+  display: flex;
+  padding: 0;
+}
+
+.tab-button {
+  flex: 1;
+  padding: 15px 20px;
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.7);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+  position: relative;
+}
+
+.tab-button.active {
+  color: white;
+  background: rgba(144, 238, 144, 0.2);
+}
+
+.tab-button.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: #90ee90;
+}
+
+.tab-content {
+  padding: 30px;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.tab-content > div {
+  animation: fadeIn 0.4s ease-out;
+}

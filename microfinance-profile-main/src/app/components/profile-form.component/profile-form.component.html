@@ -1,0 +1,135 @@
+<div class="form-section">
+  <h3 class="section-title">Informations Personnelles</h3>
+  <div class="form-row">
+    <div class="form-group">
+      <label>Nom complet</label>
+      <input type="text" [(ngModel)]="profile.fullName" placeholder="Entrez votre nom complet">
+    </div>
+    <div class="form-group">
+      <label>Date de naissance</label>
+      <input type="date" [(ngModel)]="profile.birthDate">
+    </div>
+  </div>
+  <div class="form-row">
+    <div class="form-group">
+      <label>Lieu de naissance</label>
+      <input type="text" [(ngModel)]="profile.birthPlace" placeholder="Ville de naissance">
+    </div>
+    <div class="form-group">
+      <label>Sexe</label>
+      <select [(ngModel)]="profile.gender">
+        <option value="">Sélectionnez</option>
+        <option value="M">Masculin</option>
+        <option value="F">Féminin</option>
+      </select>
+    </div>
+  </div>
+  <div class="form-row">
+    <div class="form-group">
+      <label>Situation matrimoniale</label>
+      <select [(ngModel)]="profile.maritalStatus">
+        <option value="">Sélectionnez</option>
+        <option value="single">Célibataire</option>
+        <option value="married">Marié(e)</option>
+        <option value="divorced">Divorcé(e)</option>
+        <option value="widowed">Veuf/Veuve</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Nombre d'enfants</label>
+      <input type="number" [(ngModel)]="profile.children" min="0" placeholder="0">
+    </div>
+  </div>
+</div>
+
+<div class="form-section">
+  <h3 class="section-title">Contact & Adresse</h3>
+  <div class="form-row">
+    <div class="form-group">
+      <label>Téléphone principal</label>
+      <input type="tel" [(ngModel)]="profile.phone1" placeholder="+241 XX XX XX XX">
+    </div>
+    <div class="form-group">
+      <label>Téléphone secondaire</label>
+      <input type="tel" [(ngModel)]="profile.phone2" placeholder="+241 XX XX XX XX">
+    </div>
+  </div>
+  <div class="form-row">
+    <div class="form-group">
+      <label>Email</label>
+      <input type="email" [(ngModel)]="profile.email" placeholder="votre.email@exemple.com">
+    </div>
+    <div class="form-group">
+      <label>Ville</label>
+      <input type="text" [(ngModel)]="profile.city" placeholder="Libreville">
+    </div>
+  </div>
+  <div class="form-row">
+    <div class="form-group">
+      <label>Quartier</label>
+      <input type="text" [(ngModel)]="profile.district" placeholder="Nom du quartier">
+    </div>
+    <div class="form-group">
+      <label>Adresse complète</label>
+      <textarea [(ngModel)]="profile.address" rows="3" placeholder="Adresse détaillée"></textarea>
+    </div>
+  </div>
+</div>
+
+<div class="form-section">
+  <h3 class="section-title">Informations Professionnelles</h3>
+  <div class="form-row">
+    <div class="form-group">
+      <label>Profession</label>
+      <input type="text" [(ngModel)]="profile.profession" placeholder="Votre profession">
+    </div>
+    <div class="form-group">
+      <label>Employeur</label>
+      <input type="text" [(ngModel)]="profile.employer" placeholder="Nom de l'employeur">
+    </div>
+  </div>
+  <div class="form-row">
+    <div class="form-group">
+      <label>Revenus mensuels (FCFA)</label>
+      <input type="number" [(ngModel)]="profile.monthlyIncome" placeholder="0">
+    </div>
+    <div class="form-group">
+      <label>Ancienneté (années)</label>
+      <input type="number" [(ngModel)]="profile.workExperience" min="0" placeholder="0">
+    </div>
+  </div>
+</div>
+
+<div class="form-section">
+  <h3 class="section-title">Documents d'Identité</h3>
+  <div class="form-row">
+    <div class="form-group">
+      <label>Type de pièce d'identité</label>
+      <select [(ngModel)]="profile.idType">
+        <option value="">Sélectionnez</option>
+        <option value="cni">Carte Nationale d'Identité</option>
+        <option value="passport">Passeport</option>
+        <option value="permit">Permis de séjour</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Numéro de la pièce</label>
+      <input type="text" [(ngModel)]="profile.idNumber" placeholder="Numéro d'identité">
+    </div>
+  </div>
+  <div class="form-row">
+    <div class="form-group">
+      <label>Date d'émission</label>
+      <input type="date" [(ngModel)]="profile.idIssueDate">
+    </div>
+    <div class="form-group">
+      <label>Date d'expiration</label>
+      <input type="date" [(ngModel)]="profile.idExpiryDate">
+    </div>
+  </div>
+</div>
+
+<div class="form-actions">
+  <button class="btn btn-secondary" (click)="resetForm()">Annuler</button>
+  <button class="btn btn-primary" (click)="saveProfile()">Enregistrer les modifications</button>
+</div>

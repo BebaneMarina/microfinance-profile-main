@@ -1,0 +1,190 @@
+{
+  "theobawana": {
+    "username": "theobawana",
+    "score": 818,
+    "eligible_amount": 900000,
+    "risk_level": "bas",
+    "decision": "approuvé",
+    "factors": [
+      {
+        "name": "monthly_income",
+        "value": 100,
+        "impact": 25
+      },
+      {
+        "name": "employment_status",
+        "value": 90,
+        "impact": 20
+      },
+      {
+        "name": "job_seniority",
+        "value": 100,
+        "impact": 15
+      },
+      {
+        "name": "debt_ratio",
+        "value": 70,
+        "impact": -10
+      }
+    ],
+    "recommendations": [
+      "Excellent profil ! Vous êtes éligible aux meilleures conditions"
+    ],
+    "model_used": "random_forest",
+    "model_confidence": 0.7926143759998943,
+    "calculation_date": "2025-08-03T10:43:56.294754",
+    "client_data": {
+      "name": "BEBANE MOUKOUMBI MARINA",
+      "profession": "Développeur",
+      "monthly_income": 750000,
+      "client_type": "particulier"
+    }
+  },
+  "pierre_moussavou": {
+    "user_id": 7140,
+    "score": 8.4,
+    "previous_score": 8.4,
+    "score_change": 0.0,
+    "risk_level": "bas",
+    "factors": [
+      {
+        "name": "profil_base",
+        "value": 100,
+        "impact": 60,
+        "description": "Profil financier de base"
+      },
+      {
+        "name": "historique_paiements",
+        "value": 60,
+        "impact": 25,
+        "description": "Historique des paiements"
+      },
+      {
+        "name": "comportement_recent",
+        "value": 60,
+        "impact": 15,
+        "description": "Comportement récent"
+      }
+    ],
+    "recommendations": [
+      "🎉 Excellent score ! Maintenez vos bonnes habitudes"
+    ],
+    "model_confidence": 0.75,
+    "model_type": "optimized_realtime",
+    "payment_analysis": {
+      "payment_score": 6.0,
+      "behavior_score": 6.0,
+      "total_payments": 0,
+      "on_time_ratio": 0.8,
+      "trend": "stable"
+    },
+    "is_realtime": true,
+    "last_updated": "2025-08-14T13:59:19.938493",
+    "username": "pierre_moussavou",
+    "cors_ok": true,
+    "client_info": {
+      "name": "",
+      "email": "",
+      "profession": "Ingénieur",
+      "monthly_income": 1500000.0
+    }
+  },
+  "jean_ndong": {
+    "user_id": 9258,
+    "score": 8.2,
+    "previous_score": 8.16,
+    "score_change": 0.0,
+    "risk_level": "bas",
+    "factors": [
+      {
+        "name": "profil_base",
+        "value": 96,
+        "impact": 60,
+        "description": "Profil financier de base"
+      },
+      {
+        "name": "historique_paiements",
+        "value": 60,
+        "impact": 25,
+        "description": "Historique des paiements"
+      },
+      {
+        "name": "comportement_recent",
+        "value": 60,
+        "impact": 15,
+        "description": "Comportement récent"
+      }
+    ],
+    "recommendations": [
+      "🎉 Excellent score ! Maintenez vos bonnes habitudes"
+    ],
+    "model_confidence": 0.75,
+    "model_type": "optimized_realtime",
+    "payment_analysis": {
+      "payment_score": 6.0,
+      "behavior_score": 6.0,
+      "total_payments": 0,
+      "on_time_ratio": 0.8,
+      "trend": "stable"
+    },
+    "is_realtime": true,
+    "last_updated": "2025-08-14T12:51:31.514055",
+    "username": "jean_ndong",
+    "cors_ok": true,
+    "client_info": {
+      "name": "",
+      "email": "",
+      "profession": "Technicien",
+      "monthly_income": 450000.0
+    }
+  },
+  "sophie_mfoubou": {
+    "user_id": 4132,
+    "score": 7.7,
+    "previous_score": 7.74,
+    "score_change": 0.0,
+    "risk_level": "bas",
+    "factors": [
+      {
+        "name": "profil_base",
+        "value": 89,
+        "impact": 60,
+        "description": "Profil financier de base"
+      },
+      {
+        "name": "historique_paiements",
+        "value": 60,
+        "impact": 25,
+        "description": "Historique des paiements"
+      },
+      {
+        "name": "comportement_recent",
+        "value": 60,
+        "impact": 15,
+        "description": "Comportement récent"
+      }
+    ],
+    "recommendations": [
+      "🎉 Excellent score ! Maintenez vos bonnes habitudes"
+    ],
+    "model_confidence": 0.75,
+    "model_type": "optimized_realtime",
+    "payment_analysis": {
+      "payment_score": 6.0,
+      "behavior_score": 6.0,
+      "total_payments": 0,
+      "on_time_ratio": 0.8,
+      "trend": "stable"
+    },
+    "is_realtime": true,
+    "last_updated": "2025-08-14T14:17:19.626478",
+    "username": "sophie_mfoubou",
+    "cors_ok": true,
+    "client_info": {
+      "name": "",
+      "email": "",
+      "profession": "commercante",
+      "monthly_income": 180000.0
+    }
+  }
+}

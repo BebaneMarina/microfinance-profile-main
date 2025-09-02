@@ -1,0 +1,212 @@
+// Animations
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOut {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes rotating {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// Score notification styles
+.score-notification {
+  .score-badge {
+    animation: pulse 2s ease-in-out infinite;
+  }
+}
+
+// Loading spinner
+.spinner-border {
+  display: inline-block;
+  width: 2rem;
+  height: 2rem;
+  vertical-align: text-bottom;
+  border: 0.25em solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: rotating 0.75s linear infinite;
+}
+
+// Custom notifications
+.custom-notification {
+  &.success {
+    border-left: 4px solid #4CAF50;
+    
+    .material-icons {
+      color: #4CAF50;
+    }
+  }
+  
+  &.warning {
+    border-left: 4px solid #FF9800;
+    
+    .material-icons {
+      color: #FF9800;
+    }
+  }
+  
+  &.error {
+    border-left: 4px solid #F44336;
+    
+    .material-icons {
+      color: #F44336;
+    }
+  }
+  
+  &.info {
+    border-left: 4px solid #2196F3;
+    
+    .material-icons {
+      color: #2196F3;
+    }
+  }
+}
+
+// Recommendations banner
+.recommendations-banner {
+  animation: slideIn 0.5s ease-out;
+  
+  .material-icons {
+    color: #FFC107;
+  }
+}
+
+// Credit score display
+.credit-score-display {
+  position: relative;
+  
+  .score-circle {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    font-weight: bold;
+    color: white;
+    position: relative;
+    overflow: hidden;
+    
+    &::before {
+      content: '';
+      position: absolute;
+      top: -2px;
+      left: -2px;
+      right: -2px;
+      bottom: -2px;
+      border-radius: 50%;
+      background: linear-gradient(45deg, rgba(255,255,255,0.2), transparent);
+      animation: pulse 3s ease-in-out infinite;
+    }
+  }
+  
+  .score-label {
+    text-align: center;
+    margin-top: 10px;
+    
+    .score-status {
+      font-weight: 600;
+      font-size: 18px;
+    }
+    
+    .score-description {
+      font-size: 14px;
+      color: #666;
+      margin-top: 5px;
+    }
+  }
+}
+
+// Refresh button animation
+.refresh-btn {
+  i.rotating {
+    animation: rotating 1s linear infinite;
+  }
+}
+
+// Profile enhancements
+.profile-stats {
+  .stat-card {
+    transition: all 0.3s ease;
+    
+    &:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    }
+    
+    &.score-card {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      
+      .stat-value {
+        font-size: 48px;
+        font-weight: bold;
+      }
+    }
+  }
+}
+
+// Loading states
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255,255,255,0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  
+  .loading-content {
+    text-align: center;
+    
+    .loading-icon {
+      font-size: 48px;
+      color: #2196F3;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    
+    .loading-text {
+      margin-top: 20px;
+      font-size: 18px;
+      color: #333;
+    }
+  }
+}

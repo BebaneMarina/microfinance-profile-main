@@ -1,0 +1,20 @@
+<div class="tabs-container">
+  <div class="tabs-header">
+    <button class="tab-button" [class.active]="activeTab === 'profile'" (click)="setTab('profile')">
+      Mon Profil
+    </button>
+    <button class="tab-button" [class.active]="activeTab === 'account'" (click)="setTab('account')">
+      Informations Compte
+    </button>
+    <button class="tab-button" [class.active]="activeTab === 'documents'" (click)="setTab('documents')">
+      Documents
+    </button>
+    <button class="tab-button" [class.active]="activeTab === 'security'" (click)="setTab('security')">
+      Sécurité
+    </button>
+  </div>
+
+  <div class="tab-content">
+    <ng-content></ng-content>
+  </div>
+</div>

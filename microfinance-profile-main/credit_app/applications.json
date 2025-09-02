@@ -1,0 +1,3532 @@
+[
+  {
+    "id": 1,
+    "creditType": "consommation",
+    "personalInfo": {
+      "address": "BP 1234, Rue de la Paix, Quartier Glass",
+      "birthDate": "2003-01-05",
+      "birthPlace": "Libreville",
+      "email": "marie.nguema@email.com",
+      "entityType": "",
+      "fullName": "BEBANE MOUKOUMBI Marina Brunelle",
+      "identityNumber": "CNI123456789",
+      "identityType": "cni",
+      "nationality": "gabonaise",
+      "phoneNumber": "077861364",
+      "profession": ""
+    },
+    "financialInfo": {
+      "businessSector": "",
+      "companyName": "",
+      "contractType": "cdi",
+      "contributionAmount": "",
+      "contributionFrequency": "",
+      "creationDate": "",
+      "employerName": "ventis",
+      "existingDebts": "",
+      "firstPensionDate": "",
+      "formerProfession": "",
+      "jobSeniority": 5,
+      "legalForm": "",
+      "monthlySalary": 900000,
+      "netProfit": "",
+      "otherIncome": 250000,
+      "ownCapital": "",
+      "participantCount": "",
+      "participationHistory": "",
+      "patentNumber": "",
+      "pensionAmount": "",
+      "rccmNumber": "",
+      "retirementDate": "",
+      "retirementOrganization": "",
+      "tontineName": "",
+      "turnover": ""
+    },
+    "creditDetails": {
+      "cashFlow": "",
+      "clientPaymentHistory": "",
+      "creditPurpose": "acheter une voiture",
+      "deliveryDeadline": "",
+      "duration": 12,
+      "goodsServices": "",
+      "guarantees": "maison",
+      "investmentDetails": "",
+      "investmentType": "",
+      "invoiceAmount": "",
+      "invoiceClient": "",
+      "invoiceDate": "",
+      "liquidityProblem": "",
+      "orderClient": "",
+      "paymentConditions": "",
+      "paymentDeadline": "",
+      "productionCapacity": "",
+      "profitMargin": "",
+      "proposedSolutions": "",
+      "rawMaterialsCost": "",
+      "repaymentMode": "virement",
+      "repaymentPlan": "",
+      "requestedAmount": 2500000,
+      "totalOrderAmount": "",
+      "urgency": "",
+      "workNature": ""
+    },
+    "creditScore": 850,
+    "riskLevel": "bas",
+    "creditProbability": 1,
+    "status": "approuvé",
+    "submissionDate": "2025-07-10T11:14:29.883Z",
+    "scoringFactors": [
+      {
+        "description": "Emploi stable",
+        "impact": 100,
+        "name": "employment_status",
+        "value": "CDI"
+      }
+    ],
+    "documents": {
+      "bankStatements": [
+        {
+          "file": {},
+          "name": "No07-2006_network4value.pdf",
+          "size": 1436741,
+          "type": "application/pdf"
+        }
+      ],
+      "employmentCertificate": [
+        {
+          "file": {},
+          "name": "No07-2006_network4value.pdf",
+          "size": 1436741,
+          "type": "application/pdf"
+        }
+      ],
+      "identityDocument": [
+        {
+          "file": {},
+          "name": "Devis_Soutenance.pdf",
+          "size": 129112,
+          "type": "application/pdf"
+        }
+      ],
+      "paySlips": [
+        {
+          "file": {},
+          "name": "document_conception_architecture.pdf",
+          "size": 1140366,
+          "type": "application/pdf"
+        }
+      ]
+    },
+    "guarantor_name": "BEBANE MOUKOUMBI Marina Brunelle",
+    "email": "marie.nguema@email.com",
+    "phone": "077861364",
+    "amount": 2500000,
+    "duration": 12,
+    "monthly_income": 900000,
+    "employer": "ventis",
+    "score": 850,
+    "risk_level": "bas",
+    "created_at": "2025-07-10T11:14:29.883Z"
+  },
+  {
+    "id": 2,
+    "creditType": "consommation",
+    "personalInfo": {
+      "address": "BP 1234, Rue de la Paix, Quartier Glass",
+      "birthDate": "1998-02-10",
+      "birthPlace": "Libreville",
+      "email": "marie.nguema@email.com",
+      "entityType": "",
+      "fullName": "BEBANE MOUKOUMBI Marina Brunelle",
+      "identityNumber": "CNI123456789",
+      "identityType": "cni",
+      "nationality": "gabonaise",
+      "phoneNumber": "077861364",
+      "profession": ""
+    },
+    "financialInfo": {
+      "businessSector": "",
+      "companyName": "",
+      "contractType": "cdi",
+      "contributionAmount": "",
+      "contributionFrequency": "",
+      "creationDate": "",
+      "employerName": "ventis",
+      "existingDebts": "",
+      "firstPensionDate": "",
+      "formerProfession": "",
+      "jobSeniority": 5,
+      "legalForm": "",
+      "monthlySalary": 400000,
+      "netProfit": "",
+      "otherIncome": 100000,
+      "ownCapital": "",
+      "participantCount": "",
+      "participationHistory": "",
+      "patentNumber": "",
+      "pensionAmount": "",
+      "rccmNumber": "",
+      "retirementDate": "",
+      "retirementOrganization": "",
+      "tontineName": "",
+      "turnover": ""
+    },
+    "creditDetails": {
+      "cashFlow": "",
+      "clientPaymentHistory": "",
+      "creditPurpose": "acheter une voiture",
+      "deliveryDeadline": "",
+      "duration": 12,
+      "goodsServices": "",
+      "guarantees": "terrain",
+      "investmentDetails": "",
+      "investmentType": "",
+      "invoiceAmount": "",
+      "invoiceClient": "",
+      "invoiceDate": "",
+      "liquidityProblem": "",
+      "orderClient": "",
+      "paymentConditions": "",
+      "paymentDeadline": "",
+      "productionCapacity": "",
+      "profitMargin": "",
+      "proposedSolutions": "",
+      "rawMaterialsCost": "",
+      "repaymentMode": "virement",
+      "repaymentPlan": "",
+      "requestedAmount": 2500000,
+      "totalOrderAmount": "",
+      "urgency": "",
+      "workNature": ""
+    },
+    "creditScore": 820,
+    "riskLevel": "bas",
+    "creditProbability": 0.9454545454545454,
+    "status": "approuvé",
+    "submissionDate": "2025-07-10T13:57:07.613Z",
+    "scoringFactors": [
+      {
+        "description": "Emploi stable",
+        "impact": 100,
+        "name": "employment_status",
+        "value": "CDI"
+      },
+      {
+        "description": "Âge favorable",
+        "impact": 50,
+        "name": "age",
+        "value": "27 ans"
+      }
+    ],
+    "documents": {
+      "bankStatements": [
+        {
+          "file": {},
+          "name": "No07-2006_network4value.pdf",
+          "size": 1436741,
+          "type": "application/pdf"
+        }
+      ],
+      "employmentCertificate": [
+        {
+          "file": {},
+          "name": "document_conception_architecture.pdf",
+          "size": 1140366,
+          "type": "application/pdf"
+        }
+      ],
+      "identityDocument": [
+        {
+          "file": {},
+          "name": "document_conception_architecture.pdf",
+          "size": 1140366,
+          "type": "application/pdf"
+        }
+      ],
+      "paySlips": [
+        {
+          "file": {},
+          "name": "No07-2006_network4value.pdf",
+          "size": 1436741,
+          "type": "application/pdf"
+        }
+      ]
+    },
+    "guarantor_name": "BEBANE MOUKOUMBI Marina Brunelle",
+    "email": "marie.nguema@email.com",
+    "phone": "077861364",
+    "amount": 2500000,
+    "duration": 12,
+    "monthly_income": 400000,
+    "employer": "ventis",
+    "score": 820,
+    "risk_level": "bas",
+    "created_at": "2025-07-10T13:57:07.613Z"
+  },
+  {
+    "id": 3,
+    "creditType": "consommation",
+    "personalInfo": {
+      "fullName": "BEBANE MOUKOUMBI Marina Brunelle",
+      "birthDate": "1969-01-10",
+      "birthPlace": "Libreville",
+      "nationality": "gabonaise",
+      "identityType": "cni",
+      "identityNumber": "CNI123456789",
+      "phoneNumber": "077861364",
+      "email": "marie.nguema@email.com",
+      "address": "BP 1234, Rue de la Paix, Quartier Glass",
+      "entityType": "",
+      "profession": ""
+    },
+    "financialInfo": {
+      "monthlySalary": 900000,
+      "otherIncome": 2500000,
+      "jobSeniority": 5,
+      "contractType": "cdd",
+      "employerName": "ventis",
+      "companyName": "",
+      "legalForm": "",
+      "businessSector": "",
+      "rccmNumber": "",
+      "patentNumber": "",
+      "creationDate": "",
+      "turnover": "",
+      "netProfit": "",
+      "existingDebts": "",
+      "ownCapital": "",
+      "tontineName": "",
+      "participantCount": "",
+      "contributionAmount": "",
+      "contributionFrequency": "",
+      "participationHistory": "",
+      "retirementOrganization": "",
+      "pensionAmount": "",
+      "firstPensionDate": "",
+      "retirementDate": "",
+      "formerProfession": ""
+    },
+    "creditDetails": {
+      "requestedAmount": 2500000,
+      "duration": 12,
+      "creditPurpose": "terrain acheter",
+      "repaymentMode": "virement",
+      "guarantees": "terrain",
+      "invoiceClient": "",
+      "workNature": "",
+      "invoiceAmount": "",
+      "invoiceDate": "",
+      "paymentDeadline": "",
+      "clientPaymentHistory": "",
+      "orderClient": "",
+      "goodsServices": "",
+      "totalOrderAmount": "",
+      "deliveryDeadline": "",
+      "paymentConditions": "",
+      "rawMaterialsCost": "",
+      "profitMargin": "",
+      "productionCapacity": "",
+      "liquidityProblem": "",
+      "urgency": "",
+      "proposedSolutions": "",
+      "cashFlow": "",
+      "investmentType": "",
+      "investmentDetails": "",
+      "repaymentPlan": ""
+    },
+    "creditScore": 840,
+    "riskLevel": "bas",
+    "creditProbability": 0.9818181818181818,
+    "status": "en-cours",
+    "submissionDate": "2025-07-10T21:06:26.534Z",
+    "scoringFactors": [
+      {
+        "description": "Emploi stable",
+        "impact": 100,
+        "name": "employment_status",
+        "value": "CDI"
+      },
+      {
+        "description": "Âge élevé",
+        "impact": -30,
+        "name": "age",
+        "value": "56 ans"
+      }
+    ],
+    "documents": {
+      "identityDocument": [
+        {
+          "file": {},
+          "name": "Devis_Soutenance.pdf",
+          "size": 129112,
+          "type": "application/pdf"
+        }
+      ],
+      "paySlips": [
+        {
+          "file": {},
+          "name": "angular.png",
+          "size": 5377,
+          "type": "image/png"
+        }
+      ],
+      "bankStatements": [
+        {
+          "file": {},
+          "name": "téléchargement (1).png",
+          "size": 4511,
+          "type": "image/png"
+        }
+      ],
+      "employmentCertificate": [
+        {
+          "file": {},
+          "name": "No07-2006_network4value.pdf",
+          "size": 1436741,
+          "type": "application/pdf"
+        }
+      ]
+    },
+    "guarantor_name": "BEBANE MOUKOUMBI Marina Brunelle",
+    "email": "marie.nguema@email.com",
+    "phone": "077861364",
+    "amount": 2500000,
+    "duration": 12,
+    "monthly_income": 900000,
+    "employer": "ventis",
+    "score": 840,
+    "risk_level": "bas",
+    "created_at": "2025-07-10T21:06:26.534Z"
+  },
+  {
+    "id": 4,
+    "creditType": "consommation",
+    "personalInfo": {
+      "fullName": "BEBANE MOUKOUMBI Marina Brunelle",
+      "birthDate": "1969-01-10",
+      "birthPlace": "Libreville",
+      "nationality": "gabonaise",
+      "identityType": "cni",
+      "identityNumber": "CNI123456789",
+      "phoneNumber": "077861364",
+      "email": "marie.nguema@email.com",
+      "address": "BP 1234, Rue de la Paix, Quartier Glass",
+      "maritalStatus": "marie",
+      "dependents": 5,
+      "education": ""
+    },
+    "financialInfo": {
+      "monthlySalary": 950000,
+      "otherIncome": 250000,
+      "jobSeniority": 5,
+      "contractType": "cdi",
+      "employerName": "ventis",
+      "existingDebts": 100000,
+      "companyName": "",
+      "legalForm": "",
+      "businessSector": "",
+      "rccmNumber": "",
+      "patentNumber": "",
+      "creationDate": "",
+      "turnover": "",
+      "netProfit": "",
+      "ownCapital": "",
+      "numberOfEmployees": "",
+      "tontineName": "",
+      "participantCount": "",
+      "contributionAmount": "",
+      "contributionFrequency": "",
+      "participationHistory": "",
+      "tontineLeaderName": "",
+      "retirementOrganization": "",
+      "pensionAmount": "",
+      "firstPensionDate": "",
+      "retirementDate": "",
+      "formerProfession": "",
+      "pensionRegularity": "",
+      "monthlyExpenses": "",
+      "liquidAssets": "",
+      "monthlyNetFlow": ""
+    },
+    "creditDetails": {
+      "requestedAmount": 250000,
+      "duration": 12,
+      "creditPurpose": "acheter un maison",
+      "repaymentMode": "mensuel",
+      "guarantees": "terrain",
+      "invoiceNumber": "",
+      "invoiceClient": "",
+      "invoiceAmount": "",
+      "invoiceDate": "",
+      "paymentDeadline": "",
+      "clientPaymentHistory": "",
+      "clientCompany": "",
+      "workDescription": "",
+      "orderNumber": "",
+      "orderClient": "",
+      "totalOrderAmount": "",
+      "goodsServices": "",
+      "deliveryDeadline": "",
+      "paymentConditions": "",
+      "productionCapacity": "",
+      "rawMaterialsCost": "",
+      "profitMargin": "",
+      "investmentType": "",
+      "investmentDetails": "",
+      "expectedRoi": "",
+      "projectDuration": "",
+      "marketStudy": "",
+      "competitiveAdvantage": "",
+      "urgencyReason": "",
+      "liquidityProblem": "",
+      "temporarySolution": "",
+      "alternativeSolutions": "",
+      "immediateNeed": ""
+    },
+    "creditScore": 595,
+    "riskLevel": "élevé",
+    "creditProbability": 0.6,
+    "decision": "à étudier",
+    "status": "en-cours",
+    "submissionDate": "2025-07-11T08:15:16.273Z",
+    "scoringFactors": [
+      {
+        "impact": 15,
+        "name": "age",
+        "value": 80,
+        "weight": 0.15
+      },
+      {
+        "impact": 50,
+        "name": "monthly_income",
+        "value": 100,
+        "weight": 0.25
+      },
+      {
+        "impact": 30,
+        "name": "employment_status",
+        "value": 90,
+        "weight": 0.2
+      },
+      {
+        "impact": 30,
+        "name": "job_seniority",
+        "value": 100,
+        "weight": 0.15
+      },
+      {
+        "impact": -30,
+        "name": "existing_debts",
+        "value": 100,
+        "weight": -0.15
+      }
+    ],
+    "recommendations": [
+      "Réduisez vos dettes existantes pour améliorer votre ratio d'endettement"
+    ],
+    "documents": {
+      "identityDocument": [
+        {
+          "file": {},
+          "name": "document_conception_architecture.pdf",
+          "size": 1140366,
+          "type": "application/pdf"
+        }
+      ],
+      "paySlips": [
+        {
+          "file": {},
+          "name": "No07-2006_network4value.pdf",
+          "size": 1436741,
+          "type": "application/pdf"
+        }
+      ],
+      "employmentCertificate": [
+        {
+          "file": {},
+          "name": "Devis_Soutenance.pdf",
+          "size": 129112,
+          "type": "application/pdf"
+        }
+      ],
+      "bankStatements": [
+        {
+          "file": {},
+          "name": "No07-2006_network4value.pdf",
+          "size": 1436741,
+          "type": "application/pdf"
+        }
+      ]
+    }
+  },
+  {
+    "id": 5,
+    "creditType": "consommation",
+    "personalInfo": {
+      "fullName": "BEBANE MOUKOUMBI Marina Brunelle",
+      "birthDate": "1969-01-10",
+      "birthPlace": "Libreville",
+      "nationality": "gabonaise",
+      "identityType": "cni",
+      "identityNumber": "CNI123456789",
+      "phoneNumber": "077861364",
+      "email": "marie.nguema@email.com",
+      "address": "BP 1234, Rue de la Paix, Quartier Glass",
+      "maritalStatus": "marie",
+      "dependents": 4,
+      "education": ""
+    },
+    "financialInfo": {
+      "monthlySalary": 900000,
+      "otherIncome": 250000,
+      "jobSeniority": 5,
+      "contractType": "cdi",
+      "employerName": "ventis",
+      "existingDebts": 0,
+      "companyName": "",
+      "legalForm": "",
+      "businessSector": "",
+      "rccmNumber": "",
+      "patentNumber": "",
+      "creationDate": "",
+      "turnover": "",
+      "netProfit": "",
+      "ownCapital": "",
+      "numberOfEmployees": "",
+      "tontineName": "",
+      "participantCount": "",
+      "contributionAmount": "",
+      "contributionFrequency": "",
+      "participationHistory": "",
+      "tontineLeaderName": "",
+      "retirementOrganization": "",
+      "pensionAmount": "",
+      "firstPensionDate": "",
+      "retirementDate": "",
+      "formerProfession": "",
+      "pensionRegularity": "",
+      "monthlyExpenses": "",
+      "liquidAssets": "",
+      "monthlyNetFlow": ""
+    },
+    "creditDetails": {
+      "requestedAmount": 250000,
+      "duration": 12,
+      "creditPurpose": "acheter une maison",
+      "repaymentMode": "mensuel",
+      "guarantees": "terrain",
+      "invoiceNumber": "",
+      "invoiceClient": "",
+      "invoiceAmount": "",
+      "invoiceDate": "",
+      "paymentDeadline": "",
+      "clientPaymentHistory": "",
+      "clientCompany": "",
+      "workDescription": "",
+      "orderNumber": "",
+      "orderClient": "",
+      "totalOrderAmount": "",
+      "goodsServices": "",
+      "deliveryDeadline": "",
+      "paymentConditions": "",
+      "productionCapacity": "",
+      "rawMaterialsCost": "",
+      "profitMargin": "",
+      "investmentType": "",
+      "investmentDetails": "",
+      "expectedRoi": "",
+      "projectDuration": "",
+      "marketStudy": "",
+      "competitiveAdvantage": "",
+      "urgencyReason": "",
+      "liquidityProblem": "",
+      "temporarySolution": "",
+      "alternativeSolutions": "",
+      "immediateNeed": ""
+    },
+    "creditScore": 595,
+    "riskLevel": "élevé",
+    "creditProbability": 0.6,
+    "decision": "à étudier",
+    "status": "en-cours",
+    "submissionDate": "2025-07-11T08:36:58.474Z",
+    "scoringFactors": [
+      {
+        "impact": 15,
+        "name": "age",
+        "value": 80,
+        "weight": 0.15
+      },
+      {
+        "impact": 50,
+        "name": "monthly_income",
+        "value": 100,
+        "weight": 0.25
+      },
+      {
+        "impact": 30,
+        "name": "employment_status",
+        "value": 90,
+        "weight": 0.2
+      },
+      {
+        "impact": 30,
+        "name": "job_seniority",
+        "value": 100,
+        "weight": 0.15
+      },
+      {
+        "impact": -30,
+        "name": "existing_debts",
+        "value": 100,
+        "weight": -0.15
+      }
+    ],
+    "recommendations": [],
+    "documents": {
+      "identityDocument": [
+        {
+          "file": {},
+          "name": "Devis_Soutenance.pdf",
+          "size": 129112,
+          "type": "application/pdf"
+        }
+      ],
+      "paySlips": [
+        {
+          "file": {},
+          "name": "No07-2006_network4value.pdf",
+          "size": 1436741,
+          "type": "application/pdf"
+        }
+      ],
+      "employmentCertificate": [
+        {
+          "file": {},
+          "name": "document_conception_architecture.pdf",
+          "size": 1140366,
+          "type": "application/pdf"
+        }
+      ],
+      "bankStatements": [
+        {
+          "file": {},
+          "name": "No07-2006_network4value.pdf",
+          "size": 1436741,
+          "type": "application/pdf"
+        }
+      ]
+    }
+  },
+  {
+    "id": 6,
+    "creditType": "investissement",
+    "personalInfo": {
+      "fullName": "BEBANE MOUKOUMBI Marina Brunelle",
+      "birthDate": "1969-01-10",
+      "birthPlace": "Libreville",
+      "nationality": "gabonaise",
+      "identityType": "cni",
+      "identityNumber": "CNI123456789",
+      "phoneNumber": "077861364",
+      "email": "marie.nguema@email.com",
+      "address": "BP 1234, Rue de la Paix, Quartier Glass",
+      "maritalStatus": "marie",
+      "dependents": 5,
+      "education": ""
+    },
+    "financialInfo": {
+      "monthlySalary": 900000,
+      "otherIncome": 500000,
+      "jobSeniority": 5,
+      "contractType": "independant",
+      "employerName": "ventis",
+      "existingDebts": 0,
+      "companyName": "ventis",
+      "legalForm": "ei",
+      "businessSector": "batiment",
+      "rccmNumber": "23145669875",
+      "patentNumber": "2116687",
+      "creationDate": "2013-03-11",
+      "turnover": 25000000,
+      "netProfit": 15000000,
+      "ownCapital": 2600000,
+      "numberOfEmployees": 50,
+      "tontineName": "",
+      "participantCount": "",
+      "contributionAmount": "",
+      "contributionFrequency": "",
+      "participationHistory": "",
+      "tontineLeaderName": "",
+      "retirementOrganization": "",
+      "pensionAmount": "",
+      "firstPensionDate": "",
+      "retirementDate": "",
+      "formerProfession": "",
+      "pensionRegularity": "",
+      "monthlyExpenses": "",
+      "liquidAssets": "",
+      "monthlyNetFlow": ""
+    },
+    "creditDetails": {
+      "requestedAmount": 10000000,
+      "duration": 12,
+      "creditPurpose": "developper plus mon commerce",
+      "repaymentMode": "mensuel",
+      "guarantees": "voiture",
+      "invoiceNumber": "",
+      "invoiceClient": "",
+      "invoiceAmount": "",
+      "invoiceDate": "",
+      "paymentDeadline": "",
+      "clientPaymentHistory": "",
+      "clientCompany": "",
+      "workDescription": "",
+      "orderNumber": "",
+      "orderClient": "",
+      "totalOrderAmount": "",
+      "goodsServices": "",
+      "deliveryDeadline": "",
+      "paymentConditions": "",
+      "productionCapacity": "",
+      "rawMaterialsCost": "",
+      "profitMargin": "",
+      "investmentType": "expansion",
+      "investmentDetails": "fgggggggggggggggggggggggggggggggg",
+      "expectedRoi": 50,
+      "projectDuration": 5,
+      "marketStudy": "en_cours",
+      "competitiveAdvantage": "",
+      "urgencyReason": "",
+      "liquidityProblem": "",
+      "temporarySolution": "",
+      "alternativeSolutions": "",
+      "immediateNeed": ""
+    },
+    "creditScore": 300,
+    "riskLevel": "très élevé",
+    "creditProbability": 0.1,
+    "decision": "refusé",
+    "status": "en-cours",
+    "submissionDate": "2025-07-11T08:43:46.563Z",
+    "scoringFactors": [],
+    "recommendations": [],
+    "documents": {
+      "identityDocument": [
+        {
+          "file": {},
+          "name": "Devis_Soutenance.pdf",
+          "size": 129112,
+          "type": "application/pdf"
+        }
+      ],
+      "paySlips": [
+        {
+          "file": {},
+          "name": "No07-2006_network4value.pdf",
+          "size": 1436741,
+          "type": "application/pdf"
+        }
+      ],
+      "employmentCertificate": [
+        {
+          "file": {},
+          "name": "No07-2006_network4value.pdf",
+          "size": 1436741,
+          "type": "application/pdf"
+        }
+      ],
+      "bankStatements": [
+        {
+          "file": {},
+          "name": "Blank diagram.png",
+          "size": 70243,
+          "type": "image/png"
+        }
+      ],
+      "companyStatutes": [
+        {
+          "file": {},
+          "name": "No07-2006_network4value.pdf",
+          "size": 1436741,
+          "type": "application/pdf"
+        }
+      ],
+      "balanceSheets": [
+        {
+          "file": {},
+          "name": "No07-2006_network4value.pdf",
+          "size": 1436741,
+          "type": "application/pdf"
+        }
+      ],
+      "patent": [
+        {
+          "file": {},
+          "name": "Devis_Soutenance.pdf",
+          "size": 129112,
+          "type": "application/pdf"
+        }
+      ],
+      "businessPlan": [
+        {
+          "file": {},
+          "name": "Devis_Soutenance.pdf",
+          "size": 129112,
+          "type": "application/pdf"
+        }
+      ]
+    }
+  },
+  {
+    "id": 7,
+    "creditType": "consommation",
+    "personalInfo": {
+      "fullName": "BEBANE MOUKOUMBI Marina Brunelle",
+      "birthDate": "1969-01-10",
+      "birthPlace": "Libreville",
+      "nationality": "gabonaise",
+      "identityType": "cni",
+      "identityNumber": "CNI123456789",
+      "phoneNumber": "077861364",
+      "email": "marie.nguema@email.com",
+      "address": "BP 1234, Rue de la Paix, Quartier Glass",
+      "maritalStatus": "",
+      "dependents": "",
+      "education": ""
+    },
+    "financialInfo": {
+      "monthlySalary": 900000,
+      "otherIncome": 2500000,
+      "jobSeniority": 5,
+      "contractType": "cdi",
+      "employerName": "ventis",
+      "existingDebts": 150000,
+      "companyName": "",
+      "legalForm": "",
+      "businessSector": "",
+      "rccmNumber": "",
+      "patentNumber": "",
+      "creationDate": "",
+      "turnover": "",
+      "netProfit": "",
+      "ownCapital": "",
+      "numberOfEmployees": "",
+      "tontineName": "",
+      "participantCount": "",
+      "contributionAmount": "",
+      "contributionFrequency": "",
+      "participationHistory": "",
+      "tontineLeaderName": "",
+      "retirementOrganization": "",
+      "pensionAmount": "",
+      "firstPensionDate": "",
+      "retirementDate": "",
+      "formerProfession": "",
+      "pensionRegularity": "",
+      "monthlyExpenses": "",
+      "liquidAssets": "",
+      "monthlyNetFlow": ""
+    },
+    "creditDetails": {
+      "requestedAmount": 300000,
+      "duration": 12,
+      "creditPurpose": "fffffffffffdddddddddddddddddddd",
+      "repaymentMode": "mensuel",
+      "guarantees": "terrain",
+      "invoiceNumber": "",
+      "invoiceClient": "",
+      "invoiceAmount": "",
+      "invoiceDate": "",
+      "paymentDeadline": "",
+      "clientPaymentHistory": "",
+      "clientCompany": "",
+      "workDescription": "",
+      "orderNumber": "",
+      "orderClient": "",
+      "totalOrderAmount": "",
+      "goodsServices": "",
+      "deliveryDeadline": "",
+      "paymentConditions": "",
+      "productionCapacity": "",
+      "rawMaterialsCost": "",
+      "profitMargin": "",
+      "investmentType": "",
+      "investmentDetails": "",
+      "expectedRoi": "",
+      "projectDuration": "",
+      "marketStudy": "",
+      "competitiveAdvantage": "",
+      "urgencyReason": "",
+      "liquidityProblem": "",
+      "temporarySolution": "",
+      "alternativeSolutions": "",
+      "immediateNeed": ""
+    },
+    "creditScore": 595,
+    "riskLevel": "élevé",
+    "creditProbability": 0.6,
+    "decision": "à étudier",
+    "status": "en-cours",
+    "submissionDate": "2025-07-11T09:05:56.557Z",
+    "scoringFactors": [
+      {
+        "impact": 15,
+        "name": "age",
+        "value": 80,
+        "weight": 0.15
+      },
+      {
+        "impact": 50,
+        "name": "monthly_income",
+        "value": 100,
+        "weight": 0.25
+      },
+      {
+        "impact": 30,
+        "name": "employment_status",
+        "value": 90,
+        "weight": 0.2
+      },
+      {
+        "impact": 30,
+        "name": "job_seniority",
+        "value": 100,
+        "weight": 0.15
+      },
+      {
+        "impact": -30,
+        "name": "existing_debts",
+        "value": 100,
+        "weight": -0.15
+      }
+    ],
+    "recommendations": [
+      "Réduisez vos dettes existantes pour améliorer votre ratio d'endettement"
+    ],
+    "documents": {
+      "identityDocument": [
+        {
+          "file": {},
+          "name": "Devis_Soutenance.pdf",
+          "size": 129112,
+          "type": "application/pdf"
+        }
+      ],
+      "paySlips": [
+        {
+          "file": {},
+          "name": "document_conception_architecture.pdf",
+          "size": 1140366,
+          "type": "application/pdf"
+        }
+      ],
+      "employmentCertificate": [
+        {
+          "file": {},
+          "name": "No07-2006_network4value.pdf",
+          "size": 1436741,
+          "type": "application/pdf"
+        }
+      ],
+      "bankStatements": [
+        {
+          "file": {},
+          "name": "No07-2006_network4value.pdf",
+          "size": 1436741,
+          "type": "application/pdf"
+        }
+      ]
+    }
+  },
+  {
+    "id": 8,
+    "creditType": "consommation",
+    "personalInfo": {
+      "fullName": "BEBANE MOUKOUMBI Marina Brunelle",
+      "birthDate": "1969-01-10",
+      "birthPlace": "Libreville",
+      "nationality": "gabonaise",
+      "identityType": "cni",
+      "identityNumber": "CNI123456789",
+      "phoneNumber": "077861364",
+      "email": "marina@email.com",
+      "address": "BP 1234, Rue de la Paix, Quartier Glass",
+      "maritalStatus": "marie",
+      "dependents": 5,
+      "education": ""
+    },
+    "financialInfo": {
+      "monthlySalary": 2000000,
+      "otherIncome": 2500000,
+      "jobSeniority": 8,
+      "contractType": "cdi",
+      "employerName": "ventis",
+      "existingDebts": 0,
+      "companyName": "",
+      "legalForm": "",
+      "businessSector": "",
+      "rccmNumber": "",
+      "patentNumber": "",
+      "creationDate": "",
+      "turnover": "",
+      "netProfit": "",
+      "ownCapital": "",
+      "numberOfEmployees": "",
+      "tontineName": "",
+      "participantCount": "",
+      "contributionAmount": "",
+      "contributionFrequency": "",
+      "participationHistory": "",
+      "tontineLeaderName": "",
+      "retirementOrganization": "",
+      "pensionAmount": "",
+      "firstPensionDate": "",
+      "retirementDate": "",
+      "formerProfession": "",
+      "pensionRegularity": "",
+      "monthlyExpenses": "",
+      "liquidAssets": "",
+      "monthlyNetFlow": ""
+    },
+    "creditDetails": {
+      "requestedAmount": 650000,
+      "duration": 12,
+      "creditPurpose": "acheter un voiture",
+      "repaymentMode": "mensuel",
+      "guarantees": "terrain",
+      "invoiceNumber": "",
+      "invoiceClient": "",
+      "invoiceAmount": "",
+      "invoiceDate": "",
+      "paymentDeadline": "",
+      "clientPaymentHistory": "",
+      "clientCompany": "",
+      "workDescription": "",
+      "orderNumber": "",
+      "orderClient": "",
+      "totalOrderAmount": "",
+      "goodsServices": "",
+      "deliveryDeadline": "",
+      "paymentConditions": "",
+      "productionCapacity": "",
+      "rawMaterialsCost": "",
+      "profitMargin": "",
+      "investmentType": "",
+      "investmentDetails": "",
+      "expectedRoi": "",
+      "projectDuration": "",
+      "marketStudy": "",
+      "competitiveAdvantage": "",
+      "urgencyReason": "",
+      "liquidityProblem": "",
+      "temporarySolution": "",
+      "alternativeSolutions": "",
+      "immediateNeed": ""
+    },
+    "creditScore": 595,
+    "riskLevel": "élevé",
+    "creditProbability": 0.6,
+    "decision": "à étudier",
+    "status": "en-cours",
+    "submissionDate": "2025-07-11T09:26:49.209Z",
+    "scoringFactors": [
+      {
+        "impact": 15,
+        "name": "age",
+        "value": 80,
+        "weight": 0.15
+      },
+      {
+        "impact": 50,
+        "name": "monthly_income",
+        "value": 100,
+        "weight": 0.25
+      },
+      {
+        "impact": 30,
+        "name": "employment_status",
+        "value": 90,
+        "weight": 0.2
+      },
+      {
+        "impact": 30,
+        "name": "job_seniority",
+        "value": 100,
+        "weight": 0.15
+      },
+      {
+        "impact": -30,
+        "name": "existing_debts",
+        "value": 100,
+        "weight": -0.15
+      }
+    ],
+    "recommendations": [],
+    "documents": {
+      "identityDocument": [
+        {
+          "file": {},
+          "name": "Devis_Soutenance.pdf",
+          "size": 129112,
+          "type": "application/pdf"
+        }
+      ],
+      "paySlips": [
+        {
+          "file": {},
+          "name": "No07-2006_network4value.pdf",
+          "size": 1436741,
+          "type": "application/pdf"
+        }
+      ],
+      "employmentCertificate": [
+        {
+          "file": {},
+          "name": "No07-2006_network4value.pdf",
+          "size": 1436741,
+          "type": "application/pdf"
+        }
+      ],
+      "bankStatements": [
+        {
+          "file": {},
+          "name": "No07-2006_network4value.pdf",
+          "size": 1436741,
+          "type": "application/pdf"
+        }
+      ]
+    }
+  },
+  {
+    "id": 9,
+    "creditType": "investissement",
+    "personalInfo": {
+      "fullName": "BEBANE MOUKOUMBI Marina Brunelle",
+      "birthDate": "1969-01-10",
+      "birthPlace": "Libreville",
+      "nationality": "gabonaise",
+      "identityType": "cni",
+      "identityNumber": "CNI123456789",
+      "phoneNumber": "077861364",
+      "email": "marie.nguema@email.com",
+      "address": "BP 1234, Rue de la Paix, Quartier Glass",
+      "maritalStatus": "celibataire",
+      "dependents": 0,
+      "education": ""
+    },
+    "financialInfo": {
+      "monthlySalary": 900000,
+      "otherIncome": 1000000,
+      "jobSeniority": 8,
+      "contractType": "cdi",
+      "employerName": "ventis",
+      "existingDebts": 0,
+      "companyName": "ventis",
+      "legalForm": "ei",
+      "businessSector": "agriculture",
+      "rccmNumber": "4455783",
+      "patentNumber": "54548548",
+      "creationDate": "2003-06-22",
+      "turnover": 15000000000,
+      "netProfit": 900000000,
+      "ownCapital": 2000000000,
+      "numberOfEmployees": 200,
+      "guarantees": "caution, terrain, voiture ",
+      "tontineName": "",
+      "participantCount": "",
+      "contributionAmount": "",
+      "contributionFrequency": "",
+      "participationHistory": "",
+      "tontineLeaderName": "",
+      "escrowAccount": "",
+      "solidaryGuarantor": "",
+      "retirementOrganization": "",
+      "pensionAmount": "",
+      "firstPensionDate": "",
+      "retirementDate": "",
+      "formerProfession": "",
+      "pensionRegularity": "",
+      "monthlyExpenses": "",
+      "liquidAssets": "",
+      "monthlyNetFlow": ""
+    },
+    "creditDetails": {
+      "requestedAmount": 5000000,
+      "duration": 12,
+      "creditPurpose": "je compte investir dans mon entreprise pour mieux la développer",
+      "repaymentMode": "mensuel",
+      "guarantees": "",
+      "invoiceNumber": "",
+      "invoiceClient": "",
+      "invoiceAmount": "",
+      "invoiceDate": "",
+      "paymentDeadline": "",
+      "clientPaymentHistory": "",
+      "clientCompany": "",
+      "workDescription": "",
+      "orderNumber": "",
+      "orderClient": "",
+      "totalOrderAmount": "",
+      "goodsServices": "",
+      "deliveryDeadline": "",
+      "paymentConditions": "",
+      "productionCapacity": "",
+      "rawMaterialsCost": "",
+      "profitMargin": "",
+      "investmentType": "stock",
+      "investmentDetails": "okzdoerzclghkklmkpoofincnknktvnnk,",
+      "expectedRoi": 65,
+      "projectDuration": 12,
+      "marketStudy": "en_cours",
+      "competitiveAdvantage": "",
+      "urgencyReason": "",
+      "liquidityProblem": "",
+      "temporarySolution": "",
+      "alternativeSolutions": "",
+      "immediateNeed": ""
+    },
+    "creditScore": 300,
+    "riskLevel": "très élevé",
+    "creditProbability": 0.1,
+    "decision": "refusé",
+    "status": "en-cours",
+    "submissionDate": "2025-07-13T12:21:04.348Z",
+    "scoringFactors": [],
+    "recommendations": [],
+    "documents": {
+      "identityDocument": [
+        {
+          "file": {},
+          "name": "Devis_Soutenance.pdf",
+          "size": 129112,
+          "type": "application/pdf"
+        }
+      ],
+      "paySlips": [
+        {
+          "file": {},
+          "name": "No07-2006_network4value.pdf",
+          "size": 1436741,
+          "type": "application/pdf"
+        }
+      ],
+      "employmentCertificate": [
+        {
+          "file": {},
+          "name": "document_conception_architecture.pdf",
+          "size": 1140366,
+          "type": "application/pdf"
+        }
+      ],
+      "bankStatements": [
+        {
+          "file": {},
+          "name": "No07-2006_network4value.pdf",
+          "size": 1436741,
+          "type": "application/pdf"
+        }
+      ],
+      "companyStatutes": [
+        {
+          "file": {},
+          "name": "Devis_Soutenance.pdf",
+          "size": 129112,
+          "type": "application/pdf"
+        }
+      ],
+      "balanceSheets": [
+        {
+          "file": {},
+          "name": "No07-2006_network4value.pdf",
+          "size": 1436741,
+          "type": "application/pdf"
+        }
+      ],
+      "patent": [
+        {
+          "file": {},
+          "name": "No07-2006_network4value.pdf",
+          "size": 1436741,
+          "type": "application/pdf"
+        }
+      ],
+      "businessPlan": [
+        {
+          "file": {},
+          "name": "Devis_Soutenance.pdf",
+          "size": 129112,
+          "type": "application/pdf"
+        }
+      ],
+      "ficheCircuit": [
+        {
+          "file": {},
+          "name": "No07-2006_network4value.pdf",
+          "size": 1436741,
+          "type": "application/pdf"
+        }
+      ]
+    }
+  },
+  {
+    "id": 10,
+    "creditType": "consommation_generale",
+    "personalInfo": {
+      "fullName": "Jean Dupont",
+      "birthDate": "1985-06-15",
+      "birthPlace": "Libreville",
+      "nationality": "gabonaise",
+      "identityType": "cni",
+      "identityNumber": "123456789",
+      "phoneNumber": "077123456",
+      "email": "marina@email.com",
+      "address": "Quartier Louis, Libreville, Gabon",
+      "maritalStatus": "marie",
+      "dependents": "2",
+      "education": "superieur",
+      "profession": "cadre"
+    },
+    "financialInfo": {
+      "monthlySalary": 1500000,
+      "otherIncome": 50000,
+      "monthlyCharges": 150000,
+      "jobSeniority": 5,
+      "contractType": "cdi",
+      "employerName": "Société Exemple SA",
+      "existingDebts": 50000,
+      "bankName": "Bamboo EMF",
+      "accountNumber": "1234567890",
+      "salaryDomiciliation": false,
+      "employerConvention": false
+    },
+    "creditDetails": {
+      "requestedAmount": 1000000,
+      "duration": 12,
+      "creditPurpose": "Achat d'équipement électroménager pour la maison",
+      "repaymentMode": "mensuel",
+      "liquidityProblem": "",
+      "urgencyJustification": "",
+      "solutionsEnvisaged": "",
+      "cashFlowStatus": ""
+    },
+    "creditScore": 780,
+    "riskLevel": "bas",
+    "creditProbability": 0.85,
+    "decision": "approuvé",
+    "status": "en-cours",
+    "submissionDate": "2025-07-18T09:51:24.583Z",
+    "scoringFactors": [
+      {
+        "impact": 20,
+        "name": "monthly_income",
+        "value": 85
+      },
+      {
+        "impact": 15,
+        "name": "employment_status",
+        "value": 90
+      },
+      {
+        "impact": 15,
+        "name": "job_seniority",
+        "value": 75
+      },
+      {
+        "impact": 10,
+        "name": "debt_ratio",
+        "value": 80
+      }
+    ],
+    "recommendations": [
+      "Excellent profil de crédit",
+      "Conditions préférentielles possibles"
+    ],
+    "documents": {
+      "identityDocument": [
+        {
+          "file": {},
+          "name": "identityDocument.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "paySlips": [
+        {
+          "file": {},
+          "name": "paySlips.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "employmentCertificate": [
+        {
+          "file": {},
+          "name": "employmentCertificate.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "bankStatements": [
+        {
+          "file": {},
+          "name": "bankStatements.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "seegReceipt": [
+        {
+          "file": {},
+          "name": "seegReceipt.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "debtCertificate": [
+        {
+          "file": {},
+          "name": "debtCertificate.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "salaryDomiciliationProof": [
+        {
+          "file": {},
+          "name": "salaryDomiciliationProof.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "liquidityJustification": [
+        {
+          "file": {},
+          "name": "liquidityJustification.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "financialStatements": [
+        {
+          "file": {},
+          "name": "financialStatements.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ]
+    },
+    "eligibilityCheck": {}
+  },
+  {
+    "id": 11,
+    "creditType": "consommation_generale",
+    "personalInfo": {
+      "fullName": "marina brunelle",
+      "birthDate": "1985-06-14",
+      "birthPlace": "Libreville",
+      "nationality": "gabonaise",
+      "identityType": "cni",
+      "identityNumber": "123456789",
+      "phoneNumber": "077861364",
+      "email": "marina@email.com",
+      "address": "quartier louis libreville ",
+      "maritalStatus": "marie",
+      "dependents": 2,
+      "education": "superieur",
+      "profession": "cadre"
+    },
+    "financialInfo": {
+      "monthlySalary": 1500000,
+      "otherIncome": 50000,
+      "monthlyCharges": 150000,
+      "jobSeniority": 5,
+      "contractType": "cdi",
+      "employerName": "Société Exemple SA",
+      "existingDebts": 50000,
+      "bankName": "Bamboo EMF",
+      "accountNumber": "1234567890",
+      "salaryDomiciliation": true,
+      "employerConvention": true
+    },
+    "creditDetails": {
+      "requestedAmount": 1000000,
+      "duration": 1,
+      "creditPurpose": "Avance sur salaire pour besoins personnels urgents",
+      "repaymentMode": "prelevement_salaire",
+      "liquidityProblem": "",
+      "urgencyJustification": "",
+      "solutionsEnvisaged": "",
+      "cashFlowStatus": ""
+    },
+    "creditScore": 730,
+    "riskLevel": "bas",
+    "creditProbability": 0.85,
+    "decision": "approuvé",
+    "status": "en-cours",
+    "submissionDate": "2025-07-18T11:31:09.292Z",
+    "scoringFactors": [
+      {
+        "impact": 20,
+        "name": "monthly_income",
+        "value": 85
+      },
+      {
+        "impact": 15,
+        "name": "employment_status",
+        "value": 90
+      },
+      {
+        "impact": 15,
+        "name": "job_seniority",
+        "value": 75
+      },
+      {
+        "impact": 10,
+        "name": "debt_ratio",
+        "value": 80
+      }
+    ],
+    "recommendations": [
+      "Bon profil de crédit",
+      "Approbation recommandée"
+    ],
+    "documents": {
+      "identityDocument": [
+        {
+          "file": {},
+          "name": "identityDocument.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "paySlips": [
+        {
+          "file": {},
+          "name": "paySlips.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "employmentCertificate": [
+        {
+          "file": {},
+          "name": "employmentCertificate.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "bankStatements": [
+        {
+          "file": {},
+          "name": "bankStatements.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "seegReceipt": [
+        {
+          "file": {},
+          "name": "seegReceipt.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "debtCertificate": [
+        {
+          "file": {},
+          "name": "debtCertificate.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "salaryDomiciliationProof": [
+        {
+          "file": {},
+          "name": "salaryDomiciliationProof.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "liquidityJustification": [
+        {
+          "file": {},
+          "name": "liquidityJustification.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "financialStatements": [
+        {
+          "file": {},
+          "name": "financialStatements.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ]
+    },
+    "eligibilityCheck": {}
+  },
+  {
+    "id": 12,
+    "creditType": "depannage",
+    "personalInfo": {
+      "fullName": "marina brunelle ",
+      "birthDate": "1985-06-15",
+      "birthPlace": "Libreville",
+      "nationality": "gabonaise",
+      "identityType": "cni",
+      "identityNumber": "123456789",
+      "phoneNumber": "077123456",
+      "email": "marina@email.com",
+      "address": "Quartier Louis, Libreville, Gabon",
+      "maritalStatus": "marie",
+      "dependents": "2",
+      "education": "superieur",
+      "profession": "cadre"
+    },
+    "financialInfo": {
+      "monthlySalary": 1500000,
+      "otherIncome": 50000,
+      "monthlyCharges": 150000,
+      "jobSeniority": 5,
+      "contractType": "cdi",
+      "employerName": "Société Exemple SA",
+      "existingDebts": 50000,
+      "bankName": "Bamboo EMF",
+      "accountNumber": "1234567890",
+      "salaryDomiciliation": true,
+      "employerConvention": true
+    },
+    "creditDetails": {
+      "requestedAmount": 1000000,
+      "creditPurpose": "Avance sur salaire pour besoins personnels urgents",
+      "repaymentMode": "prelevement_salaire",
+      "liquidityProblem": "Retard de paiement clients",
+      "urgencyJustification": "Paiement urgent de fournisseurs",
+      "solutionsEnvisaged": "Recouvrement de créances en cours",
+      "cashFlowStatus": "temporairement_negatif",
+      "duration": 1
+    },
+    "creditScore": 730,
+    "riskLevel": "bas",
+    "creditProbability": 0.85,
+    "decision": "approuvé",
+    "status": "en-cours",
+    "submissionDate": "2025-07-18T11:32:55.992Z",
+    "scoringFactors": [
+      {
+        "impact": 20,
+        "name": "monthly_income",
+        "value": 85
+      },
+      {
+        "impact": 15,
+        "name": "employment_status",
+        "value": 90
+      },
+      {
+        "impact": 15,
+        "name": "job_seniority",
+        "value": 75
+      },
+      {
+        "impact": 10,
+        "name": "debt_ratio",
+        "value": 80
+      }
+    ],
+    "recommendations": [
+      "Bon profil de crédit",
+      "Approbation recommandée"
+    ],
+    "documents": {
+      "identityDocument": [
+        {
+          "file": {},
+          "name": "identityDocument.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "paySlips": [
+        {
+          "file": {},
+          "name": "paySlips.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "employmentCertificate": [
+        {
+          "file": {},
+          "name": "employmentCertificate.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "bankStatements": [
+        {
+          "file": {},
+          "name": "bankStatements.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "seegReceipt": [
+        {
+          "file": {},
+          "name": "seegReceipt.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "debtCertificate": [
+        {
+          "file": {},
+          "name": "debtCertificate.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "salaryDomiciliationProof": [
+        {
+          "file": {},
+          "name": "salaryDomiciliationProof.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "liquidityJustification": [
+        {
+          "file": {},
+          "name": "liquidityJustification.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "financialStatements": [
+        {
+          "file": {},
+          "name": "financialStatements.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ]
+    },
+    "eligibilityCheck": {}
+  },
+  {
+    "id": 13,
+    "creditType": "consommation_generale",
+    "personalInfo": {
+      "fullName": "marina brunelle",
+      "birthDate": "1985-06-30",
+      "birthPlace": "Libreville",
+      "nationality": "gabonaise",
+      "identityType": "cni",
+      "identityNumber": "123456789",
+      "phoneNumber": "077861364",
+      "email": "marina@email.com",
+      "address": "quartier louis libreville",
+      "maritalStatus": "celibataire",
+      "dependents": 2,
+      "education": "superieur",
+      "profession": "ingénieur"
+    },
+    "financialInfo": {
+      "monthlySalary": 900000,
+      "otherIncome": 1500000,
+      "monthlyCharges": 200000,
+      "jobSeniority": 9,
+      "contractType": "cdi",
+      "employerName": "Société Ventis Tech",
+      "existingDebts": 150000,
+      "bankName": "Bamboo EMF",
+      "accountNumber": "1234567890",
+      "salaryDomiciliation": true,
+      "employerConvention": true
+    },
+    "creditDetails": {
+      "requestedAmount": 100000,
+      "creditPurpose": "Avance sur salaire pour besoin personnelles ",
+      "repaymentMode": "mensuel",
+      "liquidityProblem": "",
+      "urgencyJustification": "",
+      "solutionsEnvisaged": "",
+      "cashFlowStatus": "",
+      "duration": 1
+    },
+    "creditScore": 730,
+    "riskLevel": "bas",
+    "creditProbability": 0.85,
+    "decision": "approuvé",
+    "status": "en-cours",
+    "submissionDate": "2025-07-18T11:41:32.260Z",
+    "scoringFactors": [
+      {
+        "impact": 20,
+        "name": "monthly_income",
+        "value": 85
+      },
+      {
+        "impact": 15,
+        "name": "employment_status",
+        "value": 90
+      },
+      {
+        "impact": 15,
+        "name": "job_seniority",
+        "value": 75
+      },
+      {
+        "impact": 10,
+        "name": "debt_ratio",
+        "value": 80
+      }
+    ],
+    "recommendations": [
+      "Bon profil de crédit",
+      "Approbation recommandée"
+    ],
+    "documents": {
+      "identityDocument": [
+        {
+          "file": {},
+          "name": "identityDocument.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "paySlips": [
+        {
+          "file": {},
+          "name": "paySlips.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "employmentCertificate": [
+        {
+          "file": {},
+          "name": "employmentCertificate.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "bankStatements": [
+        {
+          "file": {},
+          "name": "bankStatements.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "seegReceipt": [
+        {
+          "file": {},
+          "name": "seegReceipt.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "debtCertificate": [
+        {
+          "file": {},
+          "name": "debtCertificate.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "salaryDomiciliationProof": [
+        {
+          "file": {},
+          "name": "salaryDomiciliationProof.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "liquidityJustification": [
+        {
+          "file": {},
+          "name": "liquidityJustification.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "financialStatements": [
+        {
+          "file": {},
+          "name": "financialStatements.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ]
+    },
+    "eligibilityCheck": {}
+  },
+  {
+    "id": 14,
+    "creditType": "consommation_generale",
+    "personalInfo": {
+      "fullName": "marina brunelle ",
+      "birthDate": "1985-06-15",
+      "birthPlace": "Libreville",
+      "nationality": "gabonaise",
+      "identityType": "cni",
+      "identityNumber": "123456789",
+      "phoneNumber": "077123456",
+      "email": "jean.dupont@email.com",
+      "address": "Quartier Louis, Libreville, Gabon",
+      "maritalStatus": "marie",
+      "dependents": "2",
+      "education": "superieur",
+      "profession": "cadre"
+    },
+    "financialInfo": {
+      "monthlySalary": 500000,
+      "otherIncome": 50000,
+      "monthlyCharges": 150000,
+      "jobSeniority": 5,
+      "contractType": "cdi",
+      "employerName": "Société Exemple SA",
+      "existingDebts": 50000,
+      "bankName": "Bamboo EMF",
+      "accountNumber": "1234567890",
+      "salaryDomiciliation": false,
+      "employerConvention": false
+    },
+    "creditDetails": {
+      "requestedAmount": 1000000,
+      "duration": 12,
+      "creditPurpose": "Achat d'équipement électroménager pour la maison",
+      "repaymentMode": "mensuel",
+      "liquidityProblem": "",
+      "urgencyJustification": "",
+      "solutionsEnvisaged": "",
+      "cashFlowStatus": ""
+    },
+    "creditScore": 850,
+    "riskLevel": "très bas",
+    "creditProbability": 0.95,
+    "decision": "approuvé",
+    "status": "en-cours",
+    "submissionDate": "2025-07-22T12:57:06.780Z",
+    "scoringFactors": [
+      {
+        "impact": 20,
+        "name": "monthly_income",
+        "value": 90
+      },
+      {
+        "impact": 15,
+        "name": "employment_status",
+        "value": 95
+      },
+      {
+        "impact": 15,
+        "name": "job_seniority",
+        "value": 40
+      },
+      {
+        "impact": 10,
+        "name": "debt_ratio",
+        "value": 50
+      }
+    ],
+    "recommendations": [
+      "Excellent profil de crédit - Félicitations !",
+      "Vous êtes éligible aux meilleures conditions",
+      "Traitement prioritaire de votre dossier",
+      "Attention : votre taux d'endettement est élevé",
+      "Votre ancienneté est faible, un garant pourrait être requis"
+    ],
+    "documents": {
+      "identityDocument": [
+        {
+          "file": {},
+          "name": "identityDocument.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "paySlips": [
+        {
+          "file": {},
+          "name": "paySlips.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "employmentCertificate": [
+        {
+          "file": {},
+          "name": "employmentCertificate.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "bankStatements": [
+        {
+          "file": {},
+          "name": "bankStatements.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "seegReceipt": [
+        {
+          "file": {},
+          "name": "seegReceipt.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "debtCertificate": [
+        {
+          "file": {},
+          "name": "debtCertificate.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "salaryDomiciliationProof": [
+        {
+          "file": {},
+          "name": "salaryDomiciliationProof.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "liquidityJustification": [
+        {
+          "file": {},
+          "name": "liquidityJustification.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "financialStatements": [
+        {
+          "file": {},
+          "name": "financialStatements.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ]
+    },
+    "eligibilityCheck": {}
+  },
+  {
+    "id": 15,
+    "creditType": "avance_salaire",
+    "personalInfo": {
+      "fullName": "marina brunelle ",
+      "birthDate": "1985-06-15",
+      "birthPlace": "Libreville",
+      "nationality": "gabonaise",
+      "identityType": "cni",
+      "identityNumber": "123456789",
+      "phoneNumber": "077123456",
+      "email": "jean.dupont@email.com",
+      "address": "Quartier Louis, Libreville, Gabon",
+      "maritalStatus": "marie",
+      "dependents": "2",
+      "education": "superieur",
+      "profession": "cadre"
+    },
+    "financialInfo": {
+      "monthlySalary": 1500000,
+      "otherIncome": 50000,
+      "monthlyCharges": 150000,
+      "jobSeniority": 5,
+      "contractType": "cdi",
+      "employerName": "Société Exemple SA",
+      "existingDebts": 50000,
+      "bankName": "Bamboo EMF",
+      "accountNumber": "1234567890",
+      "salaryDomiciliation": true,
+      "employerConvention": true
+    },
+    "creditDetails": {
+      "requestedAmount": 1000000,
+      "creditPurpose": "Avance sur salaire pour besoins personnels urgents",
+      "repaymentMode": "prelevement_salaire",
+      "liquidityProblem": "",
+      "urgencyJustification": "",
+      "solutionsEnvisaged": "",
+      "cashFlowStatus": "",
+      "duration": 1
+    },
+    "creditScore": 850,
+    "riskLevel": "très bas",
+    "creditProbability": 0.95,
+    "decision": "approuvé",
+    "status": "en-cours",
+    "submissionDate": "2025-07-22T13:00:14.928Z",
+    "scoringFactors": [
+      {
+        "impact": 20,
+        "name": "monthly_income",
+        "value": 90
+      },
+      {
+        "impact": 15,
+        "name": "employment_status",
+        "value": 95
+      },
+      {
+        "impact": 15,
+        "name": "job_seniority",
+        "value": 40
+      },
+      {
+        "impact": 10,
+        "name": "debt_ratio",
+        "value": 90
+      }
+    ],
+    "recommendations": [
+      "Excellent profil de crédit - Félicitations !",
+      "Vous êtes éligible aux meilleures conditions",
+      "Traitement prioritaire de votre dossier",
+      "Votre ancienneté est faible, un garant pourrait être requis"
+    ],
+    "documents": {
+      "identityDocument": [
+        {
+          "file": {},
+          "name": "identityDocument.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "paySlips": [
+        {
+          "file": {},
+          "name": "paySlips.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "employmentCertificate": [
+        {
+          "file": {},
+          "name": "employmentCertificate.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "bankStatements": [
+        {
+          "file": {},
+          "name": "bankStatements.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "seegReceipt": [
+        {
+          "file": {},
+          "name": "seegReceipt.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "debtCertificate": [
+        {
+          "file": {},
+          "name": "debtCertificate.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "salaryDomiciliationProof": [
+        {
+          "file": {},
+          "name": "salaryDomiciliationProof.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "liquidityJustification": [
+        {
+          "file": {},
+          "name": "liquidityJustification.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "financialStatements": [
+        {
+          "file": {},
+          "name": "financialStatements.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ]
+    },
+    "eligibilityCheck": {
+      "valid": true,
+      "errors": [],
+      "warnings": [
+        "Ancienneté inférieure à 1 an"
+      ],
+      "maxAmount": 1000000,
+      "recommendations": [
+        "Profil éligible pour le crédit demandé"
+      ]
+    }
+  },
+  {
+    "id": 16,
+    "creditType": "depannage",
+    "personalInfo": {
+      "fullName": "marina brunelle ",
+      "birthDate": "1985-06-15",
+      "birthPlace": "Libreville",
+      "nationality": "gabonaise",
+      "identityType": "cni",
+      "identityNumber": "123456789",
+      "phoneNumber": "077123456",
+      "email": "jean.dupont@email.com",
+      "address": "Quartier Louis, Libreville, Gabon",
+      "maritalStatus": "marie",
+      "dependents": "2",
+      "education": "superieur",
+      "profession": "cadre"
+    },
+    "financialInfo": {
+      "monthlySalary": 220000,
+      "otherIncome": 50000,
+      "monthlyCharges": 150000,
+      "jobSeniority": 5,
+      "contractType": "cdi",
+      "employerName": "Société Exemple SA",
+      "existingDebts": 50000,
+      "bankName": "Bamboo EMF",
+      "accountNumber": "1234567890",
+      "salaryDomiciliation": true,
+      "employerConvention": true
+    },
+    "creditDetails": {
+      "requestedAmount": 1000000,
+      "creditPurpose": "Avance sur salaire pour besoins personnels urgents",
+      "repaymentMode": "prelevement_salaire",
+      "liquidityProblem": "Retard de paiement clients",
+      "urgencyJustification": "Paiement urgent de fournisseurs",
+      "solutionsEnvisaged": "Recouvrement de créances en cours",
+      "cashFlowStatus": "temporairement_negatif",
+      "duration": 1
+    },
+    "creditScore": 660,
+    "riskLevel": "moyen",
+    "creditProbability": 0.7,
+    "decision": "approuvé",
+    "status": "en-cours",
+    "submissionDate": "2025-07-22T13:03:03.648Z",
+    "scoringFactors": [
+      {
+        "impact": 20,
+        "name": "monthly_income",
+        "value": 50
+      },
+      {
+        "impact": 15,
+        "name": "employment_status",
+        "value": 95
+      },
+      {
+        "impact": 15,
+        "name": "job_seniority",
+        "value": 40
+      },
+      {
+        "impact": 10,
+        "name": "debt_ratio",
+        "value": 20
+      }
+    ],
+    "recommendations": [
+      "Bon profil de crédit",
+      "Votre demande sera traitée rapidement",
+      "Un conseiller vous contactera sous 24-48h",
+      "Attention : votre taux d'endettement est élevé",
+      "Votre ancienneté est faible, un garant pourrait être requis"
+    ],
+    "documents": {
+      "identityDocument": [
+        {
+          "file": {},
+          "name": "identityDocument.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "paySlips": [
+        {
+          "file": {},
+          "name": "paySlips.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "employmentCertificate": [
+        {
+          "file": {},
+          "name": "employmentCertificate.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "bankStatements": [
+        {
+          "file": {},
+          "name": "bankStatements.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "seegReceipt": [
+        {
+          "file": {},
+          "name": "seegReceipt.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "debtCertificate": [
+        {
+          "file": {},
+          "name": "debtCertificate.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "salaryDomiciliationProof": [
+        {
+          "file": {},
+          "name": "salaryDomiciliationProof.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "liquidityJustification": [
+        {
+          "file": {},
+          "name": "liquidityJustification.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "financialStatements": [
+        {
+          "file": {},
+          "name": "financialStatements.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ]
+    },
+    "eligibilityCheck": {
+      "valid": true,
+      "errors": [],
+      "warnings": [
+        "Taux d'endettement élevé: 91%",
+        "Ancienneté inférieure à 1 an"
+      ],
+      "maxAmount": 2000000,
+      "recommendations": [
+        "Profil éligible pour le crédit demandé"
+      ]
+    }
+  },
+  {
+    "id": 17,
+    "creditType": "consommation_generale",
+    "personalInfo": {
+      "fullName": "Test User 702",
+      "birthDate": "1985-06-15",
+      "birthPlace": "Libreville",
+      "nationality": "Gabonaise",
+      "identityType": "cni",
+      "identityNumber": "123456789",
+      "phoneNumber": "077123456",
+      "email": "test676@email.com",
+      "address": "Quartier Louis, Libreville, Gabon",
+      "maritalStatus": "marie",
+      "dependents": "2",
+      "education": "superieur",
+      "profession": "cadre"
+    },
+    "financialInfo": {
+      "monthlySalary": 500000,
+      "otherIncome": 50000,
+      "monthlyCharges": 150000,
+      "jobSeniority": 24,
+      "contractType": "cdi",
+      "employerName": "Société Exemple SA",
+      "existingDebts": 50000,
+      "bankName": "Bamboo EMF",
+      "accountNumber": "1234567890",
+      "salaryDomiciliation": false,
+      "employerConvention": false
+    },
+    "creditDetails": {
+      "requestedAmount": 1000000,
+      "duration": 12,
+      "creditPurpose": "Achat d'équipement électroménager pour la maison",
+      "repaymentMode": "mensuel",
+      "liquidityProblem": "",
+      "urgencyJustification": "",
+      "solutionsEnvisaged": "",
+      "cashFlowStatus": ""
+    },
+    "creditScore": 850,
+    "riskLevel": "très bas",
+    "creditProbability": 0.95,
+    "decision": "approuvé",
+    "status": "en-cours",
+    "submissionDate": "2025-07-22T13:20:04.156Z",
+    "scoringFactors": [
+      {
+        "impact": 20,
+        "name": "monthly_income",
+        "value": 90
+      },
+      {
+        "impact": 15,
+        "name": "employment_status",
+        "value": 95
+      },
+      {
+        "impact": 15,
+        "name": "job_seniority",
+        "value": 70
+      },
+      {
+        "impact": 10,
+        "name": "debt_ratio",
+        "value": 50
+      }
+    ],
+    "recommendations": [
+      "Excellent profil de crédit - Félicitations !",
+      "Vous êtes éligible aux meilleures conditions",
+      "Traitement prioritaire de votre dossier",
+      "Attention : votre taux d'endettement est élevé"
+    ],
+    "documents": {
+      "identityDocument": [
+        {
+          "file": {},
+          "name": "identityDocument.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "paySlips": [
+        {
+          "file": {},
+          "name": "paySlips.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "employmentCertificate": [
+        {
+          "file": {},
+          "name": "employmentCertificate.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "bankStatements": [
+        {
+          "file": {},
+          "name": "bankStatements.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "seegReceipt": [
+        {
+          "file": {},
+          "name": "seegReceipt.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "debtCertificate": [
+        {
+          "file": {},
+          "name": "debtCertificate.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "salaryDomiciliationProof": [
+        {
+          "file": {},
+          "name": "salaryDomiciliationProof.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "liquidityJustification": [
+        {
+          "file": {},
+          "name": "liquidityJustification.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "financialStatements": [
+        {
+          "file": {},
+          "name": "financialStatements.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ]
+    },
+    "eligibilityCheck": {}
+  },
+  {
+    "id": 18,
+    "creditType": "consommation_generale",
+    "personalInfo": {
+      "fullName": "Test User 907",
+      "birthDate": "1985-06-15",
+      "birthPlace": "Libreville",
+      "nationality": "Gabonaise",
+      "identityType": "cni",
+      "identityNumber": "123456789",
+      "phoneNumber": "077123456",
+      "email": "test555@email.com",
+      "address": "Quartier Louis, Libreville, Gabon",
+      "maritalStatus": "marie",
+      "dependents": "2",
+      "education": "superieur",
+      "profession": "cadre"
+    },
+    "financialInfo": {
+      "monthlySalary": 500000,
+      "otherIncome": 50000,
+      "monthlyCharges": 150000,
+      "jobSeniority": 24,
+      "contractType": "cdi",
+      "employerName": "Société Exemple SA",
+      "existingDebts": 50000,
+      "bankName": "Bamboo EMF",
+      "accountNumber": "1234567890",
+      "salaryDomiciliation": false,
+      "employerConvention": false
+    },
+    "creditDetails": {
+      "requestedAmount": 1000000,
+      "duration": 12,
+      "creditPurpose": "Achat d'équipement électroménager pour la maison",
+      "repaymentMode": "mensuel",
+      "liquidityProblem": "",
+      "urgencyJustification": "",
+      "solutionsEnvisaged": "",
+      "cashFlowStatus": ""
+    },
+    "creditScore": 850,
+    "riskLevel": "très bas",
+    "creditProbability": 0.95,
+    "decision": "approuvé",
+    "status": "en-cours",
+    "submissionDate": "2025-07-22T13:36:45.946Z",
+    "scoringFactors": [
+      {
+        "impact": 20,
+        "name": "monthly_income",
+        "value": 90
+      },
+      {
+        "impact": 15,
+        "name": "employment_status",
+        "value": 95
+      },
+      {
+        "impact": 15,
+        "name": "job_seniority",
+        "value": 70
+      },
+      {
+        "impact": 10,
+        "name": "debt_ratio",
+        "value": 50
+      }
+    ],
+    "recommendations": [
+      "Excellent profil de crédit - Félicitations !",
+      "Vous êtes éligible aux meilleures conditions",
+      "Traitement prioritaire de votre dossier",
+      "Attention : votre taux d'endettement est élevé"
+    ],
+    "documents": {
+      "identityDocument": [
+        {
+          "file": {},
+          "name": "identityDocument.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "paySlips": [
+        {
+          "file": {},
+          "name": "paySlips.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "employmentCertificate": [
+        {
+          "file": {},
+          "name": "employmentCertificate.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "bankStatements": [
+        {
+          "file": {},
+          "name": "bankStatements.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "seegReceipt": [
+        {
+          "file": {},
+          "name": "seegReceipt.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "debtCertificate": [
+        {
+          "file": {},
+          "name": "debtCertificate.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "salaryDomiciliationProof": [
+        {
+          "file": {},
+          "name": "salaryDomiciliationProof.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "liquidityJustification": [
+        {
+          "file": {},
+          "name": "liquidityJustification.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "financialStatements": [
+        {
+          "file": {},
+          "name": "financialStatements.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ]
+    },
+    "eligibilityCheck": {}
+  },
+  {
+    "id": 19,
+    "creditType": "depannage",
+    "personalInfo": {
+      "fullName": "Test User 124",
+      "birthDate": "1985-06-15",
+      "birthPlace": "Libreville",
+      "nationality": "Gabonaise",
+      "identityType": "cni",
+      "identityNumber": "123456789",
+      "phoneNumber": "077123456",
+      "email": "test248@email.com",
+      "address": "Quartier Louis, Libreville, Gabon",
+      "maritalStatus": "marie",
+      "dependents": "2",
+      "education": "superieur",
+      "profession": "cadre"
+    },
+    "financialInfo": {
+      "monthlySalary": 500000,
+      "otherIncome": 50000,
+      "monthlyCharges": 150000,
+      "jobSeniority": 24,
+      "contractType": "cdi",
+      "employerName": "Société Exemple SA",
+      "existingDebts": 50000,
+      "bankName": "Bamboo EMF",
+      "accountNumber": "1234567890",
+      "salaryDomiciliation": true,
+      "employerConvention": true
+    },
+    "creditDetails": {
+      "requestedAmount": 1000000,
+      "creditPurpose": "Avance sur salaire pour besoins personnels urgents",
+      "repaymentMode": "prelevement_salaire",
+      "liquidityProblem": "Retard de paiement clients",
+      "urgencyJustification": "Paiement urgent de fournisseurs",
+      "solutionsEnvisaged": "Recouvrement de créances en cours",
+      "cashFlowStatus": "temporairement_negatif",
+      "duration": 1
+    },
+    "creditScore": 850,
+    "riskLevel": "très bas",
+    "creditProbability": 0.95,
+    "decision": "approuvé",
+    "status": "en-cours",
+    "submissionDate": "2025-07-22T13:41:58.654Z",
+    "scoringFactors": [
+      {
+        "impact": 20,
+        "name": "monthly_income",
+        "value": 90
+      },
+      {
+        "impact": 15,
+        "name": "employment_status",
+        "value": 95
+      },
+      {
+        "impact": 15,
+        "name": "job_seniority",
+        "value": 70
+      },
+      {
+        "impact": 10,
+        "name": "debt_ratio",
+        "value": 50
+      }
+    ],
+    "recommendations": [
+      "Excellent profil de crédit - Félicitations !",
+      "Vous êtes éligible aux meilleures conditions",
+      "Traitement prioritaire de votre dossier",
+      "Attention : votre taux d'endettement est élevé"
+    ],
+    "documents": {
+      "identityDocument": [
+        {
+          "file": {},
+          "name": "identityDocument.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "paySlips": [
+        {
+          "file": {},
+          "name": "paySlips.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "employmentCertificate": [
+        {
+          "file": {},
+          "name": "employmentCertificate.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "bankStatements": [
+        {
+          "file": {},
+          "name": "bankStatements.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "seegReceipt": [
+        {
+          "file": {},
+          "name": "seegReceipt.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "debtCertificate": [
+        {
+          "file": {},
+          "name": "debtCertificate.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "salaryDomiciliationProof": [
+        {
+          "file": {},
+          "name": "salaryDomiciliationProof.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "liquidityJustification": [
+        {
+          "file": {},
+          "name": "liquidityJustification.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "financialStatements": [
+        {
+          "file": {},
+          "name": "financialStatements.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ]
+    },
+    "eligibilityCheck": {
+      "valid": true,
+      "errors": [],
+      "warnings": [
+        "Taux d'endettement élevé: 40%"
+      ],
+      "maxAmount": 2000000,
+      "recommendations": [
+        "Profil éligible pour le crédit demandé"
+      ]
+    }
+  },
+  {
+    "id": 20,
+    "creditType": "avance_salaire",
+    "personalInfo": {
+      "fullName": "marina brunelle ",
+      "birthDate": "1985-06-15",
+      "birthPlace": "Libreville",
+      "nationality": "gabonaise",
+      "identityType": "cni",
+      "identityNumber": "123456789",
+      "phoneNumber": "077123456",
+      "email": "jean.dupont@email.com",
+      "address": "Quartier Louis, Libreville, Gabon",
+      "maritalStatus": "marie",
+      "dependents": "2",
+      "education": "superieur",
+      "profession": "cadre"
+    },
+    "financialInfo": {
+      "monthlySalary": 1500000,
+      "otherIncome": 50000,
+      "monthlyCharges": 150000,
+      "jobSeniority": 5,
+      "contractType": "cdi",
+      "employerName": "Société Exemple SA",
+      "existingDebts": 50000,
+      "bankName": "Bamboo EMF",
+      "accountNumber": "1234567890",
+      "salaryDomiciliation": true,
+      "employerConvention": true
+    },
+    "creditDetails": {
+      "requestedAmount": 1000000,
+      "creditPurpose": "Avance sur salaire pour besoins personnels urgents",
+      "repaymentMode": "prelevement_salaire",
+      "liquidityProblem": "",
+      "urgencyJustification": "",
+      "solutionsEnvisaged": "",
+      "cashFlowStatus": "",
+      "duration": 1
+    },
+    "creditScore": 850,
+    "riskLevel": "très bas",
+    "creditProbability": 0.95,
+    "decision": "approuvé",
+    "status": "en-cours",
+    "submissionDate": "2025-07-22T13:45:41.026Z",
+    "scoringFactors": [
+      {
+        "impact": 20,
+        "name": "monthly_income",
+        "value": 90
+      },
+      {
+        "impact": 15,
+        "name": "employment_status",
+        "value": 95
+      },
+      {
+        "impact": 15,
+        "name": "job_seniority",
+        "value": 40
+      },
+      {
+        "impact": 10,
+        "name": "debt_ratio",
+        "value": 90
+      }
+    ],
+    "recommendations": [
+      "Excellent profil de crédit - Félicitations !",
+      "Vous êtes éligible aux meilleures conditions",
+      "Traitement prioritaire de votre dossier",
+      "Votre ancienneté est faible, un garant pourrait être requis"
+    ],
+    "documents": {
+      "identityDocument": [
+        {
+          "file": {},
+          "name": "identityDocument.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "paySlips": [
+        {
+          "file": {},
+          "name": "paySlips.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "employmentCertificate": [
+        {
+          "file": {},
+          "name": "employmentCertificate.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "bankStatements": [
+        {
+          "file": {},
+          "name": "bankStatements.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "seegReceipt": [
+        {
+          "file": {},
+          "name": "seegReceipt.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "debtCertificate": [
+        {
+          "file": {},
+          "name": "debtCertificate.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "salaryDomiciliationProof": [
+        {
+          "file": {},
+          "name": "salaryDomiciliationProof.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "liquidityJustification": [
+        {
+          "file": {},
+          "name": "liquidityJustification.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "financialStatements": [
+        {
+          "file": {},
+          "name": "financialStatements.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ]
+    },
+    "eligibilityCheck": {
+      "valid": true,
+      "errors": [],
+      "warnings": [
+        "Ancienneté inférieure à 1 an"
+      ],
+      "maxAmount": 1000000,
+      "recommendations": [
+        "Profil éligible pour le crédit demandé"
+      ]
+    }
+  },
+  {
+    "id": 21,
+    "creditType": "consommation_generale",
+    "personalInfo": {
+      "fullName": "marina brunelle ",
+      "birthDate": "1985-06-15",
+      "birthPlace": "Libreville",
+      "nationality": "gabonaise",
+      "identityType": "cni",
+      "identityNumber": "123456789",
+      "phoneNumber": "077123456",
+      "email": "jean.dupont@email.com",
+      "address": "Quartier Louis, Libreville, Gabon",
+      "maritalStatus": "marie",
+      "dependents": "2",
+      "education": "superieur",
+      "profession": "cadre"
+    },
+    "financialInfo": {
+      "monthlySalary": 1500000,
+      "otherIncome": 50000,
+      "monthlyCharges": 150000,
+      "jobSeniority": 5,
+      "contractType": "cdi",
+      "employerName": "Société Exemple SA",
+      "existingDebts": 50000,
+      "bankName": "Bamboo EMF",
+      "accountNumber": "1234567890",
+      "salaryDomiciliation": false,
+      "employerConvention": false
+    },
+    "creditDetails": {
+      "requestedAmount": 1000000,
+      "duration": 12,
+      "creditPurpose": "Achat d'équipement électroménager pour la maison",
+      "repaymentMode": "mensuel",
+      "liquidityProblem": "",
+      "urgencyJustification": "",
+      "solutionsEnvisaged": "",
+      "cashFlowStatus": ""
+    },
+    "creditScore": 850,
+    "riskLevel": "très bas",
+    "creditProbability": 0.95,
+    "decision": "approuvé",
+    "status": "en-cours",
+    "submissionDate": "2025-07-22T13:50:32.465Z",
+    "scoringFactors": [
+      {
+        "impact": 20,
+        "name": "monthly_income",
+        "value": 90
+      },
+      {
+        "impact": 15,
+        "name": "employment_status",
+        "value": 95
+      },
+      {
+        "impact": 15,
+        "name": "job_seniority",
+        "value": 40
+      },
+      {
+        "impact": 10,
+        "name": "debt_ratio",
+        "value": 90
+      }
+    ],
+    "recommendations": [
+      "Excellent profil de crédit - Félicitations !",
+      "Vous êtes éligible aux meilleures conditions",
+      "Traitement prioritaire de votre dossier",
+      "Votre ancienneté est faible, un garant pourrait être requis"
+    ],
+    "documents": {
+      "identityDocument": [
+        {
+          "file": {},
+          "name": "identityDocument.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "paySlips": [
+        {
+          "file": {},
+          "name": "paySlips.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "employmentCertificate": [
+        {
+          "file": {},
+          "name": "employmentCertificate.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "bankStatements": [
+        {
+          "file": {},
+          "name": "bankStatements.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "seegReceipt": [
+        {
+          "file": {},
+          "name": "seegReceipt.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "debtCertificate": [
+        {
+          "file": {},
+          "name": "debtCertificate.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "salaryDomiciliationProof": [
+        {
+          "file": {},
+          "name": "salaryDomiciliationProof.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "liquidityJustification": [
+        {
+          "file": {},
+          "name": "liquidityJustification.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "financialStatements": [
+        {
+          "file": {},
+          "name": "financialStatements.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ]
+    },
+    "eligibilityCheck": {}
+  },
+  {
+    "id": 22,
+    "creditType": "consommation_generale",
+    "personalInfo": {
+      "fullName": "marina brunelle ",
+      "birthDate": "1985-06-15",
+      "birthPlace": "Libreville",
+      "nationality": "gabonaise",
+      "identityType": "cni",
+      "identityNumber": "123456789",
+      "phoneNumber": "077123456",
+      "email": "marina@email.com",
+      "address": "Quartier Louis, Libreville, Gabon",
+      "maritalStatus": "marie",
+      "dependents": "2",
+      "education": "superieur",
+      "profession": "cadre"
+    },
+    "financialInfo": {
+      "monthlySalary": 500000,
+      "otherIncome": 50000,
+      "monthlyCharges": 150000,
+      "jobSeniority": 5,
+      "contractType": "cdi",
+      "employerName": "Société Exemple SA",
+      "existingDebts": 50000,
+      "bankName": "Bamboo EMF",
+      "accountNumber": "1234567890",
+      "salaryDomiciliation": false,
+      "employerConvention": false
+    },
+    "creditDetails": {
+      "requestedAmount": 1000000,
+      "duration": 12,
+      "creditPurpose": "Achat d'équipement électroménager pour la maison",
+      "repaymentMode": "mensuel",
+      "liquidityProblem": "",
+      "urgencyJustification": "",
+      "solutionsEnvisaged": "",
+      "cashFlowStatus": ""
+    },
+    "creditScore": 850,
+    "riskLevel": "très bas",
+    "creditProbability": 0.95,
+    "decision": "approuvé",
+    "status": "en-cours",
+    "submissionDate": "2025-07-22T13:51:33.117Z",
+    "scoringFactors": [
+      {
+        "impact": 20,
+        "name": "monthly_income",
+        "value": 90
+      },
+      {
+        "impact": 15,
+        "name": "employment_status",
+        "value": 95
+      },
+      {
+        "impact": 15,
+        "name": "job_seniority",
+        "value": 40
+      },
+      {
+        "impact": 10,
+        "name": "debt_ratio",
+        "value": 50
+      }
+    ],
+    "recommendations": [
+      "Excellent profil de crédit - Félicitations !",
+      "Vous êtes éligible aux meilleures conditions",
+      "Traitement prioritaire de votre dossier",
+      "Attention : votre taux d'endettement est élevé",
+      "Votre ancienneté est faible, un garant pourrait être requis"
+    ],
+    "documents": {
+      "identityDocument": [
+        {
+          "file": {},
+          "name": "identityDocument.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "paySlips": [
+        {
+          "file": {},
+          "name": "paySlips.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "employmentCertificate": [
+        {
+          "file": {},
+          "name": "employmentCertificate.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "bankStatements": [
+        {
+          "file": {},
+          "name": "bankStatements.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "seegReceipt": [
+        {
+          "file": {},
+          "name": "seegReceipt.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "debtCertificate": [
+        {
+          "file": {},
+          "name": "debtCertificate.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "salaryDomiciliationProof": [
+        {
+          "file": {},
+          "name": "salaryDomiciliationProof.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "liquidityJustification": [
+        {
+          "file": {},
+          "name": "liquidityJustification.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "financialStatements": [
+        {
+          "file": {},
+          "name": "financialStatements.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ]
+    },
+    "eligibilityCheck": {}
+  },
+  {
+    "id": 23,
+    "creditType": "avance_salaire",
+    "personalInfo": {
+      "fullName": "marina brunelle ",
+      "birthDate": "1985-06-15",
+      "birthPlace": "Libreville",
+      "nationality": "gabonaise",
+      "identityType": "cni",
+      "identityNumber": "123456789",
+      "phoneNumber": "077123456",
+      "email": "marina@email.com",
+      "address": "Quartier Louis, Libreville, Gabon",
+      "maritalStatus": "marie",
+      "dependents": "2",
+      "education": "superieur",
+      "profession": "cadre"
+    },
+    "financialInfo": {
+      "monthlySalary": 1500000,
+      "otherIncome": 50000,
+      "monthlyCharges": 150000,
+      "jobSeniority": 5,
+      "contractType": "cdi",
+      "employerName": "Société Exemple SA",
+      "existingDebts": 50000,
+      "bankName": "Bamboo EMF",
+      "accountNumber": "1234567890",
+      "salaryDomiciliation": true,
+      "employerConvention": true
+    },
+    "creditDetails": {
+      "requestedAmount": 1000000,
+      "creditPurpose": "Avance sur salaire pour besoins personnels urgents",
+      "repaymentMode": "prelevement_salaire",
+      "liquidityProblem": "",
+      "urgencyJustification": "",
+      "solutionsEnvisaged": "",
+      "cashFlowStatus": "",
+      "duration": 1
+    },
+    "creditScore": 850,
+    "riskLevel": "très bas",
+    "creditProbability": 0.95,
+    "decision": "approuvé",
+    "status": "en-cours",
+    "submissionDate": "2025-07-22T14:21:20.304Z",
+    "scoringFactors": [
+      {
+        "impact": 20,
+        "name": "monthly_income",
+        "value": 90
+      },
+      {
+        "impact": 15,
+        "name": "employment_status",
+        "value": 95
+      },
+      {
+        "impact": 15,
+        "name": "job_seniority",
+        "value": 40
+      },
+      {
+        "impact": 10,
+        "name": "debt_ratio",
+        "value": 90
+      }
+    ],
+    "recommendations": [
+      "Excellent profil de crédit - Félicitations !",
+      "Vous êtes éligible aux meilleures conditions",
+      "Traitement prioritaire de votre dossier",
+      "Votre ancienneté est faible, un garant pourrait être requis"
+    ],
+    "documents": {
+      "identityDocument": [
+        {
+          "file": {},
+          "name": "identityDocument.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "paySlips": [
+        {
+          "file": {},
+          "name": "paySlips.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "employmentCertificate": [
+        {
+          "file": {},
+          "name": "employmentCertificate.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "bankStatements": [
+        {
+          "file": {},
+          "name": "bankStatements.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "seegReceipt": [
+        {
+          "file": {},
+          "name": "seegReceipt.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "debtCertificate": [
+        {
+          "file": {},
+          "name": "debtCertificate.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "salaryDomiciliationProof": [
+        {
+          "file": {},
+          "name": "salaryDomiciliationProof.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "liquidityJustification": [
+        {
+          "file": {},
+          "name": "liquidityJustification.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "financialStatements": [
+        {
+          "file": {},
+          "name": "financialStatements.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ]
+    },
+    "eligibilityCheck": {
+      "valid": true,
+      "errors": [],
+      "warnings": [
+        "Ancienneté inférieure à 1 an"
+      ],
+      "maxAmount": 1000000,
+      "recommendations": [
+        "Profil éligible pour le crédit demandé"
+      ]
+    }
+  }
+]

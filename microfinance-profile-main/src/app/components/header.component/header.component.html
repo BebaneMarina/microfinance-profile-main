@@ -1,0 +1,188 @@
+<header class="header">
+  <div class="header-container">
+    <!-- Left Section -->
+    <div class="header-left">
+      <button *ngIf="afficherMenuMobile" class="menu-toggle" (click)="basculerMenuMobile()">
+        <i class="material-icons">menu</i>
+      </button>
+      
+      <!-- Page Title -->
+      <div class="page-info">
+        <h1 class="page-title">{{ titrePage }}</h1>
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <ol>
+            <li><a href="/client/profile">Accueil</a></li>
+            <li class="active">{{ titrePage }}</li>
+          </ol>
+        </nav>
+      </div>
+    </div>
+
+    <!-- Center Section - Search -->
+    <div class="header-center">
+      <div class="search-container">
+        <i class="material-icons search-icon">search</i>
+        <input 
+          type="search" 
+          class="search-input"
+          placeholder="Rechercher des transactions, crédits..." 
+          [(ngModel)]="requeteRecherche"
+          (input)="surRecherche($event)"
+        >
+        <button class="search-button" *ngIf="requeteRecherche" (click)="effacerRecherche()">
+          <i class="material-icons">close</i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Right Section -->
+    <div class="header-right">
+      <!-- Quick Actions -->
+      <div class="quick-actions">
+        <button class="action-button" title="Nouveau message">
+          <i class="material-icons">mail_outline</i>
+        </button>
+        
+        <button class="action-button" title="Centre d'aide">
+          <i class="material-icons">help_outline</i>
+        </button>
+      </div>
+
+      <!-- Notifications -->
+      <div class="notifications-wrapper">
+        <button class="notification-button" (click)="basculerNotifications()" [class.has-notifications]="nombreNotifications > 0">
+          <i class="material-icons">notifications_none</i>
+          <span *ngIf="nombreNotifications > 0" class="notification-badge">
+            {{ nombreNotifications > 9 ? '9+' : nombreNotifications }}
+          </span>
+        </button>
+
+        <!-- Notifications Dropdown -->
+        <div class="notifications-dropdown" *ngIf="afficherNotifications" [@slideDown]>
+          <div class="dropdown-header">
+            <h3>Notifications</h3>
+            <button class="text-button" (click)="marquerToutesCommeLues()">
+              Tout marquer comme lu
+            </button>
+          </div>
+          
+          <div class="notifications-content">
+            <div *ngIf="notifications.length === 0" class="empty-state">
+              <i class="material-icons">notifications_off</i>
+              <p>Aucune notification</p>
+            </div>
+            
+            <div class="notifications-list" *ngIf="notifications.length > 0">
+              <div *ngFor="let notification of notifications" 
+                   class="notification-item" 
+                   [class.unread]="!notification.lue"
+                   (click)="marquerCommeLue(notification)">
+                <div class="notification-icon" [ngClass]="getNotificationIconClass(notification)">
+                  <i class="material-icons">{{ getNotificationIcon(notification) }}</i>
+                </div>
+                <div class="notification-content">
+                  <p class="notification-message">{{ notification.message }}</p>
+                  <span class="notification-time">
+                    <i class="material-icons">schedule</i>
+                    {{ notification.temps }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="dropdown-footer">
+            <a href="/client/notifications" class="view-all-link">
+              Voir toutes les notifications
+              <i class="material-icons">arrow_forward</i>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Profile Menu -->
+      <div class="profile-wrapper">
+        <button class="profile-button" (click)="basculerMenuUtilisateur()">
+          <div class="profile-avatar">
+            <img *ngIf="client?.ProfileImage; else noImage" 
+                 [src]="client?.ProfileImage" 
+                 alt="Photo de profil">
+            <ng-template #noImage>
+              <div class="avatar-placeholder">
+                <i class="material-icons">person</i>
+              </div>
+            </ng-template>
+          </div>
+          <div class="profile-info" *ngIf="!masquerTexteProfil">
+            <span class="profile-name">{{ client?.name || 'Utilisateur' }}</span>
+            <span class="profile-status">
+              <span class="status-dot"></span>
+              En ligne
+            </span>
+          </div>
+          <i class="material-icons dropdown-arrow">expand_more</i>
+        </button>
+
+        <!-- Profile Dropdown -->
+        <div class="profile-dropdown" *ngIf="afficherMenuUtilisateur" [@slideDown]>
+          <div class="dropdown-header">
+            <div class="user-card">
+              <div class="user-avatar">
+                <img *ngIf="client?.ProfileImage; else noImageDropdown" 
+                     [src]="client?.ProfileImage" 
+                     alt="Photo de profil">
+                <ng-template #noImageDropdown>
+                  <div class="avatar-placeholder large">
+                    <i class="material-icons">person</i>
+                  </div>
+                </ng-template>
+              </div>
+              <div class="user-info">
+                <h4 class="user-name">{{ client?.name || 'Utilisateur' }}</h4>
+                <p class="user-email">{{ client?.email || 'email@example.com' }}</p>
+                <p class="user-account">
+                  <i class="material-icons">credit_card</i>
+                  Compte: {{ client?.accountNumber || 'XXX-XXX' }}
+                </p>
+              </div>
+            </div>
+          </div>
+          
+          <nav class="dropdown-menu">
+            <a routerLink="/client/pro" class="menu-item">
+              <i class="material-icons">person_outline</i>
+              <span>Mon profil</span>
+            </a>
+            <a routerLink="/client/settings" class="menu-item">
+              <i class="material-icons">settings</i>
+              <span>Paramètres</span>
+            </a>
+            <a routerLink="/client/security" class="menu-item">
+              <i class="material-icons">security</i>
+              <span>Sécurité</span>
+            </a>
+            <div class="menu-divider"></div>
+            <a routerLink="/client/help" class="menu-item">
+              <i class="material-icons">help_outline</i>
+              <span>Centre d'aide</span>
+            </a>
+            <a routerLink="/client/feedback" class="menu-item">
+              <i class="material-icons">feedback</i>
+              <span>Donner un avis</span>
+            </a>
+            <div class="menu-divider"></div>
+            <button class="menu-item logout" (click)="deconnecter()">
+              <i class="material-icons">logout</i>
+              <span>Déconnexion</span>
+            </button>
+          </nav>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Overlay for dropdowns -->
+<div class="header-overlay" 
+     *ngIf="afficherNotifications || afficherMenuUtilisateur" 
+     (click)="fermerTousLesMenus()"></div>

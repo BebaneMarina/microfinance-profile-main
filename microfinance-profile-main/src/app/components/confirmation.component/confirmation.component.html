@@ -1,0 +1,32 @@
+<!-- confirmation.component.html -->
+<div class="confirmation-container">
+  <div class="header">
+    <h1>Confirmation de votre demande</h1>
+  </div>
+
+  <div class="confirmation-content">
+    <div class="success-icon">
+      <i class="fas fa-check-circle"></i>
+    </div>
+
+    <h2>Votre demande a été enregistrée avec succès</h2>
+    
+    <p class="reference">
+      Référence: <strong>CR{{ applicationId }}</strong>
+    </p>
+
+    <p>
+      Nous avons bien reçu votre demande de crédit et elle est en cours de traitement.
+      Vous recevrez une notification par email dès que votre dossier sera examiné.
+    </p>
+
+    <div class="actions">
+      <button routerLink="/" class="btn btn-primary">
+        Retour à l'accueil
+      </button>
+      <button routerLink="/mes-demandes" class="btn btn-secondary">
+        Voir mes demandes
+      </button>
+    </div>
+  </div>
+</div>

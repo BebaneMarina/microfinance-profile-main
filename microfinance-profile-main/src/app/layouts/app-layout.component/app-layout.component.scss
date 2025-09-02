@@ -1,0 +1,28 @@
+:root {
+  --sidebar-width: 250px;
+  --sidebar-collapsed-width: 80px;
+  --spacing-lg: 1.5rem;
+  --transition-normal: 0.3s ease;
+}
+
+.main-content {
+  margin-left: var(--sidebar-width);
+  padding: var(--spacing-lg);
+  min-height: 100vh;
+  background-color: #f9fafb;
+  transition: margin-left var(--transition-normal);
+}
+
+/* Quand la sidebar est repliée, on utilise une classe CSS sur main-content (ex: sidebar-collapsed) */
+.main-content.sidebar-collapsed {
+  margin-left: var(--sidebar-collapsed-width);
+}
+
+/* Sur petits écrans, on enlève la marge pour que le contenu prenne toute la largeur */
+@media (max-width: 768px) {
+  .main-content,
+  .main-content.sidebar-collapsed {
+    margin-left: 0;
+    padding: 1rem; /* on peut réduire le padding sur mobile */
+  }
+}

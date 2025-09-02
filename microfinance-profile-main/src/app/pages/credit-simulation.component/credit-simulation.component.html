@@ -1,0 +1,430 @@
+<div class="simulator-container">
+  <!-- Header -->
+  <header class="simulator-header">
+    <button class="back-btn" routerLink="/profile">
+      <i class="material-icons">arrow_back</i>
+      Retour
+    </button>
+    <h1>Simulateur de Crédit</h1>
+    <p class="subtitle">Estimez votre capacité d'emprunt et vos mensualités</p>
+  </header>
+
+  <!-- Formulaire de simulation -->
+  <div class="simulator-content">
+    <form [formGroup]="simulationForm" (ngSubmit)="onSubmit()" class="simulation-form">
+      <!-- Sélection du type de client -->
+      <div class="client-type-selector">
+        <h2>Vous êtes</h2>
+        <div class="client-type-buttons">
+          <button 
+            *ngFor="let type of clientTypes" 
+            type="button"
+            [class.active]="simulationForm.get('clientType')?.value === type.id"
+            (click)="simulationForm.patchValue({clientType: type.id})"
+            class="client-type-btn">
+            <i class="material-icons">{{ type.icon }}</i>
+            <span>{{ type.name }}</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <h2>Informations personnelles</h2>
+        
+        <div class="form-group">
+          <label for="fullName">
+            {{ simulationForm.get('clientType')?.value === 'entreprise' ? 'Raison sociale' : 'Nom complet' }} *
+          </label>
+          <input 
+            type="text" 
+            id="fullName" 
+            formControlName="fullName"
+            [placeholder]="simulationForm.get('clientType')?.value === 'entreprise' ? 'Nom de votre entreprise' : 'Entrez votre nom complet'"
+            class="form-control">
+          <div class="error-message" *ngIf="simulationForm.get('fullName')?.touched && simulationForm.get('fullName')?.errors">
+            <span *ngIf="simulationForm.get('fullName')?.errors?.['required']">Ce champ est obligatoire</span>
+            <span *ngIf="simulationForm.get('fullName')?.errors?.['minlength']">Minimum 3 caractères requis</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="monthlyIncome">
+            {{ simulationForm.get('clientType')?.value === 'entreprise' ? 'Chiffre d\'affaires mensuel' : 'Revenu mensuel' }} (FCFA) *
+          </label>
+          <input 
+            type="number" 
+            id="monthlyIncome" 
+            formControlName="monthlyIncome"
+            placeholder="Ex: 750000"
+            class="form-control">
+          <div class="error-message" *ngIf="simulationForm.get('monthlyIncome')?.touched && simulationForm.get('monthlyIncome')?.errors">
+            <span *ngIf="simulationForm.get('monthlyIncome')?.errors?.['required']">Ce champ est obligatoire</span>
+            <span *ngIf="simulationForm.get('monthlyIncome')?.errors?.['min']">Le montant minimum est de 100 000 FCFA</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <h2>Détails du crédit</h2>
+        
+        <div class="form-group">
+          <label for="creditType">Type de crédit *</label>
+          <select 
+            id="creditType" 
+            formControlName="creditType"
+            class="form-control">
+            <option *ngFor="let type of getAvailableCreditTypes()" [value]="type.id">
+              {{ type.name }}
+              <span *ngIf="type.maxAmount">(Max: {{ formatCurrency(type.maxAmount) }})</span>
+            </option>
+          </select>
+          <div class="info-message">
+            <i class="material-icons">info</i>
+            <span *ngIf="simulationForm.get('clientType')?.value === 'entreprise'">
+              Seul le crédit investissement est disponible pour les entreprises. 
+            </span>
+            <span *ngIf="simulationForm.get('clientType')?.value === 'particulier'">
+              Plusieurs types de crédits disponibles pour les particuliers. 
+            </span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="requestedAmount">Montant souhaité (FCFA) *</label>
+          <input 
+            type="number" 
+            id="requestedAmount" 
+            formControlName="requestedAmount"
+            placeholder="Ex: 2000000"
+            class="form-control">
+          <div class="amount-slider">
+            <input 
+              type="range" 
+              formControlName="requestedAmount"
+              min="50000"
+              max="10000000"
+              step="50000"
+              class="slider">
+            <div class="slider-labels">
+              <span>50K</span>
+              <span>5M</span>
+              <span>10M</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="duration">Durée (mois) *</label>
+          <input 
+            type="number" 
+            id="duration" 
+            formControlName="duration"
+            placeholder="Ex: 12"
+            class="form-control">
+          <div class="duration-buttons">
+            <button type="button" (click)="setDuration(6)" class="duration-btn">6 mois</button>
+            <button type="button" (click)="setDuration(12)" class="duration-btn">12 mois</button>
+            <button type="button" (click)="setDuration(24)" class="duration-btn">24 mois</button>
+            <button type="button" (click)="setDuration(36)" class="duration-btn">36 mois</button>
+          </div>
+        </div>
+
+        <!-- Sélection du type d'amortissement -->
+        <div class="form-group">
+          <label for="amortizationType">Type d'amortissement *</label>
+          <div class="amortization-type-selector">
+            <div class="type-option" 
+                 [class.active]="simulationForm.get('amortizationType')?.value === 'constant'"
+                 (click)="simulationForm.patchValue({amortizationType: 'constant'})">
+              <i class="material-icons">equalizer</i>
+              <h4>Constant</h4>
+              <p>Mensualités fixes</p>
+            </div>
+            <div class="type-option"
+                 [class.active]="simulationForm.get('amortizationType')?.value === 'degressif'"
+                 (click)="simulationForm.patchValue({amortizationType: 'degressif'})">
+              <i class="material-icons">trending_down</i>
+              <h4>Dégressif</h4>
+              <p>Mensualités décroissantes</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" (click)="resetForm()" class="btn-secondary">
+          <i class="material-icons">refresh</i>
+          Réinitialiser
+        </button>
+        <button type="submit" [disabled]="!simulationForm.valid || isLoading" class="btn-primary">
+          <i class="material-icons">calculate</i>
+          {{ isLoading ? 'Calcul en cours...' : 'Simuler' }}
+        </button>
+      </div>
+    </form>
+
+    <!-- Résultats de la simulation -->
+    <div class="simulation-results" *ngIf="simulationResult && !isLoading">
+      <h2>Résultats de votre simulation</h2>
+      
+      <!-- Statut d'éligibilité -->
+      <div class="eligibility-status" [ngClass]="getEligibilityClass()">
+        <i class="material-icons">{{ simulationResult.isEligible ? 'check_circle' : 'cancel' }}</i>
+        <h3>{{ simulationResult.isEligible ? 'Crédit éligible' : 'Crédit non éligible' }}</h3>
+      </div>
+
+      <!-- Raisons de non-éligibilité -->
+      <div class="eligibility-reasons" *ngIf="!simulationResult.isEligible && simulationResult.eligibilityReasons.length > 0">
+        <h4>Raisons :</h4>
+        <ul>
+          <li *ngFor="let reason of simulationResult.eligibilityReasons">{{ reason }}</li>
+        </ul>
+      </div>
+
+      <!-- Résumé des montants -->
+      <div class="results-grid">
+        <div class="result-card">
+          <i class="material-icons">payments</i>
+          <div class="result-content">
+            <span class="label">Mensualité</span>
+            <span class="value">{{ formatCurrency(simulationResult.monthlyPayment) }}</span>
+            <span class="sub-label" *ngIf="simulationResult.amortizationType === 'degressif'">
+              (1ère mensualité)
+            </span>
+          </div>
+        </div>
+
+        <div class="result-card">
+          <i class="material-icons">account_balance</i>
+          <div class="result-content">
+            <span class="label">Montant total</span>
+            <span class="value">{{ formatCurrency(simulationResult.totalAmount) }}</span>
+          </div>
+        </div>
+
+        <div class="result-card">
+          <i class="material-icons">trending_up</i>
+          <div class="result-content">
+            <span class="label">Intérêts totaux TTC</span>
+            <span class="value">{{ formatCurrency(simulationResult.totalInterest) }}</span>
+            <span class="sub-label">
+              Taux: {{ getInterestRateText() }}
+              <span class="client-type-badge">
+                {{ simulationForm.get('clientType')?.value === 'entreprise' ? 'Entreprise' : 'Particulier' }}
+              </span>
+            </span>
+          </div>
+        </div>
+
+        <div class="result-card">
+          <i class="material-icons">savings</i>
+          <div class="result-content">
+            <span class="label">Capacité maximale</span>
+            <span class="value">{{ formatCurrency(simulationResult.maxBorrowingCapacity) }}</span>
+            <span class="sub-label">Quotité cessible: 33.33%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Détails des taxes -->
+      <div class="tax-details">
+        <h4>Détail des taxes sur intérêts</h4>
+        <div class="tax-grid">
+          <div class="tax-item">
+            <span class="label">Intérêts HT:</span>
+            <span class="value">{{ formatCurrency(simulationResult.totalInterestHT) }}</span>
+          </div>
+          <div class="tax-item">
+            <span class="label">TVA (18%):</span>
+            <span class="value">{{ formatCurrency(simulationResult.totalTVA) }}</span>
+          </div>
+          <div class="tax-item">
+            <span class="label">CSS (1%):</span>
+            <span class="value">{{ formatCurrency(simulationResult.totalCSS) }}</span>
+          </div>
+          <div class="tax-item">
+            <span class="label">TEG:</span>
+            <span class="value">{{ simulationResult.teg.toFixed(2) }}%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Barre de progression capacité -->
+      <div class="capacity-progress">
+        <label>Utilisation de votre capacité d'emprunt</label>
+        <div class="progress-bar">
+          <div class="progress-fill" [style.width.%]="getProgressWidth()"></div>
+        </div>
+        <span class="progress-label">{{ getProgressWidth().toFixed(0) }}%</span>
+      </div>
+
+      <!-- Recommandations -->
+      <div class="recommendations" *ngIf="simulationResult.recommendations.length > 0">
+        <h3><i class="material-icons">lightbulb</i> Recommandations</h3>
+        <ul>
+          <li *ngFor="let recommendation of simulationResult.recommendations">
+            {{ recommendation }}
+          </li>
+        </ul>
+      </div>
+
+      <!-- Actions sur les résultats -->
+      <div class="results-actions">
+        <button (click)="toggleAmortizationTable()" class="btn-secondary">
+          <i class="material-icons">table_chart</i>
+          {{ showAmortizationTable ? 'Masquer' : 'Voir' }} le tableau d'amortissement
+        </button>
+        <button (click)="saveSimulation()" class="btn-secondary">
+          <i class="material-icons">save</i>
+          Sauvegarder
+        </button>
+        <button (click)="exportToPDF()" class="btn-secondary">
+          <i class="material-icons">picture_as_pdf</i>
+          Exporter PDF
+        </button>
+        <button 
+          routerLink="/credit-request" 
+          [queryParams]="{
+            amount: simulationForm.value.requestedAmount, 
+            duration: simulationForm.value.duration, 
+            type: simulationForm.value.creditType,
+            clientType: simulationForm.value.clientType
+          }" 
+          class="btn-primary" 
+          *ngIf="simulationResult.isEligible">
+          <i class="material-icons">arrow_forward</i>
+          Faire une demande
+        </button>
+      </div>
+
+      <!-- Tableau d'amortissement style Bamboo -->
+      <div class="amortization-section" *ngIf="showAmortizationTable">
+        <h3>TABLEAU D'AMORTISSEMENT INDICATIF</h3>
+        
+        <!-- Informations du prêt -->
+        <div class="loan-info-grid">
+          <div class="info-item">
+            <span class="label">Principal :</span>
+            <span class="value">{{ formatCurrency(simulationForm.value.requestedAmount) }}</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Taux Annuel HT :</span>
+            <span class="value">{{ simulationResult.interestRate.toFixed(2) }}%</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Durée :</span>
+            <span class="value">{{ simulationForm.value.duration }} Mois</span>
+          </div>
+          <div class="info-item">
+            <span class="label">TVA :</span>
+            <span class="value">18.00%</span>
+          </div>
+          <div class="info-item">
+            <span class="label">CSS :</span>
+            <span class="value">1.00%</span>
+          </div>
+          <div class="info-item">
+            <span class="label">TAUX TTC :</span>
+            <span class="value">{{ (simulationResult.interestRate * 1.19).toFixed(2) }}%</span>
+          </div>
+          <div class="info-item">
+            <span class="label">TEG :</span>
+            <span class="value">{{ simulationResult.teg.toFixed(2) }}%</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Type d'amortissement :</span>
+            <span class="value">{{ simulationResult.amortizationType === 'constant' ? 'Constant' : 'Dégressif' }}</span>
+          </div>
+        </div>
+        
+        <!-- Résumé des paiements -->
+        <div class="payment-summary">
+          <div class="summary-item">
+            <span class="label">Paiement mensuel :</span>
+            <span class="value">{{ formatCurrency(simulationResult.monthlyPayment) }}</span>
+          </div>
+          <div class="summary-item">
+            <span class="label">Total Remboursé :</span>
+            <span class="value">{{ formatCurrency(simulationResult.totalAmount) }}</span>
+          </div>
+          <div class="summary-item">
+            <span class="label">Intérêt HT :</span>
+            <span class="value">{{ formatCurrency(simulationResult.totalInterestHT) }}</span>
+          </div>
+          <div class="summary-item">
+            <span class="label">TVA / CSS :</span>
+            <span class="value">{{ formatCurrency(simulationResult.totalTVA + simulationResult.totalCSS) }}</span>
+          </div>
+        </div>
+
+        <!-- Tableau détaillé avec style Bamboo -->
+        <div class="table-container bamboo-style">
+          <table class="amortization-table">
+            <thead>
+              <tr>
+                <th>Pmt</th>
+                <th>Balance Début Période</th>
+                <th>Balance Fin Période</th>
+                <th>Principal Payé</th>
+                <th>Intérêt Payé TTC</th>
+                <th>Intérêt Payé HT</th>
+                <th>TVA sur Intérêt</th>
+                <th>CSS sur Intérêt</th>
+                <th>Montant de L'Échéance</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let row of simulationResult.amortizationTable">
+                <td class="month-number">{{ row.month }}</td>
+                <td class="amount">{{ formatCurrency(row.startBalance) }}</td>
+                <td class="amount">{{ formatCurrency(row.endBalance) }}</td>
+                <td class="amount principal">{{ formatCurrency(row.principal) }}</td>
+                <td class="amount interest-ttc">{{ formatCurrency(row.interestTTC) }}</td>
+                <td class="amount interest-ht">{{ formatCurrency(row.interestHT) }}</td>
+                <td class="amount tax">{{ formatCurrency(row.tva) }}</td>
+                <td class="amount tax">{{ formatCurrency(row.css) }}</td>
+                <td class="amount payment">{{ formatCurrency(row.monthlyPayment) }}</td>
+                <td class="date">{{ formatDate(row.date) }}</td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr class="total-row">
+                <th colspan="3">TOTAL</th>
+                <th class="amount">{{ formatCurrency(simulationForm.value.requestedAmount) }}</th>
+                <th class="amount">{{ formatCurrency(simulationResult.totalInterest) }}</th>
+                <th class="amount">{{ formatCurrency(simulationResult.totalInterestHT) }}</th>
+                <th class="amount">{{ formatCurrency(simulationResult.totalTVA) }}</th>
+                <th class="amount">{{ formatCurrency(simulationResult.totalCSS) }}</th>
+                <th class="amount">{{ formatCurrency(simulationResult.totalAmount) }}</th>
+                <th>-</th>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <!-- Résumé par année -->
+        <div class="yearly-summary" *ngIf="simulationForm.value.duration > 12">
+          <h4>Résumé annuel</h4>
+          <div class="summary-cards">
+            <div class="summary-card" *ngFor="let yearIndex of getYearIndices()">
+              <h5>Année {{ yearIndex + 1 }}</h5>
+              <div class="summary-item">
+                <span>Total payé:</span>
+                <strong>{{ formatCurrency(getYearlyPayment(yearIndex)) }}</strong>
+              </div>
+              <div class="summary-item">
+                <span>Capital remboursé:</span>
+                <strong>{{ formatCurrency(getYearlyCapital(yearIndex)) }}</strong>
+              </div>
+              <div class="summary-item">
+                <span>Intérêts payés:</span>
+                <strong>{{ formatCurrency(getYearlyPayment(yearIndex) - getYearlyCapital(yearIndex)) }}</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

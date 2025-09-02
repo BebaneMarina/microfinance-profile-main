@@ -1,0 +1,494 @@
+<!-- payment-calculator.component.html - VERSION CORRIGÉE COMPLÈTE -->
+<div class="calculator-bg">
+  <!-- Header -->
+  <div class="calculator-header">
+    <button routerLink="/home" class="header-back-btn">
+      <!-- SVG flèche -->
+      <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+      </svg>
+    </button>
+    <span class="header-icon">
+      <!-- SVG icône -->
+      <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 0v6m0-6l6 6-6-6z"></path>
+      </svg>
+    </span>
+    <h1 class="header-title">Calculateur de Mensualités</h1>
+  </div>
+
+  <div class="calculator-main">
+    <div class="calculator-grid">
+      <!-- Formulaire -->
+      <div class="calculator-form-container">
+        <form [formGroup]="calculatorForm" (ngSubmit)="calculatePayments()">
+          <h2 class="form-title">Paramètres du crédit</h2>
+          
+          <!-- Type de crédit -->
+          <div class="form-group">
+            <label class="form-label">Type de crédit</label>
+            <div class="credit-type-list">
+              <div *ngFor="let type of creditTypes" 
+                   class="credit-type-item"
+                   [class.selected]="calculatorForm.get('creditType')?.value === type.id"
+                   (click)="calculatorForm.patchValue({ creditType: type.id })">
+                <input 
+                  type="radio" 
+                  [value]="type.id" 
+                  formControlName="creditType" 
+                  class="sr-only">
+                <div class="credit-type-content">
+                  <div class="credit-type-icon">{{ type.icon }}</div>
+                  <div class="credit-type-name">{{ type.name }}</div>
+                  <div class="credit-type-rate">{{ formatPercent(type.avgRate) }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Montant et durée -->
+          <div class="form-section">
+            <h3 class="section-title">💰 Montant du crédit</h3>
+            <div class="preset-list">
+              <button *ngFor="let preset of amountPresets" 
+                      type="button"
+                      (click)="setPresetAmount(preset.amount)"
+                      class="preset-btn">
+                {{ preset.label }}
+              </button>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Montant souhaité *</label>
+                <input
+                  type="number"
+                  formControlName="loanAmount"
+                  class="form-input"
+                  placeholder="10 000 000">
+                <div *ngIf="hasError('loanAmount')" class="form-error">
+                  {{ getErrorMessage('loanAmount') }}
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Durée du prêt *</label>
+                <select
+                  formControlName="duration"
+                  class="form-input">
+                  <option *ngFor="let preset of durationPresets" [value]="preset.months">
+                    {{ preset.label }}
+                  </option>
+                </select>
+                <div *ngIf="hasError('duration')" class="form-error">
+                  {{ getErrorMessage('duration') }}
+                </div>
+              </div>
+            </div>
+            <div class="preset-list">
+              <button *ngFor="let preset of durationPresets" 
+                      type="button"
+                      (click)="setPresetDuration(preset.months)"
+                      class="preset-btn">
+                {{ preset.label }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Taux d'intérêt -->
+          <div class="form-section">
+            <h3 class="section-title">📈 Conditions financières</h3>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Taux d'intérêt nominal (%)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  formControlName="interestRate"
+                  class="form-input"
+                  placeholder="6.50">
+                <div class="form-hint">
+                  Taux moyen actuel : {{ getCurrentCreditTypeRate() }}
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Date du premier paiement</label>
+                <input
+                  type="date"
+                  formControlName="firstPaymentDate"
+                  class="form-input">
+              </div>
+            </div>
+          </div>
+
+          <!-- Assurance -->
+          <div class="form-section">
+            <h3 class="section-title">🛡️ Assurance emprunteur</h3>
+            <div class="form-checkbox-group">
+              <input
+                type="checkbox"
+                formControlName="includeInsurance"
+                id="includeInsurance"
+                class="form-checkbox">
+              <label for="includeInsurance" class="form-checkbox-label">
+                Inclure une assurance emprunteur (recommandé)
+              </label>
+            </div>
+            <div *ngIf="calculatorForm.get('includeInsurance')?.value" class="form-row">
+              <div class="form-group">
+                <label class="form-label">Taux d'assurance (% du capital)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  formControlName="insuranceRate"
+                  class="form-input"
+                  placeholder="0.36">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Type d'assurance</label>
+                <select
+                  formControlName="insuranceType"
+                  class="form-input">
+                  <option value="declining">Sur capital restant dû (dégressif)</option>
+                  <option value="constant">Sur capital initial (constant)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Frais -->
+          <div class="form-section">
+            <h3 class="section-title">📄 Frais annexes</h3>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Frais de dossier</label>
+                <input
+                  type="number"
+                  formControlName="applicationFee"
+                  class="form-input"
+                  placeholder="50 000">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Frais de notaire</label>
+                <input
+                  type="number"
+                  formControlName="notaryFees"
+                  class="form-input"
+                  placeholder="0">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Frais de garantie</label>
+                <input
+                  type="number"
+                  formControlName="guaranteeFees"
+                  class="form-input"
+                  placeholder="0">
+              </div>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="form-actions">
+            <button
+              type="button"
+              (click)="calculatePayments()"
+              [disabled]="!isFormValid || isCalculating"
+              class="btn btn-primary">
+              <span *ngIf="!isCalculating">Calculer les mensualités</span>
+              <span *ngIf="isCalculating" class="btn-loading">
+                <!-- SVG spinner -->
+                <svg width="20" height="20" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Calcul en cours...
+              </span>
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Résultats -->
+      <div class="calculator-results">
+        <div *ngIf="results" class="results-card">
+          <!-- Résultats principaux -->
+          <div class="results-main">
+            <h2 class="results-title">Vos mensualités</h2>
+            <div class="results-grid">
+              <div class="results-block">
+                <div class="results-value results-value-main">
+                  {{ formatCurrency(results.monthlyPayment) }}
+                </div>
+                <div class="results-label">Mensualité totale</div>
+                <div class="results-hint">Capital + Intérêts + Assurance</div>
+              </div>
+              <div class="results-block">
+                <div class="results-value results-value-secondary">
+                  {{ formatCurrency(results.totalCost) }}
+                </div>
+                <div class="results-label">Coût total du crédit</div>
+                <div class="results-hint">TEG : {{ formatPercent(results.effectiveRate) }}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Onglets -->
+          <div class="results-tabs">
+            <nav class="tabs-list" aria-label="Tabs">
+              <button
+                *ngFor="let tab of ['amortization', 'optimization', 'comparison', 'breakdown']"
+                (click)="setActiveTab(tab)"
+                [class.tab-active]="activeTab === tab"
+                class="tab-btn">
+                <span [ngSwitch]="tab">
+                  <span *ngSwitchCase="'amortization'">📊 Amortissement</span>
+                  <span *ngSwitchCase="'optimization'">⚡ Optimisation</span>
+                  <span *ngSwitchCase="'comparison'">⚖️ Comparaison</span>
+                  <span *ngSwitchCase="'breakdown'">🧮 Détail</span>
+                </span>
+              </button>
+            </nav>
+          </div>
+
+          <div class="results-tab-content">
+            <!-- Onglet Amortissement -->
+            <div *ngIf="activeTab === 'amortization'">
+              <div class="amortization-header">
+                <h3 class="section-title">Tableau d'amortissement</h3>
+                <div class="amortization-controls">
+                  <label>Année :</label>
+                  <select 
+                    [(ngModel)]="selectedYear"
+                    class="form-input">
+                    <option *ngFor="let year of getAvailableYears()" [value]="year">
+                      Année {{ year }}
+                    </option>
+                  </select>
+                  <button 
+                    (click)="toggleFullSchedule()"
+                    class="btn btn-secondary">
+                    {{ showFullSchedule ? 'Vue résumée' : 'Vue complète' }}
+                  </button>
+                </div>
+              </div>
+              <div class="table-responsive">
+                <table class="amortization-table">
+                  <thead>
+                    <tr>
+                      <th>Mois</th>
+                      <th>Mensualité</th>
+                      <th>Capital</th>
+                      <th>Intérêts</th>
+                      <th>Assurance</th>
+                      <th>Capital restant</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let entry of showFullSchedule ? results.amortizationSchedule : getScheduleForYear(selectedYear)">
+                      <td>{{ entry.month }}</td>
+                      <td>{{ formatCurrency(entry.monthlyPayment) }}</td>
+                      <td>{{ formatCurrency(entry.capitalPayment) }}</td>
+                      <td>{{ formatCurrency(entry.interestPayment) }}</td>
+                      <td>{{ formatCurrency(entry.insurancePayment) }}</td>
+                      <td>{{ formatCurrency(entry.remainingCapital) }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Onglet Optimisation -->
+            <div *ngIf="activeTab === 'optimization'">
+              <h3 class="section-title">Optimisations possibles</h3>
+              <div class="optimization-list">
+                <div *ngFor="let optimization of results.optimizations" class="optimization-item">
+                  <div class="optimization-header">
+                    <h4>{{ optimization.title }}</h4>
+                    <div class="optimization-savings">
+                      -{{ formatCurrency(optimization.savings) }}
+                      <span class="optimization-savings-label">d'économies</span>
+                    </div>
+                  </div>
+                  <p class="optimization-desc">{{ optimization.description }}</p>
+                  <div class="optimization-details">
+                    <div>
+                      <span>Nouvelle mensualité :</span>
+                      <span>{{ formatCurrency(optimization.newMonthlyPayment || 0) }}</span>
+                    </div>
+                    <div>
+                      <span>Type d'optimisation :</span>
+                      <span>{{ optimization.type }}</span>
+                    </div>
+                  </div>
+                </div>
+                <div *ngIf="results.optimizations.length === 0" class="optimization-empty">
+                  <p>Vos conditions actuelles sont déjà optimales !</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Onglet Comparaison -->
+            <div *ngIf="activeTab === 'comparison'">
+              <h3 class="section-title">Comparaison par durée</h3>
+              <div class="comparison-list">
+                <div *ngFor="let comparison of results.comparisonData" 
+                     class="comparison-item"
+                     [class.comparison-selected]="comparison.duration === (calculatorForm.get('duration')?.value || 240) / 12">
+                  <div class="comparison-duration">{{ comparison.duration }} ans</div>
+                  <div>
+                    <div class="comparison-monthly">{{ formatCurrency(comparison.monthlyPayment) }}/mois</div>
+                    <div class="comparison-interest">{{ formatCurrency(comparison.totalInterest) }} d'intérêts</div>
+                  </div>
+                  <div class="comparison-total">
+                    <div>{{ formatCurrency(comparison.totalCost) }}</div>
+                    <div class="comparison-savings">
+                      <span *ngIf="comparison.savings > 0">-</span>
+                      <span *ngIf="comparison.savings < 0">+</span>
+                      {{ formatCurrency(getAbsoluteValue(comparison.savings)) }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Onglet Détail -->
+            <div *ngIf="activeTab === 'breakdown'">
+              <div class="breakdown-section">
+                <h3 class="section-title">Répartition de la mensualité</h3>
+                <div class="breakdown-grid">
+                  <div class="breakdown-block">
+                    <div class="breakdown-value">{{ formatCurrency(results.paymentBreakdown.capitalPortion) }}</div>
+                    <div class="breakdown-label">Capital moyen</div>
+                  </div>
+                  <div class="breakdown-block">
+                    <div class="breakdown-value">{{ formatCurrency(results.paymentBreakdown.interestPortion) }}</div>
+                    <div class="breakdown-label">Intérêts moyens</div>
+                  </div>
+                  <div class="breakdown-block">
+                    <div class="breakdown-value">{{ formatCurrency(results.paymentBreakdown.insurancePortion) }}</div>
+                    <div class="breakdown-label">Assurance</div>
+                  </div>
+                </div>
+              </div>
+              <div class="breakdown-section">
+                <h3 class="section-title">Coûts détaillés</h3>
+                <div class="breakdown-list">
+                  <div class="breakdown-item">
+                    <span>Capital emprunté</span>
+                    <span>{{ formatCurrency(calculatorForm.get('loanAmount')?.value || 0) }}</span>
+                  </div>
+                  <div class="breakdown-item">
+                    <span>Intérêts totaux</span>
+                    <span>{{ formatCurrency(results.totalInterest) }}</span>
+                  </div>
+                  <div class="breakdown-item" *ngIf="calculatorForm.get('includeInsurance')?.value">
+                    <span>Assurance totale</span>
+                    <span>{{ formatCurrency(results.monthlyInsurance * (calculatorForm.get('duration')?.value || 240)) }}</span>
+                  </div>
+                  <div class="breakdown-item">
+                    <span>Frais annexes</span>
+                    <span>{{ formatCurrency((calculatorForm.get('applicationFee')?.value || 0) + 
+                                         (calculatorForm.get('notaryFees')?.value || 0) + 
+                                         (calculatorForm.get('guaranteeFees')?.value || 0)) }}</span>
+                  </div>
+                  <div class="breakdown-item breakdown-total">
+                    <span>Coût total</span>
+                    <span>{{ formatCurrency(results.totalCost) }}</span>
+                  </div>
+                </div>
+              </div>
+              <div class="breakdown-section">
+                <h3 class="section-title">Indicateurs</h3>
+                <div class="indicators-grid">
+                  <div>
+                    <div>Taux nominal</div>
+                    <div>{{ formatPercent(calculatorForm.get('interestRate')?.value || 0) }}</div>
+                  </div>
+                  <div>
+                    <div>TEG</div>
+                    <div>{{ formatPercent(results.effectiveRate) }}</div>
+                  </div>
+                  <div>
+                    <div>Durée</div>
+                    <div>{{ (calculatorForm.get('duration')?.value || 240) / 12 }} ans</div>
+                  </div>
+                  <div>
+                    <div>Coût du crédit</div>
+                    <div>{{ formatPercent(interestToCapitalRatio) }}</div>
+                  </div>
+                  <div>
+                    <div>Intérêts/mois moyen</div>
+                    <div>{{ formatCurrency(averageMonthlyInterest) }}</div>
+                  </div>
+                  <div>
+                    <div>Premier paiement</div>
+                    <div>{{ calculatorForm.get('firstPaymentDate')?.value | date:'dd/MM/yyyy' }}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Actions en bas -->
+          <div class="results-actions">
+            <button
+              (click)="goToComparator()"
+              [disabled]="!canExport"
+              class="btn btn-primary">
+              Comparer les banques
+            </button>
+            <button
+              (click)="exportToExcel()"
+              [disabled]="!canExport"
+              class="btn btn-secondary">
+              Exporter Excel
+            </button>
+            <button
+              (click)="simulateEarlyPayment()"
+              class="btn btn-secondary">
+              Remboursement anticipé
+            </button>
+          </div>
+        </div>
+
+        <!-- Simulateur de remboursement anticipé -->
+        <div *ngIf="results" class="early-payment-card">
+          <h3 class="section-title">Simulation remboursement anticipé</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Montant du remboursement</label>
+              <input
+                type="number"
+                formControlName="earlyPaymentAmount"
+                class="form-input"
+                placeholder="500 000">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Au bout de (mois)</label>
+              <input
+                type="number"
+                formControlName="earlyPaymentMonth"
+                class="form-input"
+                placeholder="60">
+            </div>
+          </div>
+          <button
+            (click)="simulateEarlyPayment()"
+            class="btn btn-primary btn-block">
+            Calculer l'impact
+          </button>
+        </div>
+
+        <!-- Conseils -->
+        <div class="advice-card">
+          <h3 class="advice-title">Conseils pour optimiser votre crédit</h3>
+          <ul class="advice-list">
+            <li>• Plus la durée est courte, moins vous payez d'intérêts au total</li>
+            <li>• Négociez votre taux d'intérêt, même 0,1% peut représenter des milliers d'euros</li>
+            <li>• Comparez les assurances emprunteur, elles peuvent varier du simple au double</li>
+            <li>• Un apport personnel de 10-20% améliore vos conditions de financement</li>
+            <li>• Surveillez les frais annexes qui peuvent augmenter le coût total</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

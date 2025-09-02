@@ -1,0 +1,334 @@
+[
+  {
+    "id": 1,
+    "creditType": "avance_salaire",
+    "personalInfo": {
+      "fullName": "BEBANE MOUKOUMBI MARINA BRUNELLE",
+      "email": "marina@email.com",
+      "phoneNumber": "077861364",
+      "address": "BP 1234, Rue de la Paix, Quartier Glass",
+      "birthDate": "1990-07-24",
+      "birthPlace": "lambaréné",
+      "nationality": "gabonaise",
+      "identityType": "cni",
+      "identityNumber": "CNI123456789",
+      "profession": "ingénieur",
+      "maritalStatus": "celibataire",
+      "dependents": 2,
+      "education": "superieur"
+    },
+    "financialInfo": {
+      "monthlySalary": 900000,
+      "otherIncome": 200000,
+      "monthlyCharges": 100000,
+      "existingDebts": 100000,
+      "jobSeniority": 8,
+      "contractType": "cdi",
+      "employerName": "ventis",
+      "bankName": "bamboo ",
+      "accountNumber": "83322156",
+      "salaryDomiciliation": true,
+      "employerConvention": true
+    },
+    "creditDetails": {
+      "requestedAmount": 1000000,
+      "duration": 1,
+      "creditPurpose": "Achat d'équipement électroménager pour la maison",
+      "repaymentMode": "fin_du_mois",
+      "repaymentFrequency": "fin_du_mois",
+      "liquidityProblem": "Retard de paiement clients",
+      "urgencyJustification": "Paiement urgent de fournisseurs",
+      "solutionsEnvisaged": "Recouvrement de créances en cours",
+      "cashFlowStatus": "temporairement_negatif"
+    },
+    "creditScore": 415,
+    "riskLevel": "élevé",
+    "creditProbability": 0.4237037037037037,
+    "decision": "refusé",
+    "status": "submitted",
+    "submissionDate": "2025-07-24T11:05:40.582Z",
+    "scoringFactors": [
+      {
+        "impact": 44,
+        "label": "Ancienneté",
+        "name": "job_seniority",
+        "value": 8
+      },
+      {
+        "impact": 14,
+        "label": "Revenus mensuels",
+        "name": "monthly_income",
+        "value": 90
+      },
+      {
+        "impact": 9,
+        "label": "Âge",
+        "name": "age",
+        "value": 35
+      },
+      {
+        "impact": 3,
+        "label": "Taux d'endettement",
+        "name": "debt_ratio",
+        "value": 18
+      },
+      {
+        "impact": 1,
+        "label": "Dettes existantes",
+        "name": "existing_debts",
+        "value": 20
+      }
+    ],
+    "recommendations": [
+      "Profil nécessitant une amélioration",
+      "Nous vous conseillons de réduire vos charges",
+      "Un accompagnement personnalisé vous sera proposé",
+      "Remboursement unique à la fin du mois",
+      "Analyse effectuée par IA avec 42% de confiance"
+    ],
+    "documents": {
+      "identityDocument": [
+        {
+          "file": {},
+          "name": "identityDocument.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "paySlips": [
+        {
+          "file": {},
+          "name": "paySlips.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "employmentCertificate": [
+        {
+          "file": {},
+          "name": "employmentCertificate.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "bankStatements": [
+        {
+          "file": {},
+          "name": "bankStatements.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "seegReceipt": [
+        {
+          "file": {},
+          "name": "seegReceipt.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "debtCertificate": [
+        {
+          "file": {},
+          "name": "debtCertificate.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "salaryDomiciliationProof": [
+        {
+          "file": {},
+          "name": "salaryDomiciliationProof.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "liquidityJustification": [
+        {
+          "file": {},
+          "name": "liquidityJustification.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "financialStatements": [
+        {
+          "file": {},
+          "name": "financialStatements.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ]
+    },
+    "eligibilityCheck": {},
+    "repaymentFrequency": "fin_du_mois",
+    "modelUsed": "random_forest",
+    "modelConfidence": 0.4237037037037037
+  },
+  {
+    "id": 2,
+    "creditType": "avance_salaire",
+    "personalInfo": {
+      "fullName": "BEBANE MOUKOUMBI MARINA BRUNELLE",
+      "email": "marina@email.com",
+      "phoneNumber": "077861364",
+      "address": "BP 1234, Rue de la Paix, Quartier Glass",
+      "birthDate": "1990-07-24",
+      "birthPlace": "lambaréné",
+      "nationality": "gabonaise",
+      "identityType": "cni",
+      "identityNumber": "CNI123456789",
+      "profession": "ingénieur",
+      "maritalStatus": "celibataire",
+      "dependents": 2,
+      "education": "superieur"
+    },
+    "financialInfo": {
+      "monthlySalary": 900000,
+      "otherIncome": 200000,
+      "monthlyCharges": 100000,
+      "existingDebts": 100000,
+      "jobSeniority": 8,
+      "contractType": "cdi",
+      "employerName": "ventis",
+      "bankName": "bamboo ",
+      "accountNumber": "83322156",
+      "salaryDomiciliation": true,
+      "employerConvention": true
+    },
+    "creditDetails": {
+      "requestedAmount": 1000000,
+      "duration": 1,
+      "creditPurpose": "Achat d'équipement électroménager pour la maison",
+      "repaymentMode": "fin_du_mois",
+      "repaymentFrequency": "fin_du_mois",
+      "liquidityProblem": "Retard de paiement clients",
+      "urgencyJustification": "Paiement urgent de fournisseurs",
+      "solutionsEnvisaged": "Recouvrement de créances en cours",
+      "cashFlowStatus": "temporairement_negatif"
+    },
+    "creditScore": 415,
+    "riskLevel": "élevé",
+    "creditProbability": 0.4237037037037037,
+    "decision": "refusé",
+    "status": "submitted",
+    "submissionDate": "2025-07-24T11:09:24.326Z",
+    "scoringFactors": [
+      {
+        "impact": 44,
+        "label": "Ancienneté",
+        "name": "job_seniority",
+        "value": 8
+      },
+      {
+        "impact": 14,
+        "label": "Revenus mensuels",
+        "name": "monthly_income",
+        "value": 90
+      },
+      {
+        "impact": 9,
+        "label": "Âge",
+        "name": "age",
+        "value": 35
+      },
+      {
+        "impact": 3,
+        "label": "Taux d'endettement",
+        "name": "debt_ratio",
+        "value": 18
+      },
+      {
+        "impact": 1,
+        "label": "Dettes existantes",
+        "name": "existing_debts",
+        "value": 20
+      }
+    ],
+    "recommendations": [
+      "Profil nécessitant une amélioration",
+      "Nous vous conseillons de réduire vos charges",
+      "Un accompagnement personnalisé vous sera proposé",
+      "Remboursement unique à la fin du mois",
+      "Analyse effectuée par IA avec 42% de confiance"
+    ],
+    "documents": {
+      "identityDocument": [
+        {
+          "file": {},
+          "name": "identityDocument.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "paySlips": [
+        {
+          "file": {},
+          "name": "paySlips.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "employmentCertificate": [
+        {
+          "file": {},
+          "name": "employmentCertificate.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "bankStatements": [
+        {
+          "file": {},
+          "name": "bankStatements.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "seegReceipt": [
+        {
+          "file": {},
+          "name": "seegReceipt.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "debtCertificate": [
+        {
+          "file": {},
+          "name": "debtCertificate.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "salaryDomiciliationProof": [
+        {
+          "file": {},
+          "name": "salaryDomiciliationProof.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "liquidityJustification": [
+        {
+          "file": {},
+          "name": "liquidityJustification.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ],
+      "financialStatements": [
+        {
+          "file": {},
+          "name": "financialStatements.pdf",
+          "size": 1024,
+          "type": "application/pdf"
+        }
+      ]
+    },
+    "eligibilityCheck": {},
+    "repaymentFrequency": "fin_du_mois",
+    "modelUsed": "random_forest",
+    "modelConfidence": 0.4237037037037037
+  }
+]
