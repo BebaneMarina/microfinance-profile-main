@@ -41,7 +41,7 @@
     }
   },
   "pierre_moussavou": {
-    "user_id": 7140,
+    "user_id": 5834,
     "score": 8.4,
     "previous_score": 8.4,
     "score_change": 0.0,
@@ -79,7 +79,7 @@
       "trend": "stable"
     },
     "is_realtime": true,
-    "last_updated": "2025-08-14T13:59:19.938493",
+    "last_updated": "2025-09-02T16:47:52.813164",
     "username": "pierre_moussavou",
     "cors_ok": true,
     "client_info": {
