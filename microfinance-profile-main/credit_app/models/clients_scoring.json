@@ -41,7 +41,7 @@
     }
   },
   "pierre_moussavou": {
-    "user_id": 6186,
+    "user_id": 9349,
     "score": 8.4,
     "previous_score": 8.4,
     "score_change": 0.0,
@@ -79,7 +79,7 @@
       "trend": "stable"
     },
     "is_realtime": true,
-    "last_updated": "2025-09-18T11:07:41.823823",
+    "last_updated": "2025-09-19T09:59:39.933645",
     "username": "pierre_moussavou",
     "cors_ok": true,
     "client_info": {
@@ -139,10 +139,10 @@
     }
   },
   "sophie_mfoubou": {
-    "user_id": 292,
+    "user_id": 583,
     "score": 7.7,
-    "previous_score": 7.74,
-    "score_change": 0.0,
+    "previous_score": 6.0,
+    "score_change": 1.7,
     "risk_level": "bas",
     "factors": [
       {
@@ -177,7 +177,7 @@
       "trend": "stable"
     },
     "is_realtime": true,
-    "last_updated": "2025-09-03T10:22:52.392343",
+    "last_updated": "2025-09-18T16:41:15.643649",
     "username": "sophie_mfoubou",
     "cors_ok": true,
     "client_info": {
