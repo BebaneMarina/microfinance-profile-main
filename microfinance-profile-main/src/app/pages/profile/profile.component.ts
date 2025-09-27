@@ -5,10 +5,12 @@ import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ClientProfil } from '../../models/client-profile.model';
 import { ProfileService, ActiveCredit, ProfileStats } from '../../services/profile.service';
+import { ApiProxyService } from '../../services/proxy.service';
 import { StorageService } from '../../services/storage.service';
 import { ScoringService } from '../../services/scoring.service';
 import { AuthService, User } from '../../services/auth.service';
 import { CreditManagementService } from '../../services/credit-management.service'; // Service pour la gestion des dettes
+import { CreditRequestsService } from '../../services/credit-requests.service';
 import { Subscription, interval } from 'rxjs';
 import { switchMap, catchError } from 'rxjs/operators';
 import { HttpClient } from '@angular/common/http';
@@ -299,8 +301,10 @@ export class ProfileComponent implements OnInit, OnDestroy {
     private storageService: StorageService,
     private scoringService: ScoringService,
     private authService: AuthService,
+    private creditRequestsService: CreditRequestsService,
     private http: HttpClient,
-    public creditManagementService: CreditManagementService // Service injecté
+    public creditManagementService: CreditManagementService, // Service injecté
+    private apiProxy: ApiProxyService
   ) {}
 
   ngOnInit(): void {
@@ -322,6 +326,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
         this.router.navigate(['/login']);
       }
     });
+
 
     // Abonnements existants conservés
     this.creditsSubscription = this.profileService.activeCredits$.subscribe(
@@ -375,23 +380,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
   // NOUVELLES MÉTHODES - GESTION DES DETTES ET RESTRICTIONS
   // ========================================
 
-  private loadRegisteredCredits(): void {
-    if (!this.currentUser?.username) return;
-    
-    this.http.get<RegisteredCredit[]>(`${this.apiUrl}/user-credits/${this.currentUser.username}`)
-      .subscribe({
-        next: (credits) => {
-          this.activeCreditsFromService = credits;
-          this.updateDebtCalculations();
-          console.log('✅ Crédits enregistrés chargés:', credits.length);
-        },
-        error: (error) => {
-          console.error('❌ Erreur chargement crédits:', error);
-          // Charger depuis le localStorage en fallback
-          this.loadCreditsFromStorage();
-        }
-      });
-  }
 
   private loadCreditsFromStorage(): void {
     try {
@@ -419,21 +407,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
     }
   }
 
-  private loadCreditRestrictions(): void {
-    if (!this.currentUser?.username) return;
-    
-    this.http.get<CreditRestrictions>(`${this.apiUrl}/credit-restrictions/${this.currentUser.username}`)
-      .subscribe({
-        next: (restrictions) => {
-          this.creditRestrictions = restrictions;
-          console.log('🔒 Restrictions chargées:', restrictions);
-        },
-        error: (error) => {
-          console.error('❌ Erreur chargement restrictions:', error);
-          this.calculateLocalRestrictions();
-        }
-      });
-  }
 
   private calculateLocalRestrictions(): void {
     const activeCredits = this.activeCreditsFromService.filter(c => c.status === 'active');
@@ -488,6 +461,22 @@ export class ProfileComponent implements OnInit, OnDestroy {
     
     console.log('🔒 Restrictions calculées localement:', this.creditRestrictions);
   }
+
+  private loadCreditRestrictions(): void {
+  if (!this.currentUser?.username) return;
+  
+  // ✅ Utiliser apiProxy au lieu de http.get
+  this.apiProxy.getRestrictions(this.currentUser.username).subscribe({
+    next: (restrictions) => {
+      this.creditRestrictions = restrictions;
+      console.log('🔒 Restrictions chargées:', restrictions);
+    },
+    error: (error) => {
+      console.error('❌ Erreur chargement restrictions:', error);
+      this.calculateLocalRestrictions();
+    }
+  });
+}
 
   private updateDebtCalculations(): void {
     // Mettre à jour les dettes du client
@@ -673,50 +662,21 @@ export class ProfileComponent implements OnInit, OnDestroy {
   /**
    * Soumet une demande de crédit rapide
    */
-  submitQuickCredit(): void {
-    if (this.isSubmitting) return;
-    
-    // Vérifications préliminaires
-    if (!this.canApplyForCredit) {
-      this.showNotification(this.creditBlockReason, 'error');
-      return;
-    }
-    
-    if (this.quickCredit.amount > this.globalStats.eligibleAmount) {
-      this.showNotification(`Le montant demandé (${this.formatCurrency(this.quickCredit.amount)}) dépasse votre montant éligible (${this.formatCurrency(this.globalStats.eligibleAmount)})`, 'error');
-      return;
-    }
-    
-    if (this.quickCredit.amount < 10000) {
-      this.showNotification('Le montant minimum est de 10 000 FCFA', 'error');
-      return;
-    }
+  async submitQuickCredit(): Promise<void> {
+  if (this.quickCredit.amount < 10000) {
+    this.showNotification('Le montant minimum est de 10 000 FCFA', 'error');
+    return;
+  }
 
-    this.isSubmitting = true;
-    
-    // Calculer les détails du crédit
-    const interestRate = this.getCreditInterestRate(this.quickCredit.type);
-    const processingFee = Math.round(this.quickCredit.amount * 0.015);
-    const totalAmount = this.quickCredit.amount + processingFee;
-    
-    // Créer l'objet crédit
-    const newCredit: RegisteredCredit = {
-      id: this.generateCreditId(),
+  this.isSubmitting = true;
+  
+  try {
+    // Préparer les données pour le service
+    const requestData = {
+      username: this.currentUser?.username,
       type: this.quickCredit.type,
       amount: this.quickCredit.amount,
-      totalAmount: totalAmount,
-      remainingAmount: totalAmount,
-      interestRate: interestRate,
-      status: 'active',
-      approvedDate: new Date().toISOString(),
-      dueDate: this.calculateDueDate(this.quickCredit.type),
-      paymentsHistory: []
-    };
-    
-    // Préparer les données pour l'API
-    const creditData = {
-      username: this.currentUser?.username,
-      credit: newCredit,
+      totalAmount: this.quickCredit.amount + Math.round(this.quickCredit.amount * 0.015),
       client_data: {
         name: this.client?.name || '',
         email: this.client?.email || '',
@@ -726,43 +686,37 @@ export class ProfileComponent implements OnInit, OnDestroy {
       }
     };
 
-    // Envoyer au serveur
-    this.http.post<any>(`${this.apiUrl}/register-credit`, creditData)
-      .subscribe({
-        next: (response) => {
-          console.log('✅ Crédit enregistré sur le serveur:', response);
-          
-          // Traitement local immédiat
-          this.processLocalCredit(newCredit);
-          
-          this.isSubmitting = false;
-          this.showQuickCreditModal = false;
-          
-          // Notification de succès
-          this.showCreditNotification(
-            this.quickCredit.amount, 
-            processingFee, 
-            totalAmount,
-            response.updated_score
-          );
-        },
-        error: (error) => {
-          console.error('❌ Erreur serveur, traitement local:', error);
-          
-          // Fallback: traitement local
-          this.processLocalCredit(newCredit);
-          
-          this.isSubmitting = false;
-          this.showQuickCreditModal = false;
-          
-          this.showCreditNotification(
-            this.quickCredit.amount, 
-            processingFee, 
-            totalAmount
-          );
-        }
-      });
+    // Créer la demande via le service
+    const newCredit = await this.creditRequestsService.createShortRequest(requestData);
+    
+    // Traitement local immédiat (pour compatibilité avec le code existant)
+    this.processLocalCredit({
+      id: newCredit.id,
+      type: newCredit.creditType,
+      amount: newCredit.amount,
+      totalAmount: newCredit.totalAmount,
+      remainingAmount: newCredit.remainingAmount,
+      interestRate: newCredit.interestRate,
+      status: newCredit.status,
+      approvedDate: newCredit.approvedDate,
+      dueDate: newCredit.dueDate,
+      paymentsHistory: []
+    });
+    
+    this.showCreditNotification(
+      newCredit.amount,
+      Math.round(newCredit.amount * 0.015),
+      newCredit.totalAmount
+    );
+    
+  } catch (error) {
+    console.error('Erreur création demande courte:', error);
+    this.showNotification('Erreur lors de la création de la demande', 'error');
+  } finally {
+    this.isSubmitting = false;
+    this.showQuickCreditModal = false;
   }
+}
 
   /**
    * Traite un crédit localement
@@ -1062,32 +1016,25 @@ export class ProfileComponent implements OnInit, OnDestroy {
       }
     });
   }
-
-  /**
-   * Obtient le score en temps réel
-   */
-  private getRealTimeScore(userId: number) {
-    const userData = {
-      username: this.currentUser?.username || 'user_' + userId,
-      monthly_income: this.client?.monthlyIncome || 0,
-      employment_status: this.client?.employmentStatus || 'cdi',
-      job_seniority: this.client?.jobSeniority || 24,
-      existing_debts: this.client?.existingDebts || 0,
-      monthly_charges: this.client?.monthlyCharges || 0,
-      age: this.calculateAge() || 35,
-      profession: this.client?.profession || '',
-      company: this.client?.company || '',
-      // NOUVEAU: Inclure les crédits actifs dans le calcul
-      active_credits: this.activeCreditsFromService.filter(c => c.status === 'active').map(credit => ({
-        amount: credit.amount,
-        remaining: credit.remainingAmount,
-        type: credit.type,
-        approved_date: credit.approvedDate
-      }))
-    };
-    
-    return this.http.post<RealTimeScoreUpdate>(`${this.apiUrl}/realtime-scoring`, userData);
-  }
+private loadScoreHistory(): void {
+  if (!this.currentUser?.username) return;
+  
+  // ✅ Utiliser apiProxy au lieu de http.get
+  this.apiProxy.getScoreTrend(this.currentUser.username).subscribe({
+    next: (response) => {
+      this.scoreHistory = response.recent_transactions?.map((t: any) => ({
+        score: 6.5,
+        date: t.date,
+        change: 0.1,
+        reason: t.description || 'Activité automatique'
+      })) || [];
+      console.log('📈 Historique des scores chargé:', this.scoreHistory.length, 'entrées');
+    },
+    error: (error) => {
+      console.error('❌ Erreur chargement historique:', error);
+    }
+  });
+}
 
   /**
    * Calcule l'âge du client
@@ -1230,27 +1177,87 @@ export class ProfileComponent implements OnInit, OnDestroy {
     }, 5000);
   }
 
-  /**
-   * Charge l'historique des scores
-   */
-  private loadScoreHistory(): void {
-    if (!this.currentUser?.username) return;
-    this.http.get<any>(`${this.apiUrl}/score-trend/${this.currentUser.username}`)
-      .subscribe({
-        next: (response) => {
-          this.scoreHistory = response.recent_transactions?.map((t: any) => ({
-            score: 6.5,
-            date: t.date,
-            change: 0.1,
-            reason: t.description || 'Activité automatique'
-          })) || [];
-          console.log('📈 Historique des scores chargé:', this.scoreHistory.length, 'entrées');
-        },
-        error: (error) => {
-          console.error('❌ Erreur chargement historique:', error);
-        }
-      });
+ /**
+ * Actualise le score de crédit
+ */
+refreshCreditScore(): void {
+  if (!this.currentUser || this.currentUser.username === undefined) {
+    this.showNotification('Utilisateur non connecté ou username manquant', 'error');
+    return;
   }
+
+  this.isScoreUpdating = true;
+  
+  const refreshBtn = document.querySelector('.refresh-btn i');
+  if (refreshBtn) {
+    refreshBtn.classList.add('rotating');
+  }
+  
+  console.log('🔄 Actualisation du score pour:', this.currentUser.name);
+  
+  const userData = {
+    username: this.currentUser.username,
+    name: this.currentUser.name || this.currentUser.fullName,
+    email: this.currentUser.email,
+    phone: this.currentUser.phone,
+    monthly_income: this.client?.monthlyIncome || 0,
+    employment_status: this.client?.employmentStatus || 'cdi',
+    job_seniority: this.client?.jobSeniority || 24,
+    profession: this.client?.profession || '',
+    company: this.client?.company || '',
+    existing_debts: this.client?.existingDebts || 0,
+    monthly_charges: this.client?.monthlyCharges || 0,
+    use_realtime: true,
+    // NOUVEAU: Inclure les crédits actifs
+    active_credits: this.activeCreditsFromService
+      .filter(c => c.status === 'active')
+      .map(credit => ({
+        amount: credit.amount,
+        remaining: credit.remainingAmount,
+        type: credit.type,
+        approved_date: credit.approvedDate
+      }))
+  };
+  
+  // ✅ Utiliser ApiProxyService pour appeler Flask
+  this.apiProxy.calculateScore(userData).subscribe({
+    next: (result: any) => {
+      console.log('✅ Score actualisé:', result);
+      
+      const adaptedResult: RealTimeScoreUpdate = {
+        user_id: this.currentUser?.id || 0,
+        score: result.score,
+        previous_score: result.previous_score,
+        risk_level: result.risk_level,
+        factors: result.factors || [],
+        recommendations: result.recommendations || [],
+        last_updated: result.calculation_date || new Date().toISOString(),
+        is_real_time: result.is_realtime || false,
+        score_change: result.score_change || 0,
+        payment_analysis: result.payment_analysis
+      };
+      
+      this.handleRealTimeScoreUpdate(adaptedResult);
+      this.checkEligibility();
+      
+      this.showNotification('Score de crédit actualisé !', 'success');
+      
+      if (refreshBtn) {
+        refreshBtn.classList.remove('rotating');
+      }
+      this.isScoreUpdating = false;
+    },
+    error: (error: any) => {
+      console.error('❌ Erreur lors du rafraîchissement du score:', error);
+      this.showNotification('Erreur lors de la mise à jour du score', 'error');
+      
+      if (refreshBtn) {
+        refreshBtn.classList.remove('rotating');
+      }
+      this.isScoreUpdating = false;
+    }
+  });
+}
 
   /**
    * Obtient le score actuel
@@ -1282,85 +1289,46 @@ export class ProfileComponent implements OnInit, OnDestroy {
     return this.getTimeAgo(this.realTimeScore.last_updated);
   }
 
-  /**
-   * Actualise le score de crédit
-   */
-  refreshCreditScore(): void {
-    if (!this.currentUser || this.currentUser.username === undefined) {
-        this.showNotification('Utilisateur non connecté ou username manquant', 'error');
-        return;
+  private loadRegisteredCredits(): void {
+  if (!this.currentUser?.username) return;
+  
+  // ✅ Utiliser apiProxy au lieu de http.get
+  this.apiProxy.getUserCredits(this.currentUser.username).subscribe({
+    next: (credits) => {
+      this.activeCreditsFromService = credits;
+      this.updateDebtCalculations();
+      console.log('✅ Crédits enregistrés chargés:', credits.length);
+    },
+    error: (error) => {
+      console.error('❌ Erreur chargement crédits:', error);
+      this.loadCreditsFromStorage();
     }
-
-    this.isScoreUpdating = true;
-    
-    const refreshBtn = document.querySelector('.refresh-btn i');
-    if (refreshBtn) {
-        refreshBtn.classList.add('rotating');
-    }
-    
-    console.log('🔄 Actualisation du score pour:', this.currentUser.name);
-    
-    const userData = {
-      username: this.currentUser.username,
-      name: this.currentUser.name || this.currentUser.fullName,
-      email: this.currentUser.email,
-      phone: this.currentUser.phone,
-      monthly_income: this.client?.monthlyIncome || 0,
-      employment_status: this.client?.employmentStatus || 'cdi',
-      job_seniority: this.client?.jobSeniority || 24,
-      profession: this.client?.profession || '',
-      company: this.client?.company || '',
-      existing_debts: this.client?.existingDebts || 0,
-      monthly_charges: this.client?.monthlyCharges || 0,
-      use_realtime: true,
-      // NOUVEAU: Inclure les crédits actifs
-      active_credits: this.activeCreditsFromService.filter(c => c.status === 'active').map(credit => ({
+  });
+}
+private getRealTimeScore(userId: number) {
+  const userData = {
+    username: this.currentUser?.username || 'user_' + userId,
+    monthly_income: this.client?.monthlyIncome || 0,
+    employment_status: this.client?.employmentStatus || 'cdi',
+    job_seniority: this.client?.jobSeniority || 24,
+    existing_debts: this.client?.existingDebts || 0,
+    monthly_charges: this.client?.monthlyCharges || 0,
+    age: this.calculateAge() || 35,
+    profession: this.client?.profession || '',
+    company: this.client?.company || '',
+    active_credits: this.activeCreditsFromService
+      .filter(c => c.status === 'active')
+      .map(credit => ({
         amount: credit.amount,
         remaining: credit.remainingAmount,
         type: credit.type,
         approved_date: credit.approvedDate
       }))
-    };
-    
-    this.http.post<any>(`${this.apiUrl}/client-scoring`, userData).subscribe({
-        next: (result: any) => {
-            console.log('✅ Score actualisé:', result);
-            
-            const adaptedResult: RealTimeScoreUpdate = {
-              user_id: this.currentUser?.id || 0,
-              score: result.score,
-              previous_score: result.previous_score,
-              risk_level: result.risk_level,
-              factors: result.factors || [],
-              recommendations: result.recommendations || [],
-              last_updated: result.calculation_date || new Date().toISOString(),
-              is_real_time: result.is_realtime || false,
-              score_change: result.score_change || 0,
-              payment_analysis: result.payment_analysis
-            };
-            
-            this.handleRealTimeScoreUpdate(adaptedResult);
-            this.checkEligibility();
-            
-            this.showNotification('Score de crédit actualisé !', 'success');
-            
-            if (refreshBtn) {
-                refreshBtn.classList.remove('rotating');
-            }
-            this.isScoreUpdating = false;
-        },
-        error: (error: any) => {
-            console.error('❌ Erreur lors du rafraîchissement du score:', error);
-            this.showNotification('Erreur lors de la mise à jour du score', 'error');
-            
-            if (refreshBtn) {
-                refreshBtn.classList.remove('rotating');
-            }
-            this.isScoreUpdating = false;
-        }
-    });
-  }
-
+  };
+  
+  // ✅ Utiliser apiProxy au lieu de http.post
+  return this.apiProxy.getRealtimeScore(userData);
+}
   // ========================================
   // MÉTHODES D'INFORMATION ET STATUT
   // ========================================

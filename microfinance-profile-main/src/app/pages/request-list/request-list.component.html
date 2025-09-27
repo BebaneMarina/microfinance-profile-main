@@ -1,0 +1,547 @@
+<!-- requests-list.component.html -->
+<div class="requests-container">
+  
+  <!-- Header -->
+  <div class="header">
+    <div class="header-content">
+      <div class="title-section">
+        <h1 class="page-title">
+          <i class="material-icons">assignment</i>
+          Mes Demandes de Crédit
+        </h1>
+        <p class="page-subtitle">
+          Gérez toutes vos demandes de crédit courtes et longues
+        </p>
+      </div>
+      
+      <div class="actions">
+        <button class="btn btn-outline" (click)="refreshRequests()" [disabled]="isLoading">
+          <i class="material-icons">refresh</i>
+          <span *ngIf="!isLoading">Actualiser</span>
+          <span *ngIf="isLoading">Chargement...</span>
+        </button>
+        
+        <div class="new-request-actions">
+          <button class="btn btn-primary" (click)="createNewShortRequest()">
+            <i class="material-icons">flash_on</i>
+            Crédit Rapide
+          </button>
+          <button class="btn btn-secondary" (click)="createNewLongRequest()">
+            <i class="material-icons">description</i>
+            Crédit Long
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Statistiques -->
+  <div class="stats-section">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-value">{{ stats.total }}</div>
+        <div class="stat-label">Total</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{{ stats.short }}</div>
+        <div class="stat-label">Crédits Courts</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{{ stats.long }}</div>
+        <div class="stat-label">Crédits Longs</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{{ stats.active }}</div>
+        <div class="stat-label">Actifs</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{{ stats.pending }}</div>
+        <div class="stat-label">En attente</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filtres et recherche -->
+  <div class="filters-section">
+    <div class="filters-row">
+      <!-- Type de demande -->
+      <div class="filter-group">
+        <label>Type de demande</label>
+        <select [(ngModel)]="selectedType" (change)="onTypeFilterChange()" class="filter-select">
+          <option value="all">Tous les types</option>
+          <option value="short">Crédits courts</option>
+          <option value="long">Crédits longs</option>
+        </select>
+      </div>
+
+      <!-- Statut -->
+      <div class="filter-group">
+        <label>Statut</label>
+        <select [(ngModel)]="selectedStatus" (change)="onStatusFilterChange()" class="filter-select">
+          <option value="all">Tous les statuts</option>
+          <option value="active">Actif</option>
+          <option value="approved">Approuvé</option>
+          <option value="submitted">Soumis</option>
+          <option value="in_review">En examen</option>
+          <option value="draft">Brouillon</option>
+          <option value="rejected">Rejeté</option>
+          <option value="paid">Remboursé</option>
+          <option value="overdue">En retard</option>
+        </select>
+      </div>
+
+      <!-- Recherche -->
+      <div class="filter-group flex-grow">
+        <label>Recherche</label>
+        <div class="search-input-container">
+          <input 
+            type="text" 
+            [(ngModel)]="searchTerm" 
+            (input)="onSearchChange()" 
+            placeholder="Rechercher par nom, type, objet..."
+            class="search-input">
+          <i class="material-icons search-icon">search</i>
+        </div>
+      </div>
+
+      <!-- Bouton reset filtres -->
+      <div class="filter-group">
+        <button class="btn btn-outline btn-sm" (click)="clearFilters()">
+          <i class="material-icons">clear</i>
+          Reset
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Liste des demandes -->
+  <div class="requests-content">
+    
+    <!-- État de chargement -->
+    <div *ngIf="isLoading" class="loading-state">
+      <div class="loading-spinner"></div>
+      <p>Chargement des demandes...</p>
+    </div>
+
+    <!-- Pas de demandes -->
+    <div *ngIf="!isLoading && filteredRequests.length === 0" class="empty-state">
+      <div class="empty-icon">
+        <i class="material-icons">assignment_turned_in</i>
+      </div>
+      <h3>Aucune demande trouvée</h3>
+      <p *ngIf="searchTerm || selectedType !== 'all' || selectedStatus !== 'all'">
+        Aucune demande ne correspond à vos critères de recherche.
+      </p>
+      <p *ngIf="!searchTerm && selectedType === 'all' && selectedStatus === 'all'">
+        Vous n'avez pas encore fait de demande de crédit.
+      </p>
+      <div class="empty-actions">
+        <button class="btn btn-primary" (click)="createNewShortRequest()">
+          <i class="material-icons">flash_on</i>
+          Créer une demande rapide
+        </button>
+      </div>
+    </div>
+
+    <!-- Liste des demandes -->
+    <div *ngIf="!isLoading && filteredRequests.length > 0" class="requests-list">
+      
+      <!-- Demande courte -->
+      <div *ngFor="let request of paginatedRequests" class="request-card" 
+           [class]="'request-type-' + request.type">
+        
+        <!-- Demande courte -->
+        <ng-container *ngIf="request.type === 'short'">
+          <div class="request-header">
+            <div class="request-type-badge short">
+              <i class="material-icons">flash_on</i>
+              Crédit Court
+            </div>
+            <div class="request-status" [class]="getStatusClass(request.status)">
+              {{ getStatusText(request.status) }}
+            </div>
+          </div>
+
+          <div class="request-body">
+            <div class="request-main-info">
+              <h3 class="request-title">
+                {{ getCreditTypeName(request.creditType) }}
+              </h3>
+              <div class="request-details-grid">
+                <div class="detail-item">
+                  <label>Montant décaissé</label>
+                  <span class="amount-primary">{{ formatCurrency(request.disbursedAmount || request.amount) }}</span>
+                </div>
+                <div class="detail-item">
+                  <label>Montant total à rembourser</label>
+                  <span class="amount-secondary">{{ formatCurrency(request.totalAmount) }}</span>
+                </div>
+                <div class="detail-item">
+                  <label>Restant à rembourser</label>
+                  <span class="amount-remaining" 
+                        [class.paid]="request.remainingAmount === 0">
+                    {{ formatCurrency(request.remainingAmount) }}
+                  </span>
+                </div>
+                <div class="detail-item">
+                  <label>Date d'échéance</label>
+                  <span>{{ formatDate(request.dueDate) }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="request-actions">
+              <button class="btn btn-outline btn-sm" (click)="viewRequest(request)">
+                <i class="material-icons">visibility</i>
+                Voir détails
+              </button>
+            </div>
+          </div>
+
+          <div class="request-footer">
+            <div class="request-meta">
+              <span class="request-id">ID: {{ request.id }}</span>
+              <span class="request-date">{{ getTimeAgo(request.createdAt) }}</span>
+            </div>
+          </div>
+        </ng-container>
+
+        <!-- Demande longue -->
+        <ng-container *ngIf="request.type === 'long'">
+          <div class="request-header">
+            <div class="request-type-badge long">
+              <i class="material-icons">description</i>
+              Crédit Long
+            </div>
+            <div class="request-status" [class]="getStatusClass(request.status)">
+              {{ getStatusText(request.status) }}
+            </div>
+          </div>
+
+          <div class="request-body">
+            <div class="request-main-info">
+              <h3 class="request-title">
+                {{ request.personalInfo?.fullName || 'Demande sans nom' }}
+              </h3>
+              <div class="request-details-grid">
+                <div class="detail-item">
+                  <label>Montant demandé</label>
+                  <span class="amount-primary">
+                    {{ formatCurrency(request.creditDetails?.requestedAmount || 0) }}
+                  </span>
+                </div>
+                <div class="detail-item">
+                  <label>Durée</label>
+                  <span>{{ request.creditDetails?.duration || 'Non définie' }} mois</span>
+                </div>
+                <div class="detail-item">
+                  <label>Objet</label>
+                  <span class="purpose-text">
+                    {{ request.creditDetails?.purpose || 'Non spécifié' }}
+                  </span>
+                </div>
+                <div class="detail-item">
+                  <label>Revenus mensuels</label>
+                  <span>{{ formatCurrency(request.financialDetails?.monthlyIncome || 0) }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="request-actions">
+              <button class="btn btn-outline btn-sm" (click)="viewRequest(request)">
+                <i class="material-icons">visibility</i>
+                Voir détails
+              </button>
+              <button *ngIf="canEditLongRequest(request)" 
+                      class="btn btn-secondary btn-sm" (click)="editRequest(request)">
+                <i class="material-icons">edit</i>
+                Modifier
+              </button>
+              <button *ngIf="request.status === 'draft'" 
+                      class="btn btn-danger btn-sm" (click)="deleteRequest(request)">
+                <i class="material-icons">delete</i>
+                Supprimer
+              </button>
+            </div>
+          </div>
+
+          <div class="request-footer">
+            <div class="request-meta">
+              <span class="request-id">ID: {{ request.id }}</span>
+              <span class="request-date">
+                {{ request.submissionDate ? 'Soumise ' + getTimeAgo(request.submissionDate) : 'Créée ' + getTimeAgo(request.createdAt) }}
+              </span>
+            </div>
+          </div>
+        </ng-container>
+      </div>
+    </div>
+
+    <!-- Pagination -->
+    <div *ngIf="!isLoading && filteredRequests.length > 0" class="pagination-section">
+      <div class="pagination-info">
+        Affichage de {{ (currentPage - 1) * itemsPerPage + 1 }} à 
+        {{ Math.min(currentPage * itemsPerPage, filteredRequests.length) }} 
+        sur {{ filteredRequests.length }} demandes
+      </div>
+      
+      <div class="pagination" *ngIf="totalPages > 1">
+        <button class="btn btn-outline btn-sm" 
+                (click)="previousPage()" 
+                [disabled]="currentPage === 1">
+          <i class="material-icons">chevron_left</i>
+        </button>
+        
+        <button *ngFor="let page of pageNumbers" 
+                class="btn btn-sm" 
+                [class.btn-primary]="page === currentPage"
+                [class.btn-outline]="page !== currentPage"
+                (click)="goToPage(page)">
+          {{ page }}
+        </button>
+        
+        <button class="btn btn-outline btn-sm" 
+                (click)="nextPage()" 
+                [disabled]="currentPage === totalPages">
+          <i class="material-icons">chevron_right</i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal détails demande -->
+  <div *ngIf="showRequestModal && selectedRequest" class="modal-overlay" (click)="closeRequestModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      
+      <!-- Header modal -->
+      <div class="modal-header">
+        <h2 class="modal-title">
+          <i class="material-icons">{{ selectedRequest.type === 'short' ? 'flash_on' : 'description' }}</i>
+          Détails de la demande
+        </h2>
+        <button class="modal-close" (click)="closeRequestModal()">
+          <i class="material-icons">close</i>
+        </button>
+      </div>
+
+      <!-- Body modal - Demande courte -->
+      <div *ngIf="selectedRequest.type === 'short'" class="modal-body">
+        <div class="detail-section">
+          <h3>Informations générales</h3>
+          <div class="detail-grid">
+            <div class="detail-row">
+              <span class="detail-label">Type de crédit:</span>
+              <span class="detail-value">{{ getCreditTypeName(selectedRequest.creditType) }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Statut:</span>
+              <span class="detail-value status-badge" [class]="getStatusClass(selectedRequest.status)">
+                {{ getStatusText(selectedRequest.status) }}
+              </span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">ID de la demande:</span>
+              <span class="detail-value">{{ selectedRequest.id }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Date d'approbation:</span>
+              <span class="detail-value">{{ formatDate(selectedRequest.approvedDate) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-section">
+          <h3>Détails financiers</h3>
+          <div class="detail-grid">
+            <div class="detail-row highlight">
+              <span class="detail-label">Montant décaissé:</span>
+              <span class="detail-value amount-large">
+                {{ formatCurrency(selectedRequest.disbursedAmount || selectedRequest.amount) }}
+              </span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Montant total à rembourser:</span>
+              <span class="detail-value">{{ formatCurrency(selectedRequest.totalAmount) }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Montant restant:</span>
+              <span class="detail-value" [class.success]="selectedRequest.remainingAmount === 0">
+                {{ formatCurrency(selectedRequest.remainingAmount) }}
+              </span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Taux d'intérêt:</span>
+              <span class="detail-value">{{ (selectedRequest.interestRate * 100).toFixed(1) }}%</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-section">
+          <h3>Échéances</h3>
+          <div class="detail-grid">
+            <div class="detail-row">
+              <span class="detail-label">Date d'échéance:</span>
+              <span class="detail-value">{{ formatDate(selectedRequest.dueDate) }}</span>
+            </div>
+            <div class="detail-row" *ngIf="selectedRequest.nextPaymentDate">
+              <span class="detail-label">Prochain paiement:</span>
+              <span class="detail-value">{{ formatDate(selectedRequest.nextPaymentDate) }}</span>
+            </div>
+            <div class="detail-row" *ngIf="selectedRequest.nextPaymentAmount">
+              <span class="detail-label">Montant prochain paiement:</span>
+              <span class="detail-value">{{ formatCurrency(selectedRequest.nextPaymentAmount) }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Body modal - Demande longue -->
+      <div *ngIf="selectedRequest.type === 'long'" class="modal-body">
+        
+        <!-- Informations personnelles -->
+        <div class="detail-section" *ngIf="selectedRequest.personalInfo">
+          <h3>Informations personnelles</h3>
+          <div class="detail-grid">
+            <div class="detail-row">
+              <span class="detail-label">Nom complet:</span>
+              <span class="detail-value">{{ selectedRequest.personalInfo.fullName }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Email:</span>
+              <span class="detail-value">{{ selectedRequest.personalInfo.email }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Téléphone:</span>
+              <span class="detail-value">{{ selectedRequest.personalInfo.phone }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Adresse:</span>
+              <span class="detail-value">{{ selectedRequest.personalInfo.address }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Profession:</span>
+              <span class="detail-value">{{ selectedRequest.personalInfo.profession }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Entreprise:</span>
+              <span class="detail-value">{{ selectedRequest.personalInfo.company }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Détails du crédit -->
+        <div class="detail-section" *ngIf="selectedRequest.creditDetails">
+          <h3>Détails du crédit demandé</h3>
+          <div class="detail-grid">
+            <div class="detail-row highlight">
+              <span class="detail-label">Montant demandé:</span>
+              <span class="detail-value amount-large">
+                {{ formatCurrency(selectedRequest.creditDetails.requestedAmount) }}
+              </span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Durée:</span>
+              <span class="detail-value">{{ selectedRequest.creditDetails.duration }} mois</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Fréquence de remboursement:</span>
+              <span class="detail-value">{{ selectedRequest.creditDetails.repaymentFrequency || 'Mensuel' }}</span>
+            </div>
+            <div class="detail-row full-width">
+              <span class="detail-label">Objet du crédit:</span>
+              <span class="detail-value">{{ selectedRequest.creditDetails.purpose }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Informations financières -->
+        <div class="detail-section" *ngIf="selectedRequest.financialDetails">
+          <h3>Situation financière</h3>
+          <div class="detail-grid">
+            <div class="detail-row">
+              <span class="detail-label">Revenus mensuels:</span>
+              <span class="detail-value">{{ formatCurrency(selectedRequest.financialDetails.monthlyIncome) }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Charges mensuelles:</span>
+              <span class="detail-value">{{ formatCurrency(selectedRequest.financialDetails.monthlyExpenses || 0) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Simulation -->
+        <div class="detail-section" *ngIf="selectedRequest.simulation">
+          <h3>Simulation</h3>
+          <div class="detail-grid">
+            <div class="detail-row">
+              <span class="detail-label">Score calculé:</span>
+              <span class="detail-value">{{ selectedRequest.simulation.calculatedScore }}/10</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Niveau de risque:</span>
+              <span class="detail-value">{{ selectedRequest.simulation.riskLevel }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Montant recommandé:</span>
+              <span class="detail-value">{{ formatCurrency(selectedRequest.simulation.recommendedAmount || 0) }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Taux suggéré:</span>
+              <span class="detail-value">{{ selectedRequest.simulation.suggestedRate?.toFixed(2) }}%</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Mensualité estimée:</span>
+              <span class="detail-value">{{ formatCurrency(selectedRequest.simulation.monthlyPayment || 0) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Statut et historique -->
+        <div class="detail-section">
+          <h3>Statut et dates</h3>
+          <div class="detail-grid">
+            <div class="detail-row">
+              <span class="detail-label">Statut actuel:</span>
+              <span class="detail-value status-badge" [class]="getStatusClass(selectedRequest.status)">
+                {{ getStatusText(selectedRequest.status) }}
+              </span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Date de création:</span>
+              <span class="detail-value">{{ formatDate(selectedRequest.createdAt) }}</span>
+            </div>
+            <div class="detail-row" *ngIf="selectedRequest.submissionDate">
+              <span class="detail-label">Date de soumission:</span>
+              <span class="detail-value">{{ formatDate(selectedRequest.submissionDate) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Historique -->
+        <div class="detail-section" *ngIf="selectedRequest.reviewHistory && selectedRequest.reviewHistory.length > 0">
+          <h3>Historique des actions</h3>
+          <div class="history-timeline">
+            <div *ngFor="let entry of selectedRequest.reviewHistory" class="history-entry">
+              <div class="history-date">{{ formatDate(entry.date) }}</div>
+              <div class="history-action">{{ entry.action }}</div>
+              <div class="history-agent">{{ entry.agent }}</div>
+              <div class="history-comment" *ngIf="entry.comment">{{ entry.comment }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer modal -->
+      <div class="modal-footer">
+        <button class="btn btn-outline" (click)="closeRequestModal()">
+          Fermer
+        </button>
+        <button *ngIf="selectedRequest.type === 'long' && canEditLongRequest(selectedRequest)" 
+                class="btn btn-primary" (click)="editRequest(selectedRequest)">
+          <i class="material-icons">edit</i>
+          Modifier
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

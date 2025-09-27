@@ -12,6 +12,7 @@ import { CreditLongRequestComponent } from './pages/credit-request.component/cre
 import { SimulatorHomeComponent } from './simulateur-bank/components/simulator-home/simulator-home.component';
 import { PaymentCalculatorComponent } from './simulateur-bank/components/payment-calculator/payment-calculator.component';
 import { BorrowingCapacityComponent } from './simulateur-bank/components/capacite-emprunt/boworing-capacity.component';
+import { RequestsListComponent } from './pages/request-list/request-list.component';
 
 export const routes: Routes = [
   {
@@ -141,6 +142,15 @@ export const routes: Routes = [
             data: { 
               requiresAuth: true,
               description: 'Formulaire complet de demande de crédit'
+            }
+          },
+          {
+            path: 'request-list',
+            component: RequestsListComponent,
+            title: 'liste des demandes',
+            data:{
+              requireAuth: true,
+              description: 'liste complète des demandes'
             }
           },
           {

@@ -65,7 +65,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
 
   private setDefaultClient(): void {
     this.client = {
-      username: 'theobawana',
+      username: 'marina',
       clientId: 'BAMBOO-TB-2025',
       clientType: 'particulier',
       initiales: 'TB',
@@ -119,6 +119,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
       '/client/parametre': 'Paramètres',
       '/client/help': 'Aide',
       '/client/credit-request': 'Nouvelle demande de crédit',
+      '/client/app-requests-list': 'liste de demande',
       '/client/transactions': 'Transactions',
       '/client/payment-history': 'Historique des paiements',
       '/client/documents': 'Mes documents',

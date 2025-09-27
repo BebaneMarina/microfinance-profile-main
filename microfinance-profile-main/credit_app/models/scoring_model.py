@@ -254,12 +254,12 @@ class CreditScoringModel:
             self.score_cache[cache_key] = result
             self.last_calculation_time[cache_key] = current_time
             
-            logger.info(f"✅ Score temps réel calculé: {previous_score} → {final_score} (Δ{score_change:+.1f})")
+            logger.info(f"Score temps réel calculé: {previous_score} → {final_score} (Δ{score_change:+.1f})")
             
             return result
             
         except Exception as e:
-            logger.error(f"❌ Erreur calcul score temps réel: {str(e)}")
+            logger.error(f"Erreur calcul score temps réel: {str(e)}")
             # Fallback simple
             return self.predict_base_score(client_data)
 
@@ -295,7 +295,7 @@ class CreditScoringModel:
             }
             
         except Exception as e:
-            logger.error(f"❌ Erreur prédiction base: {str(e)}")
+            logger.error(f" Erreur prédiction base: {str(e)}")
             return self.rule_based_scoring(client_data)
 
     def prepare_basic_features(self, data):

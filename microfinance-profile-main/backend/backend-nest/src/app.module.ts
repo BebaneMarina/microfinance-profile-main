@@ -7,6 +7,8 @@ import { AuthModule } from './app/auth/auth.module';
 import { UsersModule } from './users/user.module';
 import { CreditModule } from './credit/credit.module';
 import { ScoringModule } from './scoring/scoring.module';
+import { CreditLongModule } from './credit/credit-long.module';
+import { UserCreditsModule } from './users-credit/users-credits.module';
 
 @Module({
   imports: [
@@ -32,6 +34,8 @@ import { ScoringModule } from './scoring/scoring.module';
     UsersModule,
     CreditModule,
     ScoringModule,
+    CreditLongModule,
+    UserCreditsModule
   ],
   controllers: [AppController],
   providers: [AppService],

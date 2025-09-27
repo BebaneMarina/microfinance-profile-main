@@ -1,4 +1,4 @@
-<!-- credit-long-request.component.html -->
+<!-- credit-long-request.component.html - VERSION CORRIGÉE -->
 <div class="credit-long-container">
   <!-- En-tête avec progression -->
   <header class="request-header">
@@ -114,8 +114,8 @@
         </div>
       </form>
 
-      <!-- Résultats de simulation -->
-      <div *ngIf="showSimulation && simulation" class="simulation-results">
+      <!-- Résultats de simulation - ✅ CORRIGÉ -->
+      <div *ngIf="showSimulation && simulation && simulation.results" class="simulation-results">
         <h3>
           <i class="fas fa-chart-line"></i>
           Résultats de votre simulation
@@ -770,7 +770,7 @@
                          (change)="onFileSelected($event, 'identityProof')">
                   <button type="button" 
                           class="btn btn-outline-primary btn-sm"
-                          (click)="triggerFileInput('identityProof')">>
+                          (click)="triggerFileInput('identityProof')">
                     <i class="fas fa-upload"></i>
                     {{ isDocumentUploaded('identityProof') ? 'Modifier' : 'Télécharger' }}
                   </button>
@@ -778,7 +778,7 @@
                           *ngIf="isDocumentUploaded('identityProof')"
                           class="btn btn-outline-danger btn-sm"
                           (click)="removeDocument('identityProof')">
-                    <i class="fas fa-trash"></i>
+                          <i class="fas fa-trash"></i>
                   </button>
                 </div>
               </div>
@@ -805,7 +805,7 @@
                          (change)="onFileSelected($event, 'incomeProof')">
                   <button type="button" 
                           class="btn btn-outline-primary btn-sm"
-                          (click)="triggerFileInput('incomeProof')">>
+                          (click)="triggerFileInput('incomeProof')">
                     <i class="fas fa-upload"></i>
                     {{ isDocumentUploaded('incomeProof') ? 'Modifier' : 'Télécharger' }}
                   </button>
@@ -840,7 +840,7 @@
                          (change)="onFileSelected($event, 'bankStatements')">
                   <button type="button" 
                           class="btn btn-outline-primary btn-sm"
-                          (click)="triggerFileInput('bankStatements')">>
+                          (click)="triggerFileInput('bankStatements')">
                     <i class="fas fa-upload"></i>
                     {{ isDocumentUploaded('bankStatements') ? 'Modifier' : 'Télécharger' }}
                   </button>
@@ -874,7 +874,7 @@
                          (change)="onFileSelected($event, 'employmentCertificate')">
                   <button type="button" 
                           class="btn btn-outline-primary btn-sm"
-                          (click)="triggerFileInput('employmentCertificate')">>
+                          (click)="triggerFileInput('employmentCertificate')">
                     <i class="fas fa-upload"></i>
                     {{ isDocumentUploaded('employmentCertificate') ? 'Modifier' : 'Télécharger' }}
                   </button>
@@ -918,7 +918,7 @@
                          (change)="onFileSelected($event, 'businessPlan')">
                   <button type="button" 
                           class="btn btn-outline-secondary btn-sm"
-                          (click)="triggerFileInput('businessPlan')">>
+                          (click)="triggerFileInput('businessPlan')">
                     <i class="fas fa-upload"></i>
                     {{ isDocumentUploaded('businessPlan') ? 'Modifier' : 'Télécharger' }}
                   </button>
@@ -948,7 +948,7 @@
                          (change)="onFileSelected($event, 'propertyDeeds')">
                   <button type="button" 
                           class="btn btn-outline-secondary btn-sm"
-                          (click)="triggerFileInput('propertyDeeds')">>
+                          (click)="triggerFileInput('propertyDeeds')">
                     <i class="fas fa-upload"></i>
                     {{ isDocumentUploaded('propertyDeeds') ? 'Modifier' : 'Télécharger' }}
                   </button>
@@ -979,7 +979,7 @@
                          (change)="onFileSelected($event, 'guarantorDocuments')">
                   <button type="button" 
                           class="btn btn-outline-secondary btn-sm"
-                          (click)="triggerFileInput('guarantorDocuments')">>
+                          (click)="triggerFileInput('guarantorDocuments')">
                     <i class="fas fa-upload"></i>
                     {{ isDocumentUploaded('guarantorDocuments') ? 'Modifier' : 'Télécharger' }}
                   </button>
@@ -1011,7 +1011,7 @@
       </form>
     </section>
 
-    <!-- ÉTAPE 5: CONFIRMATION -->
+    <!-- ÉTAPE 5: CONFIRMATION - ✅ CORRIGÉ -->
     <section *ngIf="isConfirmationStep" class="step-content confirmation-step">
       <div class="step-header">
         <h2>
@@ -1035,8 +1035,8 @@
       <!-- Récapitulatif complet -->
       <div class="confirmation-summary">
         
-        <!-- Simulation -->
-        <div class="summary-section" *ngIf="simulation">
+        <!-- Simulation - ✅ CORRIGÉ -->
+        <div class="summary-section" *ngIf="simulation && simulation.results">
           <h3>
             <i class="fas fa-calculator"></i>
             Conditions de votre crédit
@@ -1331,6 +1331,7 @@
     </div>
   </div>
 </div>
+
 
 <!-- Styles intégrés pour un aperçu rapide -->
 <style>

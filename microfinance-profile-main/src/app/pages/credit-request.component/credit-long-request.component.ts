@@ -5,9 +5,40 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
-
-import { CreditLongService, CreditLongRequest, CreditSimulation, CreateCreditResponse } from '../../services/credit-long.service';
+import { CreditRequestsService, LongCreditRequest } from '../../services/credit-requests.service';
+import { CreditLongService, CreditLongRequest, CreditSimulation } from '../../services/credit-long.service';
 import { AuthService } from '../../services/auth.service';
+
+export interface CreateCreditResponse {
+  id: string;
+  success: boolean;
+  message: string;
+  request?: any;
+  status?: string;
+  submissionDate?: string;
+}
+
+interface CompatibleDraft extends Omit<LongCreditRequest, 'personalInfo' | 'creditDetails'> {
+  personalInfo?: {
+    fullName: string;
+    email: string;
+    phone: string;
+    address: string;
+    profession: string;
+    company: string;
+    maritalStatus?: string;
+    dependents?: number;
+  };
+  creditDetails?: {
+    requestedAmount: number;
+    duration: number;
+    purpose: string;
+    repaymentFrequency: string;
+    preferredRate?: number;  // Optionnel
+    guarantors?: any[];      // Optionnel
+  };
+}
+
 
 @Component({
   selector: 'app-credit-long-request',
@@ -65,13 +96,15 @@ export class CreditLongRequestComponent implements OnInit, OnDestroy {
     private creditLongService: CreditLongService,
     private authService: AuthService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private creditRequestsService: CreditRequestsService 
   ) {}
 
   ngOnInit(): void {
     this.initializeForms();
     this.loadCurrentUser();
     this.loadExistingDraft();
+    this.setupAutoSave();
     
     // Surveiller les changements de simulation
     this.subscriptions.push(
@@ -83,15 +116,53 @@ export class CreditLongRequestComponent implements OnInit, OnDestroy {
     );
   }
 
-  ngOnDestroy(): void {
+ ngOnDestroy(): void {
+    // Sauvegarder avant de quitter
+    if (this.hasUnsavedChanges()) {
+      this.saveDraft();
+    }
+    
+    if (this.autoSaveTimeout) {
+      clearTimeout(this.autoSaveTimeout);
+    }
+    
     this.subscriptions.forEach(sub => sub.unsubscribe());
   }
+
+  private async uploadDocuments(requestId: string): Promise<void> {
+  try {
+    const uploadPromises = Object.entries(this.uploadedFiles).map(([documentType, file]) => 
+      this.creditRequestsService.uploadLongRequestDocument(requestId, documentType, file)
+    );
+
+    await Promise.all(uploadPromises);
+    console.log('Tous les documents ont été téléchargés avec succès');
+    
+  } catch (error) {
+    console.error('Erreur lors du téléchargement des documents:', error);
+    this.showNotification('Erreur lors du téléchargement de certains documents', 'warning');
+  }
+}
+
+private showSuccessModal(response: LongCreditRequest): void {
+  // Adapter le response au format attendu
+  this.submissionResult = {
+    applicationId: response.id || 'CR' + Date.now(),
+    amount: this.simulationForm.get('requestedAmount')?.value,
+    duration: this.simulationForm.get('duration')?.value,
+    status: response.status,
+    message: 'Demande soumise avec succès',
+    submissionDate: response.submissionDate || new Date().toISOString()
+  };
+  this.showResultModal = true;
+}
+
 
   // === MÉTHODE POUR FERMER LE MODAL ===
   closeResultModal(): void {
     this.showResultModal = false;
     this.submissionResult = null;
-    this.router.navigate(['/dashboard']);
+    this.router.navigate(['/profile']);
   }
 
   // === INITIALISATION ===
@@ -182,43 +253,65 @@ export class CreditLongRequestComponent implements OnInit, OnDestroy {
       }
     }
   }
+ private setupAutoSave(): void {
+    // Sauvegarder automatiquement toutes les 30 secondes
+    setInterval(async () => {
+      if (this.hasUnsavedChanges()) {
+        await this.saveDraft();
+      }
+    }, 30000);
 
-  private loadExistingDraft(): void {
-    if (this.currentUser?.username) {
-      this.creditLongService.getDraft(this.currentUser.username).subscribe({
-        next: (draft) => {
-          if (draft) {
-            this.loadDraftData(draft);
-          }
-        },
-        error: (error: any) => {
-          console.error('Erreur chargement brouillon:', error);
-        }
+    // Sauvegarder à chaque changement important
+    [this.personalForm, this.financialForm, this.simulationForm].forEach(form => {
+      form.valueChanges.subscribe(() => {
+        // Débounce la sauvegarde
+        clearTimeout(this.autoSaveTimeout);
+        this.autoSaveTimeout = setTimeout(() => {
+          this.saveDraft();
+        }, 2000);
       });
-    }
+    });
   }
 
-  private loadDraftData(draft: Partial<CreditLongRequest>): void {
-    if (draft.creditDetails) {
-      this.simulationForm.patchValue(draft.creditDetails);
+  private autoSaveTimeout: any;
+
+  private hasUnsavedChanges(): boolean {
+    return this.personalForm.dirty || 
+           this.financialForm.dirty || 
+           this.simulationForm.dirty ||
+           this.documentsForm.dirty;
+  }
+
+ private loadDraftData(draft: CompatibleDraft): void {
+  if (draft.creditDetails) {
+    // Extraire seulement les propriétés du formulaire de simulation
+    const simulationData = {
+      requestedAmount: draft.creditDetails.requestedAmount,
+      duration: draft.creditDetails.duration,
+      purpose: draft.creditDetails.purpose,
+      repaymentFrequency: draft.creditDetails.repaymentFrequency
+    };
+    this.simulationForm.patchValue(simulationData);
+  }
+  
+  if (draft.personalInfo) {
+    this.personalForm.patchValue(draft.personalInfo);
+  }
+  
+  if (draft.financialDetails) {
+    this.financialForm.patchValue(draft.financialDetails);
+    
+    if (draft.financialDetails.otherIncomes) {
+      this.loadOtherIncomes(draft.financialDetails.otherIncomes);
     }
-    if (draft.personalInfo) {
-      this.personalForm.patchValue(draft.personalInfo);
+    if (draft.financialDetails.existingLoans) {
+      this.loadExistingLoans(draft.financialDetails.existingLoans);
     }
-    if (draft.financialDetails) {
-      this.financialForm.patchValue(draft.financialDetails);
-      
-      if (draft.financialDetails.otherIncomes) {
-        this.loadOtherIncomes(draft.financialDetails.otherIncomes);
-      }
-      if (draft.financialDetails.existingLoans) {
-        this.loadExistingLoans(draft.financialDetails.existingLoans);
-      }
-      if (draft.financialDetails.assets) {
-        this.loadAssets(draft.financialDetails.assets);
-      }
+    if (draft.financialDetails.assets) {
+      this.loadAssets(draft.financialDetails.assets);
     }
   }
+}
 
   // === SIMULATION ===
 
@@ -459,19 +552,20 @@ export class CreditLongRequestComponent implements OnInit, OnDestroy {
 
   // === SAUVEGARDE ET SOUMISSION ===
 
-  saveDraft(): void {
-    const draftData: Partial<CreditLongRequest> = {
+ async saveDraft(): Promise<void> {
+  try {
+    const draftData: Partial<any> = {
       userId: this.currentUser?.id,
-      username: this.currentUser?.username,
+      username: this.currentUser?.email,
       status: 'draft',
       personalInfo: this.personalForm.value,
       creditDetails: {
         ...this.simulationForm.value,
-        preferredRate: this.simulation?.results.suggestedRate
+        preferredRate: this.simulation?.results?.suggestedRate // ✅ Ajout de ?. pour éviter l'erreur
       },
       financialDetails: this.financialForm.value,
       documents: this.documentsForm.value,
-      simulation: this.simulation ? {
+      simulation: this.simulation?.results ? { // ✅ Vérifier que results existe
         calculatedScore: this.simulation.results.score,
         riskLevel: this.simulation.results.riskLevel,
         recommendedAmount: this.simulation.results.recommendedAmount,
@@ -480,39 +574,82 @@ export class CreditLongRequestComponent implements OnInit, OnDestroy {
         totalInterest: this.simulation.results.totalInterest,
         debtToIncomeRatio: this.simulation.results.debtToIncomeRatio,
         approvalProbability: this.simulation.results.approvalProbability
-      } : undefined,
-      reviewHistory: []
+      } : null, // ✅ Retourner null si pas de simulation
+      reviewHistory: [{
+        date: new Date().toISOString(),
+        action: 'Brouillon créé',
+        agent: 'Client',
+        comment: 'Brouillon sauvegardé automatiquement'
+      }]
     };
 
-    this.creditLongService.saveDraft(draftData).subscribe({
-      next: () => {
-        console.log('Brouillon sauvegardé');
-      },
-      error: (error: any) => {
-        console.error('Erreur sauvegarde brouillon:', error);
-      }
-    });
+    await this.creditRequestsService.saveLongRequestDraft(draftData);
+    
+    console.log('Brouillon sauvegardé en base de données');
+
+  } catch (error) {
+    console.error('Erreur sauvegarde brouillon:', error);
+    // Continuer même si la sauvegarde échoue
+  }
+}
+
+private validateFinalRequest(): string[] {
+  const errors: string[] = [];
+
+  if (!this.simulation) {
+    errors.push('Une simulation est requise avant la soumission.');
   }
 
-  submitRequest(): void {
-    // Validation finale
-    this.validationErrors = this.validateFinalRequest();
-    
-    if (this.validationErrors.length > 0) {
-      this.showNotification('Veuillez corriger les erreurs avant de soumettre.', 'error');
-      return;
-    }
+  if (!this.personalForm.valid) {
+    errors.push('Les informations personnelles sont incomplètes.');
+  }
 
-    if (this.isSubmitting) {
-      return;
-    }
+  if (!this.financialForm.valid) {
+    errors.push('Les informations financières sont incomplètes.');
+  }
 
-    this.isSubmitting = true;
+  if (!this.documentsForm.valid) {
+    errors.push('Tous les documents obligatoires doivent être fournis.');
+  }
 
+  const monthlyIncome = this.financialForm.value.monthlyIncome;
+  const requestedAmount = this.simulationForm.value.requestedAmount;
+  
+  if (requestedAmount > monthlyIncome * 60) {
+    errors.push('Le montant demandé est trop élevé par rapport aux revenus.');
+  }
+
+  const totalExistingPayments = this.calculateTotalExistingPayments();
+  const newPayment = this.simulation?.results?.monthlyPayment || 0; // ✅ Ajout de ?. 
+  const debtRatio = ((totalExistingPayments + newPayment) / monthlyIncome) * 100;
+  
+  if (debtRatio > 50) {
+    errors.push('Le taux d\'endettement total dépasse 50%.');
+  }
+
+  return errors;
+}
+
+  async submitRequest(): Promise<void> {
+  // Validation finale
+  this.validationErrors = this.validateFinalRequest();
+  
+  if (this.validationErrors.length > 0) {
+    this.showNotification('Veuillez corriger les erreurs avant de soumettre.', 'error');
+    return;
+  }
+
+  if (this.isSubmitting) {
+    return;
+  }
+
+  this.isSubmitting = true;
+
+  try {
     // Construire la demande finale
-    const requestData: Partial<CreditLongRequest> = {
+    const requestData = {
       userId: this.currentUser?.id,
-      username: this.currentUser?.username,
+      username: this.currentUser?.email,
       status: 'submitted',
       submissionDate: new Date().toISOString(),
       
@@ -520,7 +657,7 @@ export class CreditLongRequestComponent implements OnInit, OnDestroy {
       
       creditDetails: {
         ...this.simulationForm.value,
-        preferredRate: this.simulation?.results.suggestedRate,
+        preferredRate: this.simulation?.results?.suggestedRate, // ✅
         guarantors: []
       },
       
@@ -528,7 +665,7 @@ export class CreditLongRequestComponent implements OnInit, OnDestroy {
       
       documents: this.documentsForm.value,
       
-      simulation: this.simulation ? {
+      simulation: this.simulation?.results ? { // ✅ Vérification
         calculatedScore: this.simulation.results.score,
         riskLevel: this.simulation.results.riskLevel,
         recommendedAmount: this.simulation.results.recommendedAmount,
@@ -537,7 +674,7 @@ export class CreditLongRequestComponent implements OnInit, OnDestroy {
         totalInterest: this.simulation.results.totalInterest,
         debtToIncomeRatio: this.simulation.results.debtToIncomeRatio,
         approvalProbability: this.simulation.results.approvalProbability
-      } : undefined,
+      } : null, // ✅
       
       reviewHistory: [{
         date: new Date().toISOString(),
@@ -547,84 +684,118 @@ export class CreditLongRequestComponent implements OnInit, OnDestroy {
       }]
     };
 
-    // ✅ Correction: typage explicite de la réponse
-    this.creditLongService.createCreditRequest(requestData).subscribe({
-      next: (response: CreateCreditResponse) => {
-        this.isSubmitting = false;
-        
-        this.submissionResult = {
-          applicationId: response.id,
-          ...response
-        };
-        
-        if (response.id) {
-          this.uploadDocuments(response.id).then(() => {
-            this.showSuccessModal(response);
-          });
-        } else {
-          this.showSuccessModal(response);
-        }
-        
-        this.clearDraft();
-      },
-      error: (error: any) => { // ✅ Correction: typage explicite de l'erreur
-        this.isSubmitting = false;
-        console.error('Erreur soumission:', error);
-        this.showNotification('Erreur lors de la soumission de la demande.', 'error');
-      }
-    });
+    const createdRequest = await this.creditRequestsService.createLongRequest(requestData);
+    
+    this.submissionResult = {
+      applicationId: createdRequest.id,
+      status: createdRequest.status,
+      submissionDate: createdRequest.submissionDate,
+      message: 'Demande soumise avec succès'
+    };
+    
+    // Upload des documents si nécessaire
+    if (Object.keys(this.uploadedFiles).length > 0) {
+      await this.uploadDocuments(createdRequest.id);
+    }
+
+    this.showSuccessModal(createdRequest);
+    this.clearDraft();
+
+  } catch (error) {
+    console.error('Erreur soumission:', error);
+    this.showNotification('Erreur lors de la soumission de la demande.', 'error');
+  } finally {
+    this.isSubmitting = false;
   }
-
-  private async uploadDocuments(requestId: string): Promise<void> {
-    const uploadPromises = Object.entries(this.uploadedFiles).map(([type, file]) => {
-      return this.creditLongService.uploadDocument(requestId, type, file).toPromise();
-    });
-
+}
+ private loadExistingDraft(): Promise<void> {
+  return new Promise(async (resolve) => {
+    if (!this.currentUser?.email) { 
+      resolve();
+      return;
+    }
+    
     try {
-      await Promise.all(uploadPromises);
-      console.log('Tous les documents ont été téléchargés');
+      //  CORRIGÉ : passe l'email au lieu du username
+      const draft = await this.creditRequestsService.getLongRequestDraft(this.currentUser.email);
+      
+      if (draft) {
+        this.loadDraftDataDirectly(draft);
+        console.log('Brouillon chargé depuis la base de données');
+      }
+      resolve();
     } catch (error) {
-      console.error('Erreur upload documents:', error);
-      this.showNotification('Certains documents n\'ont pas pu être téléchargés.', 'warning');
+      console.error('Erreur chargement brouillon:', error);
+      resolve();
+    }
+  });
+}
+
+private loadDraftDataDirectly(draft: any): void {
+  // Charger les données de simulation
+  if (draft.creditDetails) {
+    this.simulationForm.patchValue({
+      requestedAmount: draft.creditDetails.requestedAmount || 2000000,
+      duration: draft.creditDetails.duration || 12,
+      purpose: draft.creditDetails.purpose || '',
+      repaymentFrequency: draft.creditDetails.repaymentFrequency || 'mensuel'
+    });
+  }
+  
+  // Charger les informations personnelles
+  if (draft.personalInfo) {
+    this.personalForm.patchValue({
+      fullName: draft.personalInfo.fullName || '',
+      email: draft.personalInfo.email || '',
+      phone: draft.personalInfo.phone || '',
+      address: draft.personalInfo.address || '',
+      profession: draft.personalInfo.profession || '',
+      company: draft.personalInfo.company || '',
+      maritalStatus: draft.personalInfo.maritalStatus || '',
+      dependents: draft.personalInfo.dependents || 0
+    });
+  }
+  
+  // Charger les informations financières
+  if (draft.financialDetails) {
+    this.financialForm.patchValue({
+      monthlyIncome: draft.financialDetails.monthlyIncome || 0,
+      monthlyExpenses: draft.financialDetails.monthlyExpenses || 0
+    });
+    
+    // Charger les détails d'emploi si présents
+    if (draft.financialDetails.employmentDetails) {
+      this.financialForm.get('employmentDetails')?.patchValue(draft.financialDetails.employmentDetails);
+    }
+    
+    // Charger les tableaux dynamiques
+    if (draft.financialDetails.otherIncomes) {
+      this.loadOtherIncomes(draft.financialDetails.otherIncomes);
+    }
+    if (draft.financialDetails.existingLoans) {
+      this.loadExistingLoans(draft.financialDetails.existingLoans);
+    }
+    if (draft.financialDetails.assets) {
+      this.loadAssets(draft.financialDetails.assets);
     }
   }
-
-  private validateFinalRequest(): string[] {
-    const errors: string[] = [];
-
-    if (!this.simulation) {
-      errors.push('Une simulation est requise avant la soumission.');
-    }
-
-    if (!this.personalForm.valid) {
-      errors.push('Les informations personnelles sont incomplètes.');
-    }
-
-    if (!this.financialForm.valid) {
-      errors.push('Les informations financières sont incomplètes.');
-    }
-
-    if (!this.documentsForm.valid) {
-      errors.push('Tous les documents obligatoires doivent être fournis.');
-    }
-
-    const monthlyIncome = this.financialForm.value.monthlyIncome;
-    const requestedAmount = this.simulationForm.value.requestedAmount;
-    
-    if (requestedAmount > monthlyIncome * 60) {
-      errors.push('Le montant demandé est trop élevé par rapport aux revenus.');
-    }
-
-    const totalExistingPayments = this.calculateTotalExistingPayments();
-    const newPayment = this.simulation?.results.monthlyPayment || 0;
-    const debtRatio = ((totalExistingPayments + newPayment) / monthlyIncome) * 100;
-    
-    if (debtRatio > 50) {
-      errors.push('Le taux d\'endettement total dépasse 50%.');
-    }
-
-    return errors;
+  
+  // Charger la simulation si présente
+  if (draft.simulation) {
+    this.simulation = draft.simulation;
+    this.showSimulation = true;
   }
+}
+
+private mapStatusToComponent(serviceStatus: string): 'draft' | 'submitted' | 'approved' | 'rejected' | 'under_review' | 'cancelled' {
+  const statusMapping: Record<string, any> = {
+    'in_review': 'under_review',
+    'requires_info': 'under_review'
+  };
+  
+  return statusMapping[serviceStatus] || serviceStatus as any;
+}
+
 
   private calculateTotalExistingPayments(): number {
     return this.existingLoans.value.reduce((total: number, loan: any) => {
@@ -774,15 +945,6 @@ export class CreditLongRequestComponent implements OnInit, OnDestroy {
     }, 5000);
   }
 
-  private showSuccessModal(response: CreateCreditResponse): void {
-    this.submissionResult = {
-      applicationId: response.id || 'CR' + Date.now(),
-      amount: this.simulationForm.get('requestedAmount')?.value,
-      duration: this.simulationForm.get('duration')?.value,
-      status: 'submitted'
-    };
-    this.showResultModal = true;
-  }
 
   // === GETTERS POUR LE TEMPLATE ===
 

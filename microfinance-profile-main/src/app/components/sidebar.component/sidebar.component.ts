@@ -63,10 +63,10 @@ export class SidebarComponent implements OnInit, OnDestroy {
       isVisible: true
     },
     {
-      id: 'credit-list',
+      id: 'request-list',
       label: 'Mes crédits',
       icon: 'account_balance_wallet',
-      route: '/client/credit-list',
+      route: '/client/request-list',
       isVisible: true
     },
     {

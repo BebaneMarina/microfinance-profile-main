@@ -727,6 +727,115 @@ def simulate_transaction():
             'error': str(e),
             'cors_ok': True
         }), 500
+    
+@app.route('/register-credit', methods=['POST', 'OPTIONS'])
+def register_credit():
+    """Enregistre une nouvelle demande de crédit"""
+    if request.method == 'OPTIONS':
+        return '', 200
+    
+    try:
+        logger.info("💳 ENREGISTREMENT NOUVELLE DEMANDE DE CRÉDIT")
+        logger.info(f"🌐 Origin: {request.headers.get('Origin')}")
+        
+        data = request.json
+        if not data:
+            return jsonify({
+                'error': 'Données manquantes',
+                'cors_ok': True
+            }), 400
+        
+        username = data.get('username', 'unknown')
+        loan_amount = data.get('loan_amount', 0)
+        loan_duration = data.get('loan_duration', 1)
+        credit_type = data.get('credit_type', 'consommation_generale')
+        
+        logger.info(f"👤 Client: {username}")
+        logger.info(f"💰 Montant: {loan_amount:,} FCFA")
+        logger.info(f"📅 Durée: {loan_duration} mois")
+        logger.info(f"🏷️ Type: {credit_type}")
+        
+        # Charger les applications existantes
+        applications = load_applications()
+        
+        # Créer une nouvelle demande
+        new_application = {
+            'id': len(applications) + 1,
+            'username': username,
+            'loan_amount': loan_amount,
+            'loan_duration': loan_duration,
+            'credit_type': credit_type,
+            'status': 'pending',
+            'created_at': datetime.now().isoformat(),
+            'client_info': {
+                'name': data.get('name', ''),
+                'email': data.get('email', ''),
+                'phone': data.get('phone', ''),
+                'profession': data.get('profession', ''),
+                'monthly_income': data.get('monthly_income', 0)
+            }
+        }
+        
+        # Calculer le score si possible
+        if scoring_model:
+            scoring_data = prepare_client_data_for_scoring(data)
+            scoring_data['loan_amount'] = loan_amount
+            scoring_data['loan_duration'] = loan_duration
+            scoring_data['credit_type'] = credit_type
+            
+            score_result = scoring_model.predict(scoring_data)
+            
+            new_application['score'] = score_result.get('score', 6.0)
+            new_application['risk_level'] = score_result.get('risk_level', 'moyen')
+            new_application['decision'] = score_result.get('decision', 'à étudier')
+        else:
+            new_application['score'] = 6.0
+            new_application['risk_level'] = 'moyen'
+            new_application['decision'] = 'à étudier'
+        
+        # Ajouter à la liste
+        applications.append(new_application)
+        
+        # Sauvegarder
+        save_applications(applications)
+        
+        logger.info(f"✅ Demande enregistrée avec ID: {new_application['id']}")
+        logger.info(f"📊 Score calculé: {new_application['score']}")
+        
+        return jsonify({
+            'success': True,
+            'application_id': new_application['id'],
+            'score': new_application['score'],
+            'risk_level': new_application['risk_level'],
+            'decision': new_application['decision'],
+            'message': 'Demande de crédit enregistrée avec succès',
+            'cors_ok': True
+        })
+        
+    except Exception as e:
+        logger.error(f"❌ Erreur enregistrement crédit: {str(e)}")
+        logger.error(traceback.format_exc())
+        
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'cors_ok': True
+        }), 500
+
+@app.route('/endpoints', methods=['GET'])
+def list_endpoints():
+    """Liste tous les endpoints disponibles"""
+    routes = []
+    for rule in app.url_map.iter_rules():
+        routes.append({
+            'endpoint': rule.endpoint,
+            'methods': list(rule.methods),
+            'path': str(rule)
+        })
+    return jsonify({
+        'total_endpoints': len(routes),
+        'endpoints': sorted(routes, key=lambda x: x['path'])
+    })
 
 @app.route('/statistics', methods=['GET', 'OPTIONS'])
 def get_statistics():

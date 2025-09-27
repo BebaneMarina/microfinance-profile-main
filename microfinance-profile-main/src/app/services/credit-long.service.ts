@@ -1,4 +1,4 @@
-// credit-long.service.ts - Service complet avec corrections TypeScript
+// credit-long.service.ts - Service complet corrigé
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, BehaviorSubject, of, throwError, from } from 'rxjs';
@@ -98,7 +98,7 @@ export interface CreditSimulation {
     approvalProbability: number;
     keyFactors: Array<{
       factor: string;
-      impact: 'positive' | 'negative' | 'neutral'; // ✅ Correction: ajout de 'neutral'
+      impact: 'positive' | 'negative' | 'neutral';
       description: string;
     }>;
     recommendations: string[];
@@ -115,7 +115,6 @@ export interface TestResult {
   details?: any;
 }
 
-// ✅ Interface ajoutée pour la réponse de création
 export interface CreateCreditResponse {
   success: boolean;
   id?: string;
@@ -128,9 +127,10 @@ export interface CreateCreditResponse {
 })
 export class CreditLongService {
   
-  // Configuration API
-  private readonly API_BASE_URL = 'http://localhost:5000/api';
+  // Configuration API - CORRIGÉE
+  private readonly API_BASE_URL = 'http://localhost:3000';  // NestJS
   private readonly CREDIT_LONG_API = `${this.API_BASE_URL}/credit-long`;
+  private readonly FLASK_API_URL = 'http://localhost:5000';  // Flask pour ML uniquement
   
   // Sujets pour la gestion d'état
   private userRequestsSubject = new BehaviorSubject<CreditLongRequest[]>([]);
@@ -147,22 +147,20 @@ export class CreditLongService {
   // ==================== MÉTHODES PRINCIPALES ====================
 
   /**
-   * Charge toutes les demandes d'un utilisateur avec gestion d'erreur robuste
+   * Charge toutes les demandes d'un utilisateur
    */
   loadUserRequests(username: string): Observable<CreditLongRequest[]> {
     if (!username) {
-      console.warn('⚠️ Username vide, retour d\'un tableau vide');
+      console.warn('Username vide, retour d\'un tableau vide');
       return of([]);
     }
 
-    // Vérifier le cache d'abord
     if (this.requestsCache.has(username)) {
       const cachedRequests = this.requestsCache.get(username) || [];
       this.userRequestsSubject.next(cachedRequests);
-      console.log(`📂 ${cachedRequests.length} demande(s) chargée(s) depuis le cache`);
+      console.log(`${cachedRequests.length} demande(s) chargée(s) depuis le cache`);
     }
 
-    // Si mode hors ligne, retourner uniquement les données locales
     if (this.isOfflineMode) {
       const localRequests = this.getLocalRequests(username);
       this.userRequestsSubject.next(localRequests);
@@ -173,9 +171,8 @@ export class CreditLongService {
       .pipe(
         timeout(10000),
         map(response => {
-          console.log('📥 Réponse serveur brute:', response);
+          console.log('Réponse serveur brute:', response);
           
-          // Gérer différents formats de réponse
           let serverRequests: any[] = [];
           
           if (response && response.success) {
@@ -185,16 +182,16 @@ export class CreditLongService {
           } else if (response && response.data) {
             serverRequests = Array.isArray(response.data) ? response.data : [];
           } else {
-            console.warn('⚠️ Format de réponse non reconnu, utilisation d\'un tableau vide');
+            console.warn('Format de réponse non reconnu');
             serverRequests = [];
           }
 
           if (!Array.isArray(serverRequests)) {
-            console.warn('⚠️ serverRequests n\'est pas un tableau:', typeof serverRequests, serverRequests);
+            console.warn('serverRequests n\'est pas un tableau');
             serverRequests = [];
           }
 
-          console.log(`✅ ${serverRequests.length} demande(s) reçue(s) du serveur`);
+          console.log(`${serverRequests.length} demande(s) reçue(s) du serveur`);
 
           const transformedRequests = serverRequests.map(req => this.transformServerRequest(req));
           const mergedRequests = this.mergeRequests(transformedRequests);
@@ -205,7 +202,7 @@ export class CreditLongService {
           return mergedRequests;
         }),
         catchError(error => {
-          console.error('❌ Erreur chargement demandes:', error);
+          console.error('Erreur chargement demandes:', error);
           
           const localRequests = this.requestsCache.get(username) || this.getLocalRequests(username);
           this.userRequestsSubject.next(localRequests);
@@ -217,10 +214,9 @@ export class CreditLongService {
   }
 
   /**
-   * ✅ Méthode ajoutée pour créer une demande de crédit
+   * Crée une demande de crédit
    */
   createCreditRequest(requestData: Partial<CreditLongRequest>): Observable<CreateCreditResponse> {
-    // Générer un ID local si pas fourni
     const requestWithId = {
       ...requestData,
       id: requestData.id || `CR_${Date.now()}`,
@@ -229,7 +225,6 @@ export class CreditLongService {
       status: 'submitted' as const
     };
 
-    // Sauvegarder localement d'abord
     this.saveLocalRequest(requestWithId as CreditLongRequest);
 
     if (this.isOfflineMode) {
@@ -257,7 +252,7 @@ export class CreditLongService {
           }
         }),
         catchError(error => {
-          console.warn('⚠️ Création serveur échouée, sauvegarde locale conservée');
+          console.warn('Création serveur échouée, sauvegarde locale conservée');
           return of({
             success: true,
             id: requestWithId.id,
@@ -269,18 +264,18 @@ export class CreditLongService {
   }
 
   /**
-   * Méthode corrigée pour fusionner les demandes avec validation robuste
+   * Fusionne les demandes serveur et locales
    */
   private mergeRequests(serverRequests: CreditLongRequest[] = []): CreditLongRequest[] {
     try {
       if (!Array.isArray(serverRequests)) {
-        console.warn('⚠️ mergeRequests: serverRequests n\'est pas un tableau, conversion...', serverRequests);
+        console.warn('mergeRequests: serverRequests n\'est pas un tableau');
         serverRequests = [];
       }
 
       const localRequests = this.getAllLocalRequests();
       
-      console.log(`🔄 Fusion: ${serverRequests.length} serveur + ${localRequests.length} local`);
+      console.log(`Fusion: ${serverRequests.length} serveur + ${localRequests.length} local`);
 
       const mergedMap = new Map<string, CreditLongRequest>();
 
@@ -310,21 +305,21 @@ export class CreditLongService {
           return dateB.getTime() - dateA.getTime();
         });
 
-      console.log(`✅ Fusion terminée: ${result.length} demande(s) total`);
+      console.log(`Fusion terminée: ${result.length} demande(s) total`);
       return result;
 
     } catch (error) {
-      console.error('❌ Erreur dans mergeRequests:', error);
+      console.error('Erreur dans mergeRequests:', error);
       return this.getAllLocalRequests();
     }
   }
 
   /**
-   * Transforme une demande du serveur vers le format local
+   * Transforme une demande du serveur
    */
   private transformServerRequest(serverRequest: any): CreditLongRequest {
     if (!serverRequest) {
-      console.warn('⚠️ Demande serveur vide');
+      console.warn('Demande serveur vide');
       return this.createEmptyRequest();
     }
 
@@ -405,13 +400,13 @@ export class CreditLongService {
       };
       
     } catch (error) {
-      console.error('❌ Erreur transformation demande serveur:', error, serverRequest);
+      console.error('Erreur transformation demande serveur:', error, serverRequest);
       return this.createEmptyRequest();
     }
   }
 
   /**
-   * Crée une demande vide par défaut
+   * Crée une demande vide
    */
   private createEmptyRequest(): CreditLongRequest {
     return {
@@ -450,7 +445,7 @@ export class CreditLongService {
   // ==================== MÉTHODES DE DIAGNOSTIC ====================
 
   /**
-   * Test de connectivité de l'API
+   * Test de connectivité
    */
   testConnection(): Observable<TestResult> {
     if (this.isOfflineMode) {
@@ -485,7 +480,7 @@ export class CreditLongService {
           }
         }),
         catchError((error: HttpErrorResponse) => {
-          console.warn('⚠️ API non accessible, mode fallback activé');
+          console.warn('API non accessible, mode fallback activé');
           
           let errorMessage = 'Erreur de connexion';
           let errorDetails: any = {};
@@ -525,7 +520,7 @@ export class CreditLongService {
   }
 
   /**
-   * Test de simulation rapide pour diagnostic
+   * Test de simulation
    */
   testSimulation(): Observable<TestResult> {
     const testData = {
@@ -553,7 +548,7 @@ export class CreditLongService {
       });
     }
 
-    return this.http.post<any>(`${this.CREDIT_LONG_API}/simulate`, testData)
+    return this.http.post<any>(`${this.FLASK_API_URL}/credit-simulation`, testData)
       .pipe(
         timeout(8000),
         map(response => {
@@ -592,7 +587,7 @@ export class CreditLongService {
   }
 
   /**
-   * Test de création de brouillon pour diagnostic
+   * Test de sauvegarde brouillon
    */
   testDraftSave(): Observable<TestResult> {
     const testDraft = {
@@ -650,7 +645,7 @@ export class CreditLongService {
   }
 
   /**
-   * Diagnostic complet de l'API
+   * Diagnostic complet
    */
   runDiagnostic(): Observable<{
     success: boolean;
@@ -704,17 +699,17 @@ export class CreditLongService {
     );
   }
 
-  // ==================== MÉTHODES PRINCIPALES D'API ====================
+  // ==================== API PRINCIPALES ====================
 
   /**
-   * Simulation de crédit avec gestion d'erreur et fallback
+   * Simulation de crédit
    */
   simulateCredit(simulationData: any): Observable<CreditSimulation> {
     if (this.isOfflineMode) {
       return this.simulateCreditOffline(simulationData);
     }
 
-    return this.http.post<any>(`${this.CREDIT_LONG_API}/simulate`, simulationData)
+    return this.http.post<any>(`${this.FLASK_API_URL}/credit-simulation`, simulationData)
       .pipe(
         timeout(10000),
         map(response => {
@@ -724,14 +719,14 @@ export class CreditLongService {
           throw new Error('Réponse de simulation invalide');
         }),
         catchError(error => {
-          console.warn('⚠️ Simulation serveur échouée, utilisation du mode fallback');
+          console.warn('Simulation serveur échouée, mode fallback');
           return this.simulateCreditOffline(simulationData);
         })
       );
   }
 
   /**
-   * ✅ SIMULATION HORS LIGNE CORRIGÉE avec facteurs neutres
+   * Simulation hors ligne
    */
   private simulateCreditOffline(simulationData: any): Observable<CreditSimulation> {
     const amount = simulationData.requestedAmount || 0;
@@ -760,7 +755,6 @@ export class CreditLongService {
       approvalProbability = 0.65;
     }
 
-    // ✅ FACTEURS CLÉS AVEC TOUS LES TYPES D'IMPACT
     const keyFactors: Array<{
       factor: string;
       impact: 'positive' | 'negative' | 'neutral';
@@ -795,34 +789,34 @@ export class CreditLongService {
     ];
 
     const recommendations: string[] = [
-      '✅ Simulation calculée en mode hors ligne'
+      'Simulation calculée en mode hors ligne'
     ];
 
     if (debtToIncomeRatio < 30) {
-      recommendations.push('💡 Profil favorable pour un crédit personnel');
+      recommendations.push('Profil favorable pour un crédit personnel');
     } else if (debtToIncomeRatio > 40) {
-      recommendations.push('⚠️ Considérez réduire le montant ou augmenter la durée');
+      recommendations.push('Considérez réduire le montant ou augmenter la durée');
     } else {
-      recommendations.push('📊 Profil équilibré, conditions standard');
+      recommendations.push('Profil équilibré, conditions standard');
     }
 
     if (monthlyIncome >= 1000000) {
-      recommendations.push('🎯 Revenus élevés, éligible aux taux préférentiels');
+      recommendations.push('Revenus élevés, éligible aux taux préférentiels');
     }
 
     if (duration > 48) {
-      recommendations.push('📅 Durée étendue, vérifiez le coût total');
+      recommendations.push('Durée étendue, vérifiez le coût total');
     }
 
     const warnings: string[] = [];
     if (debtToIncomeRatio > 40) {
-      warnings.push('⚠️ Taux d\'endettement élevé');
+      warnings.push('Taux d\'endettement élevé');
     }
     if (amount > monthlyIncome * 40) {
-      warnings.push('⚠️ Montant élevé par rapport aux revenus');
+      warnings.push('Montant élevé par rapport aux revenus');
     }
     if (contractType === 'CDD' && duration > 24) {
-      warnings.push('⚠️ Contrat temporaire pour une longue durée');
+      warnings.push('Contrat temporaire pour une longue durée');
     }
 
     const simulation: CreditSimulation = {
@@ -868,7 +862,7 @@ export class CreditLongService {
       .pipe(
         timeout(5000),
         catchError(error => {
-          console.warn('⚠️ Sauvegarde serveur échouée, sauvegarde locale conservée');
+          console.warn('Sauvegarde serveur échouée, sauvegarde locale conservée');
           return of({ success: true, message: 'Sauvegardé localement uniquement' });
         })
       );
@@ -889,7 +883,7 @@ export class CreditLongService {
         timeout(5000),
         map(response => response?.draft || null),
         catchError(error => {
-          console.warn('⚠️ Récupération brouillon serveur échouée, vérification locale');
+          console.warn('Récupération brouillon serveur échouée, vérification locale');
           const localRequests = this.getLocalRequests(username);
           const draftRequest = localRequests.find(req => req.status === 'draft');
           return of(draftRequest || null);
@@ -898,6 +892,9 @@ export class CreditLongService {
   }
 
   /**
+   * Upload de document
+   */
+ /**
    * Upload de document
    */
   uploadDocument(requestId: string, documentType: string, file: File): Observable<any> {
@@ -919,7 +916,7 @@ export class CreditLongService {
       .pipe(
         timeout(30000),
         catchError(error => {
-          console.warn('⚠️ Upload serveur échoué');
+          console.warn('Upload serveur échoué');
           return of({
             success: false,
             error: error.message,
@@ -942,13 +939,13 @@ export class CreditLongService {
       const parsed = JSON.parse(localData);
       return Array.isArray(parsed) ? parsed : [];
     } catch (error) {
-      console.error('❌ Erreur lecture localStorage:', error);
+      console.error('Erreur lecture localStorage:', error);
       return [];
     }
   }
 
   /**
-   * Récupère les demandes locales d'un utilisateur spécifique
+   * Récupère les demandes locales d'un utilisateur
    */
   private getLocalRequests(username: string): CreditLongRequest[] {
     if (!username) return [];
@@ -978,9 +975,9 @@ export class CreditLongService {
       }
       
       localStorage.setItem('credit_long_requests', JSON.stringify(allRequests));
-      console.log(`💾 Demande ${request.id} sauvegardée localement`);
+      console.log(`Demande ${request.id} sauvegardée localement`);
     } catch (error) {
-      console.error('❌ Erreur sauvegarde locale:', error);
+      console.error('Erreur sauvegarde locale:', error);
     }
   }
 
@@ -990,7 +987,7 @@ export class CreditLongService {
   private checkOfflineMode(): void {
     this.isOfflineMode = localStorage.getItem('force_fallback_mode') === 'true';
     if (this.isOfflineMode) {
-      console.warn('🔧 Mode hors ligne activé');
+      console.warn('Mode hors ligne activé');
     }
   }
 
@@ -1131,7 +1128,7 @@ export class CreditLongService {
   }
 
   /**
-   * Synchronise les données avec le serveur
+   * Synchronise avec le serveur
    */
   syncWithServer(username: string): Observable<{ success: boolean; synced: number; errors: number }> {
     if (this.isOfflineMode) {
@@ -1188,15 +1185,15 @@ export class CreditLongService {
 
       if (filteredRequests.length < allRequests.length) {
         localStorage.setItem('credit_long_requests', JSON.stringify(filteredRequests));
-        console.log(`🧹 ${allRequests.length - filteredRequests.length} anciennes demandes supprimées`);
+        console.log(`${allRequests.length - filteredRequests.length} anciennes demandes supprimées`);
       }
     } catch (error) {
-      console.error('❌ Erreur nettoyage:', error);
+      console.error('Erreur nettoyage:', error);
     }
   }
 
   /**
-   * Obtient les statistiques utilisateur
+   * Statistiques utilisateur
    */
   getUserStats(username: string): Observable<{
     totalRequests: number;
@@ -1254,7 +1251,7 @@ export class CreditLongService {
   }
 
   /**
-   * Masque le numéro de téléphone
+   * Masque le téléphone
    */
   private maskPhone(phone: string): string {
     if (!phone || phone.length < 4) return phone;
@@ -1273,12 +1270,12 @@ export class CreditLongService {
   }
 
   /**
-   * Nettoyage des données lors de la déconnexion
+   * Nettoie les données utilisateur
    */
   clearUserData(): void {
     this.userRequestsSubject.next([]);
     this.requestsCache.clear();
-    console.log('🧹 Cache utilisateur nettoyé');
+    console.log('Cache utilisateur nettoyé');
   }
 
   /**
@@ -1288,22 +1285,22 @@ export class CreditLongService {
     this.isOfflineMode = enabled;
     if (enabled) {
       localStorage.setItem('force_fallback_mode', 'true');
-      console.log('🔧 Mode hors ligne activé');
+      console.log('Mode hors ligne activé');
     } else {
       localStorage.removeItem('force_fallback_mode');
-      console.log('🌐 Mode en ligne activé');
+      console.log('Mode en ligne activé');
     }
   }
 
   /**
-   * Vérifie si le service est en mode hors ligne
+   * Vérifie si en mode hors ligne
    */
   isInOfflineMode(): boolean {
     return this.isOfflineMode;
   }
 
   /**
-   * Gestion centralisée des erreurs HTTP
+   * Gestion des erreurs HTTP
    */
   private handleError = (error: HttpErrorResponse): Observable<never> => {
     let errorMessage = 'Une erreur est survenue';
@@ -1329,12 +1326,12 @@ export class CreditLongService {
       }
     }
 
-    console.error('❌ Erreur HTTP:', errorMessage, error);
+    console.error('Erreur HTTP:', errorMessage, error);
     return throwError(errorMessage);
   };
 
   /**
-   * Obtient l'état de santé du service
+   * État de santé du service
    */
   getServiceHealth(): Observable<{
     status: 'healthy' | 'degraded' | 'offline';
