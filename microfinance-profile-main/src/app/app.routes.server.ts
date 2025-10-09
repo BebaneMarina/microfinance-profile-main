@@ -13,12 +13,33 @@ import { SimulatorHomeComponent } from './simulateur-bank/components/simulator-h
 import { PaymentCalculatorComponent } from './simulateur-bank/components/payment-calculator/payment-calculator.component';
 import { BorrowingCapacityComponent } from './simulateur-bank/components/capacite-emprunt/boworing-capacity.component';
 import { RequestsListComponent } from './pages/request-list/request-list.component';
+import { BackofficeComponent } from './pages/backoffice/backoffice.component';
+import { BackofficeGuard } from './guards/backoffice.guard';
+import { BackofficeLoginComponent } from './pages/backoffice/backoffice-login.component';
 
 export const routes: Routes = [
   {
     path: '',
     redirectTo: 'accueil',
     pathMatch: 'full'
+  },
+
+  // ===== BACKOFFICE - ROUTE INDÉPENDANTE =====
+  // Le backoffice fonctionne sans le LayoutComponent
+  {
+  path: 'backoffice/login',
+  component: BackofficeLoginComponent,
+  title: 'Connexion Backoffice - Bamboo Credit'
+},
+  {
+    path: 'backoffice',
+    component: BackofficeComponent,
+    canActivate: [BackofficeGuard],
+    title: 'Backoffice - Gestion des Demandes',
+    data: { 
+      role: 'admin',
+      standalone: true  // Indique que c'est une route indépendante
+    }
   },
 
   // Routes publiques (sans connexion requise)
@@ -147,10 +168,10 @@ export const routes: Routes = [
           {
             path: 'request-list',
             component: RequestsListComponent,
-            title: 'liste des demandes',
+            title: 'Liste des demandes',
             data:{
-              requireAuth: true,
-              description: 'liste complète des demandes'
+              requiresAuth: true,
+              description: 'Liste complète des demandes'
             }
           },
           {

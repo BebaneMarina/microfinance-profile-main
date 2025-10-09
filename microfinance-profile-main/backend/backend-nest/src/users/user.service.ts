@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { User } from '../app/auth/entities/user.entity';
+import { Utilisateur } from '../app/auth/entities/user.entity';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -12,17 +12,17 @@ export class UsersService {
     throw new Error('Method not implemented.');
   }
   constructor(
-    @InjectRepository(User)
-    private usersRepository: Repository<User>,
+    @InjectRepository(Utilisateur)
+    private usersRepository: Repository<Utilisateur>,
   ) {}
 
-  async findByUsername(username: string): Promise<User | undefined> {
+  async findByUsername(username: string): Promise<Utilisateur | undefined> {
     try {
       // Chercher par email, téléphone ou nom d'utilisateur
       const user = await this.usersRepository.findOne({
         where: [
           { email: username },
-          { phone_number: username }
+          { telephone: username }
         ]
       });
       
@@ -39,7 +39,7 @@ export class UsersService {
     }
   }
 
-  async findById(id: number): Promise<User> {
+  async findById(id: number): Promise<Utilisateur> {
     const user = await this.usersRepository.findOne({ where: { id } });
     if (!user) {
       throw new NotFoundException(`Utilisateur avec ID ${id} non trouvé`);
@@ -47,15 +47,15 @@ export class UsersService {
     return user;
   }
 
-  async findAll(): Promise<User[]> {
+  async findAll(): Promise<Utilisateur[]> {
     return this.usersRepository.find({
-      select: ['id', 'uuid', 'email', 'firstName', 'lastName', 'role', 'status', 'monthly_income']
+      select: ['id', 'uuid', 'email', 'prenom', 'nom', 'statut_emploi', 'revenu_mensuel']
     });
   }
 
-  async updateUserIncome(userId: number, monthlyIncome: number): Promise<User> {
+  async updateUserIncome(userId: number, monthlyIncome: number): Promise<Utilisateur> {
     const user = await this.findById(userId);
-    user.monthly_income = monthlyIncome;
+    user.revenu_mensuel = monthlyIncome;
     return this.usersRepository.save(user);
   }
 }

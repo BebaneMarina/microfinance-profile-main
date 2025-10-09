@@ -17,28 +17,29 @@ export class AuthService {
   ) {}
 
   async validateUser(username: string, password: string): Promise<any> {
-    try {
-      const user = await this.usersService.findByUsername(username);
-      
-      if (!user) {
-        this.logger.warn(`Utilisateur non trouvé: ${username}`);
-        return null;
-      }
-
-      const isPasswordValid = bcrypt.compare(password, user.passwordHash);
-      
-      if (!isPasswordValid) {
-        this.logger.warn(`Mot de passe invalide pour: ${username}`);
-        return null;
-      }
-
-      const { password_hash, ...result } = user;
-      return result;
-    } catch (error) {
-      this.logger.error(`Erreur lors de la validation: ${error.message}`);
+  try {
+    const user = await this.usersService.findByUsername(username);
+    
+    if (!user) {
+      this.logger.warn(`Utilisateur non trouvé: ${username}`);
       return null;
     }
+
+    // CORRECTION : await manquant pour bcrypt.compare
+    const isPasswordValid = await bcrypt.compare(password, user.mot_de_passe_hash);
+    
+    if (!isPasswordValid) {
+      this.logger.warn(`Mot de passe invalide pour: ${username}`);
+      return null;
+    }
+
+    const { mot_de_passe_hash, ...result } = user;
+    return result;
+  } catch (error) {
+    this.logger.error(`Erreur lors de la validation: ${error.message}`);
+    return null;
   }
+}
 
   async login(user: any): Promise<any> {
     try {

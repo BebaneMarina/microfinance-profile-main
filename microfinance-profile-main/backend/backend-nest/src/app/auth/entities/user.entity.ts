@@ -1,86 +1,114 @@
-import { Entity, Column, PrimaryGeneratedColumn, BeforeInsert, BeforeUpdate } from 'typeorm';
-import * as bcrypt from 'bcrypt';
+import { Entity, Column, PrimaryGeneratedColumn, OneToMany, OneToOne } from 'typeorm';
+import { Credit } from './credit.entity';
+import { RestrictionCredit } from './restriction-credit.entity';
 
-@Entity('users')
-export class User {
-  uuid: any;
-  getFullName: any;
-  monthly_income: any;
-  profession: any;
-  phone_number: any;
-  creditRequests: any;
-    username: any;
-    isAdmin: any;
-    creditScore: number;
-    riskLevel: string;
-    company: string;
-  password_hash(password: string, password_hash: any) {
+export enum StatutUtilisateur {
+  ACTIF = 'actif',
+  INACTIF = 'inactif',
+  SUSPENDU = 'suspendu',
+  BLOQUE = 'bloque'
+}
+
+export enum TypeEmploi {
+  CDI = 'cdi',
+  CDD = 'cdd',
+  INDEPENDANT = 'independant',
+  FONCTIONNAIRE = 'fonctionnaire',
+  AUTRE = 'autre'
+}
+
+export enum NiveauRisque {
+  TRES_BAS = 'tres_bas',
+  BAS = 'bas',
+  MOYEN = 'moyen',
+  ELEVE = 'eleve',
+  TRES_ELEVE = 'tres_eleve'
+}
+
+@Entity('utilisateurs')
+export class Utilisateur {
+  getFullName() {
     throw new Error('Method not implemented.');
   }
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ unique: true })
+  @Column({ type: 'uuid', default: () => 'uuid_generate_v4()' })
+  uuid: string;
+
+  @Column({ length: 100 })
+  nom: string;
+
+  @Column({ length: 100 })
+  prenom: string;
+
+  @Column({ unique: true, length: 255 })
   email: string;
 
-  @Column({ name: 'password_hash' })
-  passwordHash: string;
+  @Column({ unique: true, length: 20 })
+  telephone: string;
 
-  @Column({ name: 'first_name' })
-  firstName: string;
+  @Column({ length: 255 })
+  mot_de_passe_hash: string;
 
-  @Column({ name: 'last_name' })
-  lastName: string;
+  @Column({ length: 100, default: 'Libreville' })
+  ville: string;
 
-  @Column({ name: 'phone_number', nullable: true })
-  phoneNumber: string;
+  @Column({ length: 100, nullable: true })
+  quartier: string;
 
-  @Column({ 
-    type: 'enum', 
-    enum: ['admin', 'agent', 'client', 'super_admin'],
-    default: 'client'
-  })
-  role: string;
+  @Column({ length: 50, default: 'Estuaire' })
+  province: string;
 
-  @Column({ 
-    type: 'enum', 
-    enum: ['active', 'inactive', 'suspended', 'deleted'],
-    default: 'active'
-  })
-  status: string;
+  @Column({ length: 255, nullable: true })
+  profession: string;
 
-  @Column({ name: 'monthly_income', type: 'decimal', precision: 12, scale: 2, nullable: true })
-  monthlyIncome: number;
+  @Column({ length: 255, nullable: true })
+  employeur: string;
 
-  @Column({ name: 'created_at', type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-  createdAt: Date;
+  @Column({ type: 'enum', enum: TypeEmploi, default: TypeEmploi.CDI })
+  statut_emploi: TypeEmploi;
 
-  @Column({ name: 'updated_at', type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-  updatedAt: Date;
+  @Column({ type: 'decimal', precision: 12, scale: 2 })
+  revenu_mensuel: number;
 
-  // Méthode pour hacher le mot de passe avant insertion/mise à jour
-  @BeforeInsert()
-  @BeforeUpdate()
-  async hashPassword() {
-    if (this.passwordHash) {
-      const salt = await bcrypt.genSalt(10);
-      this.passwordHash = await bcrypt.hash(this.passwordHash, salt);
-    }
-  }
+  @Column({ type: 'int', default: 0 })
+  anciennete_mois: number;
 
-  // Méthode pour valider le mot de passe
-  async validatePassword(password: string): Promise<boolean> {
-    try {
-      return await bcrypt.compare(password, this.passwordHash);
-    } catch (error) {
-      console.error('Erreur lors de la validation du mot de passe:', error);
-      return false;
-    }
-  }
+  @Column({ type: 'decimal', precision: 12, scale: 2, default: 0 })
+  charges_mensuelles: number;
 
-  // Méthode pour définir le mot de passe (à utiliser lors de la création)
-  async setPassword(password: string) {
-    const salt = await bcrypt.genSalt(10);
-    this.passwordHash = await bcrypt.hash(password, salt);
-  }
-  }
+  @Column({ type: 'decimal', precision: 12, scale: 2, default: 0 })
+  dettes_existantes: number;
+
+  @Column({ type: 'decimal', precision: 3, scale: 1, default: 6.0 })
+  score_credit: number;
+
+  @Column({ type: 'int', default: 650 })
+  score_850: number;
+
+  @Column({ type: 'enum', enum: NiveauRisque, default: NiveauRisque.MOYEN })
+  niveau_risque: NiveauRisque;
+
+  @Column({ type: 'decimal', precision: 12, scale: 2, default: 0 })
+  montant_eligible: number;
+
+  @Column({ type: 'enum', enum: StatutUtilisateur, default: StatutUtilisateur.ACTIF })
+  statut: StatutUtilisateur;
+
+  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  date_creation: Date;
+
+  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  date_modification: Date;
+
+  @Column({ type: 'timestamp', nullable: true })
+  derniere_connexion: Date;
+
+  @OneToMany(() => Credit, credit => credit.utilisateur)
+  credits: Credit[];
+
+  @OneToOne(() => RestrictionCredit, restriction => restriction.utilisateur)
+  restrictions: RestrictionCredit;
+  creditRequests: any;
+}

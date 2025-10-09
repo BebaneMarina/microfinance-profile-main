@@ -408,6 +408,19 @@ export class LoginComponent implements OnInit, OnDestroy {
     this.showErrorNotification(this.errorMessage);
   }
 
+  public quickTestLogin(profileType: 'excellent' | 'bon' | 'moyen' | 'risque'): void {
+  const testAccounts = {
+    excellent: { email: 'jp.obame@email.ga', password: 'gabon2025' },
+    bon: { email: 'm.bouyou@email.ga', password: 'gabon2025' },
+    moyen: { email: 'a.sambabiyo@email.ga', password: 'gabon2025' },
+    risque: { email: 'j.ndoumba@email.ga', password: 'gabon2025' }
+  };
+
+  const account = testAccounts[profileType];
+  this.loginForm.patchValue(account);
+  this.onSubmit();
+}
+
   private showLoadingMessage(message: string): void {
     const loadingDiv = document.createElement('div');
     loadingDiv.id = 'scoring-loading';

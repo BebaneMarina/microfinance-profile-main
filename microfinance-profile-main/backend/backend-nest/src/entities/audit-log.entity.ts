@@ -1,5 +1,5 @@
 import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, CreateDateColumn } from 'typeorm';
-import { User } from '../app/auth/entities/user.entity';
+import { Utilisateur } from '../app/auth/entities/user.entity';
 
 @Entity('audit_logs')
 export class AuditLog {
@@ -9,9 +9,9 @@ export class AuditLog {
   @Column({ name: 'user_id', nullable: true })
   userId: number;
 
-  @ManyToOne(() => User)
+  @ManyToOne(() => Utilisateur)
   @JoinColumn({ name: 'user_id' })
-  user: User;
+  user: Utilisateur;
 
   @Column()
   action: string;

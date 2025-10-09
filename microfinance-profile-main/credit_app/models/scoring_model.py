@@ -1,593 +1,662 @@
-# scoring_model_fixed.py - VERSION OPTIMISÉE SANS RÉCURSION
+"""
+Modèle de scoring Random Forest utilisant les données PostgreSQL
+"""
 import pandas as pd
 import numpy as np
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import classification_report, confusion_matrix
 import joblib
-import os
 import logging
-import warnings
-from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional
-warnings.filterwarnings('ignore')
+from datetime import datetime
+from typing import Dict, List, Optional
+import psycopg2
+from psycopg2.extras import RealDictCursor
+import os
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-class CreditScoringModel:
-    def __init__(self):
+
+class PostgresCreditScoringModel:
+    """
+    Modèle Random Forest entraîné sur les données réelles de PostgreSQL
+    """
+    
+    def __init__(self, db_config: Dict):
+        self.db_config = db_config
         self.model = None
         self.scaler = StandardScaler()
-        self.feature_names = [
-            'age', 'monthly_income', 'other_income', 'monthly_charges',
-            'existing_debts', 'job_seniority', 'employment_status_encoded',
-            'loan_amount', 'loan_duration', 'debt_ratio', 'payment_capacity',
-            'income_stability', 'credit_history_score'
-        ]
-        self.model_path = 'models/credit_scoring_model.pkl'
-        self.scaler_path = 'models/credit_scaler.pkl'
+        self.model_path = 'models/rf_model_postgres.pkl'
+        self.scaler_path = 'models/scaler_postgres.pkl'
         
-        # Cache pour les scores temps réel - OPTIMISÉ
-        self.score_cache = {}
-        self.last_calculation_time = {}  # NOUVEAU : éviter les calculs répétitifs
-        self.cache_duration = 30  # secondes - durée de validité du cache
+        # Créer le dossier models s'il n'existe pas
+        os.makedirs('models', exist_ok=True)
         
-        # Configuration des types de crédit
-        self.credit_types_config = {
-            'consommation_generale': {
-                'max_amount': 5000000,
-                'max_duration': 3,
-                'min_income': 200000,
-                'interest_rate': 0.05
-            },
-            'avance_salaire': {
-                'max_amount': 2000000,
-                'max_duration': 1,
-                'min_income': 150000,
-                'interest_rate': 0.03
-            },
-            'depannage': {
-                'max_amount': 1000000,
-                'max_duration': 1,
-                'min_income': 100000,
-                'interest_rate': 0.04
-            }
-        }
-        
-        # Pondération temps réel
-        self.realtime_weights = {
-            'base_score': 0.6,  # 60% score de base
-            'payment_history': 0.25,  # 25% historique
-            'recent_behavior': 0.15   # 15% comportement récent
-        }
-        
-        # Impact des transactions
-        self.transaction_impacts = {
-            'on_time_payment': 0.1,
-            'early_payment': 0.15,
-            'late_1_7_days': -0.05,
-            'late_8_30_days': -0.2,
-            'late_31_plus_days': -0.5,
-            'missed_payment': -1.0,
-            'loan_disbursement': -0.1,
-            'loan_closure': 0.3
-        }
-        
-        # Charger le modèle
+        # Charger ou entraîner le modèle
         if not self.load_model():
-            logger.info("Aucun modèle trouvé, entraînement d'un nouveau modèle...")
-            self.train_with_synthetic_data()
-
-    def load_model(self):
-        """Charge le modèle pré-entraîné"""
+            logger.info("🤖 Aucun modèle trouvé, entraînement sur les données PostgreSQL...")
+            self.train_model_from_database()
+        
+        self.risk_thresholds = {
+            'tres_bas': 8.0,
+            'bas': 7.0,
+            'moyen': 5.0,
+            'eleve': 3.0
+        }
+    
+    def get_db_connection(self):
+        """Connexion à PostgreSQL"""
+        return psycopg2.connect(**self.db_config)
+    
+    # ==========================================
+    # ENTRAÎNEMENT DU MODÈLE SUR DONNÉES RÉELLES
+    # ==========================================
+    
+    def train_model_from_database(self) -> bool:
+        """
+        Entraîne le modèle Random Forest sur les données de la base PostgreSQL
+        """
         try:
-            if os.path.exists(self.model_path) and os.path.exists(self.scaler_path):
-                self.model = joblib.load(self.model_path)
-                self.scaler = joblib.load(self.scaler_path)
-                logger.info("✅ Modèle chargé avec succès")
-                return True
-            return False
-        except Exception as e:
-            logger.error(f"❌ Erreur chargement modèle: {str(e)}")
-            return False
-
-    def save_model(self):
-        """Sauvegarde le modèle"""
-        try:
-            if self.model is not None:
-                os.makedirs('models', exist_ok=True)
-                joblib.dump(self.model, self.model_path)
-                joblib.dump(self.scaler, self.scaler_path)
-                logger.info("💾 Modèle sauvegardé")
-                return True
-            return False
-        except Exception as e:
-            logger.error(f"❌ Erreur sauvegarde: {str(e)}")
-            return False
-
-    def train_with_synthetic_data(self):
-        """Entraîne le modèle avec des données synthétiques"""
-        try:
-            logger.info("🔄 Entraînement du modèle...")
+            logger.info("📊 Extraction des données depuis PostgreSQL...")
             
-            n_samples = 1000  # Réduit pour éviter la surcharge
-            data = []
+            with self.get_db_connection() as conn:
+                # Requête complète pour récupérer toutes les données nécessaires
+                query = """
+                    WITH payment_stats AS (
+                        SELECT 
+                            utilisateur_id,
+                            COUNT(*) as total_paiements,
+                            COUNT(CASE WHEN type_paiement = 'a_temps' THEN 1 END) as paiements_a_temps,
+                            COUNT(CASE WHEN type_paiement = 'en_retard' THEN 1 END) as paiements_en_retard,
+                            COUNT(CASE WHEN type_paiement = 'manque' THEN 1 END) as paiements_manques,
+                            AVG(jours_retard) as moyenne_jours_retard,
+                            MAX(date_paiement) as dernier_paiement
+                        FROM historique_paiements
+                        GROUP BY utilisateur_id
+                    )
+                    SELECT 
+                        u.id as utilisateur_id,
+                        u.revenu_mensuel,
+                        u.anciennete_mois,
+                        u.charges_mensuelles,
+                        u.dettes_existantes,
+                        u.score_credit,
+                        
+                        -- Encodage statut emploi
+                        CASE 
+                            WHEN u.statut_emploi IN ('cdi', 'fonctionnaire') THEN 3
+                            WHEN u.statut_emploi = 'cdd' THEN 2
+                            WHEN u.statut_emploi = 'independant' THEN 1
+                            ELSE 0
+                        END as statut_emploi_encoded,
+                        
+                        -- Restrictions
+                        COALESCE(r.credits_actifs_count, 0) as credits_actifs_count,
+                        COALESCE(r.ratio_endettement, 0) as ratio_endettement,
+                        
+                        -- Statistiques de paiement
+                        COALESCE(ps.total_paiements, 0) as total_paiements,
+                        COALESCE(ps.paiements_a_temps, 0) as paiements_a_temps,
+                        COALESCE(ps.paiements_en_retard, 0) as paiements_en_retard,
+                        COALESCE(ps.paiements_manques, 0) as paiements_manques,
+                        COALESCE(ps.moyenne_jours_retard, 0) as moyenne_jours_retard,
+                        
+                        -- Label cible : bon client si score >= 7 ET bon historique paiements
+                        CASE 
+                            WHEN u.score_credit >= 7 
+                                AND COALESCE(ps.paiements_a_temps::FLOAT / NULLIF(ps.total_paiements, 0), 0) >= 0.8
+                            THEN 1 
+                            ELSE 0 
+                        END as bon_client
+                        
+                    FROM utilisateurs u
+                    LEFT JOIN restrictions_credit r ON u.id = r.utilisateur_id
+                    LEFT JOIN payment_stats ps ON u.id = ps.utilisateur_id
+                    WHERE u.statut = 'actif'
+                    AND u.revenu_mensuel > 0
+                """
+                
+                df = pd.read_sql(query, conn)
             
-            np.random.seed(42)
+            logger.info(f"✅ {len(df)} utilisateurs récupérés")
             
-            for i in range(n_samples):
-                age = max(18, min(65, np.random.normal(35, 10)))
-                monthly_income = max(100000, min(5000000, np.random.lognormal(13, 0.7)))
-                other_income = np.random.exponential(100000) if np.random.random() < 0.3 else 0
-                monthly_charges = monthly_income * np.random.uniform(0.2, 0.8)
-                existing_debts = monthly_income * np.random.uniform(0, 1.5)
-                job_seniority = np.random.exponential(24)
-                
-                employment_status = np.random.choice(['cdi', 'cdd', 'independant', 'autre'], 
-                                                   p=[0.4, 0.3, 0.2, 0.1])
-                employment_encoded = {'cdi': 3, 'cdd': 2, 'independant': 1, 'autre': 0}[employment_status]
-                
-                loan_amount = np.random.uniform(100000, 2000000)
-                loan_duration = np.random.uniform(0.5, 3)
-                
-                total_income = monthly_income + other_income
-                debt_ratio = (monthly_charges + existing_debts) / total_income
-                payment_capacity = max(0, total_income - monthly_charges - existing_debts)
-                income_stability = min(100, (job_seniority / 12) * 20 + employment_encoded * 20)
-                credit_history_score = np.random.uniform(50, 100)
-                
-                score_factors = [
-                    monthly_income / 500000 * 0.3,
-                    employment_encoded / 3 * 0.2,
-                    (1 - debt_ratio) * 0.25,
-                    job_seniority / 36 * 0.1,
-                    credit_history_score / 100 * 0.15
-                ]
-                
-                final_score = sum(score_factors)
-                approved = 1 if final_score > 0.6 else 0
-                
-                sample = [
-                    age, monthly_income, other_income, monthly_charges,
-                    existing_debts, job_seniority, employment_encoded,
-                    loan_amount, loan_duration, debt_ratio, payment_capacity,
-                    income_stability, credit_history_score
-                ]
-                
-                data.append(sample + [approved])
+            if len(df) < 30:
+                logger.warning(f"⚠️ Pas assez de données ({len(df)} < 30), utilisation règles métier")
+                return False
             
-            # Créer le DataFrame
-            columns = self.feature_names + ['approved']
-            df = pd.DataFrame(data, columns=columns)
+            # Afficher la distribution des classes
+            class_dist = df['bon_client'].value_counts()
+            logger.info(f"📊 Distribution: Bons clients={class_dist.get(1, 0)}, Mauvais={class_dist.get(0, 0)}")
             
-            X = df[self.feature_names]
-            y = df['approved']
+            # Préparer les features
+            feature_columns = [
+                'revenu_mensuel', 'anciennete_mois', 'charges_mensuelles',
+                'dettes_existantes', 'statut_emploi_encoded', 'credits_actifs_count',
+                'ratio_endettement', 'total_paiements', 'paiements_a_temps',
+                'paiements_en_retard', 'paiements_manques', 'moyenne_jours_retard'
+            ]
             
+            # Ajouter features calculées
+            df['debt_to_income'] = (df['charges_mensuelles'] + df['dettes_existantes']) / df['revenu_mensuel'].replace(0, 1)
+            df['capacity_ratio'] = np.maximum(0, (df['revenu_mensuel'] - df['charges_mensuelles'] - df['dettes_existantes']) / df['revenu_mensuel'].replace(0, 1))
+            df['ratio_paiements_temps'] = df['paiements_a_temps'] / df['total_paiements'].replace(0, 1)
+            
+            feature_columns.extend(['debt_to_income', 'capacity_ratio', 'ratio_paiements_temps'])
+            
+            X = df[feature_columns].fillna(0).values
+            y = df['bon_client'].values
+            
+            # Vérifier qu'on a les deux classes
+            if len(np.unique(y)) < 2:
+                logger.warning("⚠️ Une seule classe présente, utilisation règles métier")
+                return False
+            
+            # Split train/test
             X_train, X_test, y_train, y_test = train_test_split(
                 X, y, test_size=0.2, random_state=42, stratify=y
             )
             
+            # Normalisation
+            logger.info("📐 Normalisation des données...")
             X_train_scaled = self.scaler.fit_transform(X_train)
             X_test_scaled = self.scaler.transform(X_test)
             
+            # Entraînement Random Forest
+            logger.info("🌲 Entraînement du Random Forest...")
             self.model = RandomForestClassifier(
-                n_estimators=50,  # Réduit pour les performances
-                max_depth=8,
+                n_estimators=100,
+                max_depth=12,
                 min_samples_split=5,
                 min_samples_leaf=2,
+                max_features='sqrt',
                 random_state=42,
-                n_jobs=1  # Un seul job pour éviter les conflits
+                class_weight='balanced',  # Important pour classes déséquilibrées
+                n_jobs=-1
             )
             
             self.model.fit(X_train_scaled, y_train)
             
-            y_pred = self.model.predict(X_test_scaled)
-            accuracy = accuracy_score(y_test, y_pred)
+            # Évaluation
+            train_score = self.model.score(X_train_scaled, y_train)
+            test_score = self.model.score(X_test_scaled, y_test)
             
-            logger.info(f"✅ Modèle entraîné! Précision: {accuracy:.2%}")
+            logger.info(f"📈 Précision train: {train_score:.3f}")
+            logger.info(f"📈 Précision test: {test_score:.3f}")
+            
+            # Prédictions sur test
+            y_pred = self.model.predict(X_test_scaled)
+            
+            logger.info("\n📊 Classification Report:")
+            logger.info("\n" + classification_report(y_test, y_pred, 
+                                                     target_names=['Mauvais', 'Bon']))
+            
+            # Feature importance
+            logger.info("\n🔍 Importance des features:")
+            feature_names = feature_columns
+            importances = self.model.feature_importances_
+            
+            # Trier par importance
+            indices = np.argsort(importances)[::-1]
+            for i in range(min(10, len(feature_names))):
+                idx = indices[i]
+                logger.info(f"  {i+1}. {feature_names[idx]}: {importances[idx]:.4f}")
+            
+            # Sauvegarder
             self.save_model()
             
-            return accuracy
+            logger.info("\n✅ Modèle Random Forest entraîné et sauvegardé avec succès!")
+            return True
             
         except Exception as e:
-            logger.error(f"❌ Erreur entraînement: {str(e)}")
-            return 0.0
-
-    # MÉTHODE OPTIMISÉE : Calcul temps réel sans récursion
-    def calculate_realtime_score(self, user_id: int, client_data: Dict, transaction_history: List = None) -> Dict[str, Any]:
-        """Calcule le score temps réel - VERSION OPTIMISÉE"""
+            logger.error(f"❌ Erreur lors de l'entraînement: {e}")
+            import traceback
+            traceback.print_exc()
+            return False
+    
+    def save_model(self):
+        """Sauvegarde le modèle et le scaler"""
         try:
-            current_time = datetime.now()
-            
-            # VÉRIFICATION CACHE : éviter les calculs répétitifs
-            cache_key = f"{user_id}_{hash(str(client_data))}"
-            if cache_key in self.last_calculation_time:
-                last_calc = self.last_calculation_time[cache_key]
-                if (current_time - last_calc).seconds < self.cache_duration:
-                    cached_result = self.score_cache.get(cache_key)
-                    if cached_result:
-                        logger.info(f"🔄 Score temps réel (cache) pour utilisateur {user_id}")
-                        return cached_result
-            
-            logger.info(f"🔄 Calcul score temps réel pour utilisateur {user_id}")
-            
-            # 1. Score de base SANS récursion
-            base_score_result = self.predict_base_score(client_data)
-            base_score = base_score_result['score']
-            
-            # 2. Analyse de l'historique
-            payment_analysis = self.analyze_payment_history_simple(transaction_history or [])
-            
-            # 3. Score final pondéré
-            final_score = (
-                base_score * self.realtime_weights['base_score'] +
-                payment_analysis['payment_score'] * self.realtime_weights['payment_history'] +
-                payment_analysis['behavior_score'] * self.realtime_weights['recent_behavior']
-            )
-            
-            final_score = max(0, min(10, final_score))
-            
-            # 4. Calculer le changement
-            previous_score = self.get_cached_score(user_id)
-            score_change = final_score - previous_score
-            
-            # 5. Résultat
-            result = {
-                'user_id': user_id,
-                'score': round(final_score, 1),
-                'previous_score': previous_score,
-                'score_change': round(score_change, 1),
-                'risk_level': self.determine_risk_level(final_score),
-                'factors': self.get_simplified_factors(base_score, payment_analysis),
-                'recommendations': self.get_basic_recommendations(final_score, payment_analysis),
-                'model_confidence': base_score_result.get('model_confidence', 0.75),
-                'model_type': 'optimized_realtime',
-                'payment_analysis': payment_analysis,
-                'is_realtime': True,
-                'last_updated': current_time.isoformat()
+            joblib.dump(self.model, self.model_path)
+            joblib.dump(self.scaler, self.scaler_path)
+            logger.info(f"💾 Modèle sauvegardé: {self.model_path}")
+        except Exception as e:
+            logger.error(f"Erreur sauvegarde modèle: {e}")
+    
+    def load_model(self) -> bool:
+        """Charge le modèle sauvegardé"""
+        try:
+            if os.path.exists(self.model_path) and os.path.exists(self.scaler_path):
+                self.model = joblib.load(self.model_path)
+                self.scaler = joblib.load(self.scaler_path)
+                logger.info("✅ Modèle Random Forest chargé depuis le fichier")
+                return True
+            return False
+        except Exception as e:
+            logger.error(f"Erreur chargement modèle: {e}")
+            return False
+    
+    # ==========================================
+    # CALCUL DU SCORE AVEC LE MODÈLE
+    # ==========================================
+    
+    def calculate_comprehensive_score(self, user_id: int) -> Dict:
+        """
+        Calcule le score complet d'un utilisateur
+        """
+        # Récupérer toutes les données de l'utilisateur
+        user_data = self._get_user_complete_data(user_id)
+        
+        if not user_data:
+            raise ValueError(f"Utilisateur {user_id} introuvable")
+        
+        # Calculer le score ML
+        if self.model is not None:
+            ml_score = self._calculate_ml_score(user_data)
+            model_type = 'random_forest'
+            confidence = 0.85
+        else:
+            ml_score = self._calculate_rule_based_score(user_data)
+            model_type = 'rule_based'
+            confidence = 0.70
+        
+        # Normaliser entre 0 et 10
+        final_score = max(0, min(10, ml_score))
+        score_850 = int(300 + (final_score / 10) * 550)
+        
+        # Déterminer le risque
+        risk_level = self._determine_risk_level(final_score)
+        
+        # Calculer le montant éligible
+        eligible_amount = self._calculate_eligible_amount(
+            final_score, 
+            user_data['revenu_mensuel'],
+            user_data['ratio_endettement']
+        )
+        
+        # Générer les recommandations
+        recommendations = self._generate_recommendations(final_score, user_data)
+        
+        return {
+            'score': round(final_score, 1),
+            'score_850': score_850,
+            'niveau_risque': risk_level,
+            'montant_eligible': eligible_amount,
+            'model_type': model_type,
+            'model_confidence': confidence,
+            'details': {
+                'payment_reliability': user_data.get('reliability', 'N/A'),
+                'on_time_ratio': user_data.get('ratio_paiements_temps', 0) * 100,
+                'total_payments': user_data.get('total_paiements', 0),
+                'avg_delay_days': user_data.get('moyenne_jours_retard', 0),
+                'debt_ratio': user_data.get('ratio_endettement', 0),
+                'active_credits': user_data.get('credits_actifs_count', 0)
+            },
+            'recommendations': recommendations
+        }
+    
+    def _get_user_complete_data(self, user_id: int) -> Optional[Dict]:
+        """Récupère toutes les données d'un utilisateur"""
+        
+        with self.get_db_connection() as conn:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                cur.execute("""
+                    WITH payment_stats AS (
+                        SELECT 
+                            utilisateur_id,
+                            COUNT(*) as total_paiements,
+                            COUNT(CASE WHEN type_paiement = 'a_temps' THEN 1 END) as paiements_a_temps,
+                            COUNT(CASE WHEN type_paiement = 'en_retard' THEN 1 END) as paiements_en_retard,
+                            COUNT(CASE WHEN type_paiement = 'manque' THEN 1 END) as paiements_manques,
+                            AVG(jours_retard) as moyenne_jours_retard
+                        FROM historique_paiements
+                        WHERE utilisateur_id = %s
+                        GROUP BY utilisateur_id
+                    )
+                    SELECT 
+                        u.*,
+                        COALESCE(r.credits_actifs_count, 0) as credits_actifs_count,
+                        COALESCE(r.ratio_endettement, 0) as ratio_endettement,
+                        COALESCE(r.dette_totale_active, 0) as dette_totale_active,
+                        COALESCE(ps.total_paiements, 0) as total_paiements,
+                        COALESCE(ps.paiements_a_temps, 0) as paiements_a_temps,
+                        COALESCE(ps.paiements_en_retard, 0) as paiements_en_retard,
+                        COALESCE(ps.paiements_manques, 0) as paiements_manques,
+                        COALESCE(ps.moyenne_jours_retard, 0) as moyenne_jours_retard
+                    FROM utilisateurs u
+                    LEFT JOIN restrictions_credit r ON u.id = r.utilisateur_id
+                    LEFT JOIN payment_stats ps ON u.id = ps.utilisateur_id
+                    WHERE u.id = %s
+                """, (user_id, user_id))
+                
+                result = cur.fetchone()
+                
+                if not result:
+                    return None
+                
+                data = dict(result)
+                
+                # Calculer les features supplémentaires
+                revenu = float(data.get('revenu_mensuel', 0))
+                charges = float(data.get('charges_mensuelles', 0))
+                dettes = float(data.get('dettes_existantes', 0))
+                total_p = float(data.get('total_paiements', 0))
+                
+                data['debt_to_income'] = (charges + dettes) / max(revenu, 1)
+                data['capacity_ratio'] = max(0, (revenu - charges - dettes) / max(revenu, 1))
+                data['ratio_paiements_temps'] = data['paiements_a_temps'] / max(total_p, 1)
+                
+                # Déterminer la fiabilité
+                if total_p == 0:
+                    data['reliability'] = 'nouveau_client'
+                elif data['ratio_paiements_temps'] >= 0.95:
+                    data['reliability'] = 'excellent'
+                elif data['ratio_paiements_temps'] >= 0.85:
+                    data['reliability'] = 'tres_bon'
+                elif data['ratio_paiements_temps'] >= 0.70:
+                    data['reliability'] = 'bon'
+                else:
+                    data['reliability'] = 'moyen'
+                
+                return data
+    
+    def _calculate_ml_score(self, user_data: Dict) -> float:
+        """Calcul du score avec Random Forest"""
+        try:
+            # Préparer les features
+            employment_map = {
+                'cdi': 3,
+                'fonctionnaire': 3,
+                'cdd': 2,
+                'independant': 1,
+                'autre': 0
             }
             
-            # 6. Mettre à jour le cache
-            self.score_cache[user_id] = final_score
-            self.score_cache[cache_key] = result
-            self.last_calculation_time[cache_key] = current_time
+            features = [
+                user_data.get('revenu_mensuel', 0),
+                user_data.get('anciennete_mois', 0),
+                user_data.get('charges_mensuelles', 0),
+                user_data.get('dettes_existantes', 0),
+                employment_map.get(user_data.get('statut_emploi', 'autre'), 0),
+                user_data.get('credits_actifs_count', 0),
+                user_data.get('ratio_endettement', 0),
+                user_data.get('total_paiements', 0),
+                user_data.get('paiements_a_temps', 0),
+                user_data.get('paiements_en_retard', 0),
+                user_data.get('paiements_manques', 0),
+                user_data.get('moyenne_jours_retard', 0),
+                user_data.get('debt_to_income', 0),
+                user_data.get('capacity_ratio', 0),
+                user_data.get('ratio_paiements_temps', 0)
+            ]
             
-            logger.info(f"Score temps réel calculé: {previous_score} → {final_score} (Δ{score_change:+.1f})")
-            
-            return result
-            
-        except Exception as e:
-            logger.error(f"Erreur calcul score temps réel: {str(e)}")
-            # Fallback simple
-            return self.predict_base_score(client_data)
-
-    def predict_base_score(self, client_data):
-        """Prédiction de base SANS récursion"""
-        try:
-            if self.model is None:
-                return self.rule_based_scoring(client_data)
-            
-            # Préparer les features de base seulement
-            X = self.prepare_basic_features(client_data)
+            X = np.array([features])
             X_scaled = self.scaler.transform(X)
             
-            prediction = self.model.predict(X_scaled)[0]
+            # Prédiction
             proba = self.model.predict_proba(X_scaled)[0]
             
-            score_850 = 700 if prediction == 1 else 400
-            score_850 = int(score_850 + 150 * proba[1])
-            score_850 = max(300, min(850, score_850))
+            # Convertir en score 0-10
+            # proba[1] = probabilité d'être un bon client
+            score = 3.0 + (proba[1] * 7.0)  # Score entre 3 et 10
             
-            score_10 = self.convert_score_to_10(score_850)
-            
-            return {
-                'score': score_10,
-                'score_850': score_850,
-                'probability': float(proba[1]),
-                'risk_level': self.determine_risk_level(score_10),
-                'decision': self.get_decision(score_850),
-                'factors': [],
-                'model_confidence': float(max(proba)),
-                'model_type': 'random_forest_base',
-                'is_realtime': False
-            }
+            return score
             
         except Exception as e:
-            logger.error(f" Erreur prédiction base: {str(e)}")
-            return self.rule_based_scoring(client_data)
-
-    def prepare_basic_features(self, data):
-        """Prépare SEULEMENT les features de base"""
-        features = {}
+            logger.error(f"Erreur ML scoring: {e}")
+            return self._calculate_rule_based_score(user_data)
+    
+    def _calculate_rule_based_score(self, user_data: Dict) -> float:
+        """Score basé sur règles métier (fallback)"""
+        score = 5.0
         
-        features['age'] = float(data.get('age', 30))
-        features['monthly_income'] = float(data.get('monthly_income', 0))
-        features['other_income'] = float(data.get('other_income', 0))
-        features['monthly_charges'] = float(data.get('monthly_charges', 0))
-        features['existing_debts'] = float(data.get('existing_debts', 0))
-        features['job_seniority'] = float(data.get('job_seniority', 12))
-        features['loan_amount'] = float(data.get('loan_amount', 1000000))
-        features['loan_duration'] = float(data.get('loan_duration', 1))
+        # Score de revenu
+        revenu = float(user_data.get('revenu_mensuel', 0))
+        if revenu >= 1500000:
+            score += 2.0
+        elif revenu >= 1000000:
+            score += 1.5
+        elif revenu >= 500000:
+            score += 1.0
+        elif revenu < 300000:
+            score -= 1.0
         
-        employment_status = data.get('employment_status', 'autre').lower()
-        employment_mapping = {'cdi': 3, 'cdd': 2, 'independant': 1, 'autre': 0}
-        features['employment_status_encoded'] = employment_mapping.get(employment_status, 0)
+        # Score d'emploi
+        statut = user_data.get('statut_emploi', 'autre')
+        if statut in ['cdi', 'fonctionnaire']:
+            score += 1.5
+        elif statut == 'cdd':
+            score += 0.5
         
-        total_income = features['monthly_income'] + features['other_income']
-        features['debt_ratio'] = (features['monthly_charges'] + features['existing_debts']) / max(total_income, 1)
-        features['payment_capacity'] = max(0, total_income - features['monthly_charges'] - features['existing_debts'])
-        features['income_stability'] = min(100, (features['job_seniority'] / 12) * 20 + features['employment_status_encoded'] * 20)
-        features['credit_history_score'] = 75  # Valeur par défaut
+        # Score d'ancienneté
+        anciennete = float(user_data.get('anciennete_mois', 0))
+        if anciennete >= 60:
+            score += 1.0
+        elif anciennete >= 24:
+            score += 0.5
+        elif anciennete < 12:
+            score -= 0.5
         
-        df = pd.DataFrame([features])[self.feature_names]
-        return df
-
-    def analyze_payment_history_simple(self, transaction_history: List) -> Dict[str, Any]:
-        """Analyse simplifiée de l'historique de paiement"""
-        if not transaction_history:
-            return {
-                'payment_score': 6.0,
-                'behavior_score': 6.0,
-                'total_payments': 0,
-                'on_time_ratio': 0.8,
-                'trend': 'stable'
-            }
+        # Score de paiements
+        ratio_temps = user_data.get('ratio_paiements_temps', 0)
+        score += ratio_temps * 2.0  # +2 max
         
-        # Analyser seulement les 10 dernières transactions
-        recent = transaction_history[-10:] if len(transaction_history) > 10 else transaction_history
+        # Pénalité endettement
+        ratio_dette = float(user_data.get('ratio_endettement', 0))
+        if ratio_dette > 70:
+            score -= 3.0
+        elif ratio_dette > 50:
+            score -= 1.5
+        elif ratio_dette <= 30:
+            score += 1.0
         
-        total_payments = len(recent)
-        on_time_payments = sum(1 for t in recent if t.get('days_late', 0) == 0)
+        # Pénalité crédits multiples
+        credits_actifs = int(user_data.get('credits_actifs_count', 0))
+        if credits_actifs >= 2:
+            score -= 1.5
+        elif credits_actifs == 0:
+            score += 0.5
         
-        on_time_ratio = on_time_payments / total_payments if total_payments > 0 else 0.8
+        return max(0, min(10, score))
+    
+    def _determine_risk_level(self, score: float) -> str:
+        """Détermine le niveau de risque"""
+        if score >= 8.0:
+            return 'tres_bas'
+        elif score >= 7.0:
+            return 'bas'
+        elif score >= 5.0:
+            return 'moyen'
+        elif score >= 3.0:
+            return 'eleve'
+        else:
+            return 'tres_eleve'
+    
+    def _calculate_eligible_amount(self, score: float, revenu: float, ratio_dette: float) -> int:
+        """Calcule le montant éligible"""
+        if score < 4:
+            return 0
         
-        # Score de paiement simple
-        payment_score = on_time_ratio * 10
+        # Base sur le revenu
+        if score >= 8:
+            multiplier = 0.8
+        elif score >= 7:
+            multiplier = 0.6
+        elif score >= 6:
+            multiplier = 0.5
+        elif score >= 5:
+            multiplier = 0.4
+        else:
+            multiplier = 0.3
         
-        # Score de comportement basé sur la régularité
-        behavior_score = 6.0 + (on_time_ratio - 0.5) * 4
-        behavior_score = max(0, min(10, behavior_score))
+        montant = int(revenu * multiplier)
         
-        return {
-            'payment_score': round(payment_score, 1),
-            'behavior_score': round(behavior_score, 1),
-            'total_payments': total_payments,
-            'on_time_ratio': round(on_time_ratio, 2),
-            'trend': 'improving' if on_time_ratio > 0.8 else ('declining' if on_time_ratio < 0.6 else 'stable')
-        }
-
-    def get_simplified_factors(self, base_score: float, payment_analysis: Dict) -> List[Dict]:
-        """Facteurs simplifiés"""
-        return [
-            {
-                'name': 'profil_base',
-                'value': int(base_score * 10),
-                'impact': 60,
-                'description': 'Profil financier de base'
-            },
-            {
-                'name': 'historique_paiements',
-                'value': int(payment_analysis.get('payment_score', 6) * 10),
-                'impact': 25,
-                'description': 'Historique des paiements'
-            },
-            {
-                'name': 'comportement_recent',
-                'value': int(payment_analysis.get('behavior_score', 6) * 10),
-                'impact': 15,
-                'description': 'Comportement récent'
-            }
-        ]
-
-    def get_basic_recommendations(self, score: float, payment_analysis: Dict) -> List[str]:
-        """Recommandations de base"""
+        # Réduire si endettement élevé
+        if ratio_dette > 50:
+            montant = int(montant * 0.5)
+        elif ratio_dette > 70:
+            montant = int(montant * 0.3)
+        
+        # Plafond
+        return min(montant, 2000000)
+    
+    def _generate_recommendations(self, score: float, user_data: Dict) -> List[str]:
+        """Génère des recommandations personnalisées"""
         recommendations = []
         
+        # Recommandations sur les paiements
+        ratio_temps = user_data.get('ratio_paiements_temps', 0) * 100
+        if ratio_temps < 80:
+            recommendations.append("Améliorez votre taux de paiements à temps pour augmenter votre score")
+        
+        avg_delay = user_data.get('moyenne_jours_retard', 0)
+        if avg_delay > 7:
+            recommendations.append(f"Réduisez vos retards de paiement (moyenne actuelle: {avg_delay:.0f} jours)")
+        
+        # Recommandations sur l'endettement
+        ratio_dette = user_data.get('ratio_endettement', 0)
+        if ratio_dette > 50:
+            recommendations.append(f"Votre taux d'endettement est élevé ({ratio_dette:.0f}%), remboursez vos dettes")
+        
+        credits_actifs = user_data.get('credits_actifs_count', 0)
+        if credits_actifs >= 2:
+            recommendations.append("Vous avez atteint le maximum de crédits actifs (2)")
+        
+        # Recommandations globales
         if score < 5:
-            recommendations.append("⚠️ Améliorez votre régularité de paiement")
+            recommendations.append("Concentrez-vous sur les paiements à temps et la réduction des dettes")
         elif score < 7:
-            recommendations.append("📈 Continuez vos efforts, votre score progresse")
+            recommendations.append("Continuez vos efforts, vous êtes sur la bonne voie")
         else:
-            recommendations.append("🎉 Excellent score ! Maintenez vos bonnes habitudes")
+            recommendations.append("Excellent profil ! Maintenez vos bonnes habitudes")
         
-        on_time_ratio = payment_analysis.get('on_time_ratio', 0.8)
-        if on_time_ratio < 0.8:
-            recommendations.append("📅 Respectez vos échéances pour améliorer votre score")
+        return recommendations
+    
+    # ==========================================
+    # MÉTHODES EXISTANTES (conservées)
+    # ==========================================
+    
+    def get_or_calculate_score(self, user_id: int, force_recalculate: bool = False) -> Dict:
+        """Récupère ou calcule le score"""
+        if not force_recalculate:
+            existing_score = self.get_user_score_from_db(user_id)
+            if existing_score:
+                return existing_score
         
-        return recommendations[:3]  # Maximum 3 recommandations
-
-    # MÉTHODES UTILITAIRES OPTIMISÉES
-    def get_cached_score(self, user_id: int) -> float:
-        """Score en cache"""
-        return self.score_cache.get(user_id, 6.0)
-
-    def determine_risk_level(self, score: float) -> str:
-        """Niveau de risque"""
-        if score >= 9: return 'très_bas'
-        elif score >= 7: return 'bas'
-        elif score >= 5: return 'moyen'
-        elif score >= 3: return 'élevé'
-        else: return 'très_élevé'
-
-    def convert_score_to_10(self, score_850):
-        """Conversion score 850 vers 10"""
-        score_10 = ((score_850 - 300) / 550) * 10
-        return max(0, min(10, round(score_10, 1)))
-
-    def get_decision(self, score_850):
-        """Décision basée sur score 850"""
-        if score_850 >= 650: return 'approuvé'
-        elif score_850 >= 550: return 'à étudier'
-        else: return 'refusé'
-
-    # MÉTHODE SIMPLIFIÉE POUR LE MAIN PREDICT
-    def predict(self, client_data):
-        """Méthode principale de prédiction - SIMPLIFIÉE"""
+        # Recalculer
+        new_score = self.calculate_comprehensive_score(user_id)
+        self.update_user_score_in_db(user_id, new_score)
+        
+        return new_score
+    
+    def get_user_score_from_db(self, user_id: int) -> Optional[Dict]:
+        """Récupère le score depuis la DB"""
+        with self.get_db_connection() as conn:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                cur.execute("""
+                    SELECT 
+                        id,
+                        score_credit,
+                        score_850,
+                        niveau_risque,
+                        montant_eligible,
+                        date_modification
+                    FROM utilisateurs
+                    WHERE id = %s
+                """, (user_id,))
+                
+                result = cur.fetchone()
+                return dict(result) if result else None
+    
+    def update_user_score_in_db(self, user_id: int, score_data: Dict) -> bool:
+        """Met à jour le score dans la DB"""
         try:
-            # Utiliser seulement le scoring de base pour éviter la récursion
-            return self.predict_base_score(client_data)
-            
+            with self.get_db_connection() as conn:
+                with conn.cursor() as cur:
+                    cur.execute("""
+                        UPDATE utilisateurs
+                        SET 
+                            score_credit = %s,
+                            score_850 = %s,
+                            niveau_risque = %s,
+                            montant_eligible = %s,
+                            date_modification = NOW()
+                        WHERE id = %s
+                    """, (
+                        score_data['score'],
+                        score_data['score_850'],
+                        score_data['niveau_risque'],
+                        score_data['montant_eligible'],
+                        user_id
+                    ))
+                    
+                    # Historique
+                    cur.execute("""
+                        INSERT INTO historique_scores (
+                            utilisateur_id,
+                            score_credit,
+                            score_850,
+                            niveau_risque,
+                            montant_eligible,
+                            evenement_declencheur,
+                            date_calcul
+                        ) VALUES (%s, %s, %s, %s, %s, %s, NOW())
+                    """, (
+                        user_id,
+                        score_data['score'],
+                        score_data['score_850'],
+                        score_data['niveau_risque'],
+                        score_data['montant_eligible'],
+                        'Calcul automatique ML'
+                    ))
+                    
+                    conn.commit()
+                    return True
         except Exception as e:
-            logger.error(f"❌ Erreur prédiction: {str(e)}")
-            return self.rule_based_scoring(client_data)
-
-    def rule_based_scoring(self, client_data):
-        """Scoring par règles métier"""
-        score_850 = 650
-        factors = []
-        
-        monthly_income = float(client_data.get('monthly_income', 0))
-        employment_status = client_data.get('employment_status', 'autre').lower()
-        job_seniority = float(client_data.get('job_seniority', 0))
-        
-        # Revenus
-        if monthly_income >= 500000:
-            score_850 += 80
-            factors.append({'name': 'monthly_income', 'value': 90, 'impact': 25})
-        elif monthly_income >= 300000:
-            score_850 += 40
-            factors.append({'name': 'monthly_income', 'value': 70, 'impact': 15})
-        
-        # Emploi
-        if employment_status == 'cdi':
-            score_850 += 80
-            factors.append({'name': 'employment_status', 'value': 90, 'impact': 25})
-        elif employment_status == 'cdd':
-            score_850 += 40
-            factors.append({'name': 'employment_status', 'value': 70, 'impact': 15})
-        
-        # Ancienneté
-        if job_seniority >= 24:
-            score_850 += 60
-            factors.append({'name': 'job_seniority', 'value': 85, 'impact': 20})
-        
-        score_850 = max(300, min(850, score_850))
-        score_10 = self.convert_score_to_10(score_850)
-        
-        return {
-            'score': score_10,
-            'score_850': score_850,
-            'probability': (score_850 - 300) / 550,
-            'risk_level': self.determine_risk_level(score_10),
-            'decision': self.get_decision(score_850),
-            'factors': factors,
-            'model_confidence': 0.75,
-            'model_type': 'rule_based',
-            'is_realtime': False
-        }
-
-    def calculate_eligible_amount(self, client_data):
-        """Calcul du montant éligible"""
-        try:
-            score_result = self.predict_base_score(client_data)
-            score_10 = score_result['score']
-            risk_level = score_result['risk_level']
-            
-            monthly_income = float(client_data.get('monthly_income', 0))
-            max_amount = min(monthly_income * 0.3333, 2000000)
-            
-            if risk_level == 'élevé':
-                max_amount *= 0.7
-            elif risk_level == 'très_élevé':
-                max_amount *= 0.5
-            elif risk_level in ['bas', 'très_bas']:
-                max_amount = min(max_amount * 1.2, 2000000)
-            
-            return {
-                'eligible_amount': int(max_amount // 1000 * 1000),
-                'score': score_10,
-                'risk_level': risk_level,
-                'factors': score_result['factors'],
-                'recommendations': [
-                    'Montant calculé selon votre profil de risque',
-                    'Maintenez vos revenus stables pour conserver ce montant'
-                ]
-            }
-            
-        except Exception as e:
-            logger.error(f"❌ Erreur calcul montant éligible: {str(e)}")
-            monthly_income = float(client_data.get('monthly_income', 500000))
-            return {
-                'eligible_amount': int(min(monthly_income * 0.3333, 1000000)),
-                'score': 6.0,
-                'risk_level': 'moyen',
-                'factors': [],
-                'recommendations': ['Calcul par défaut']
-            }
-
-    # NOUVELLES MÉTHODES POUR LA COMPATIBILITÉ
-    def process_transaction_impact(self, user_id: int, transaction_type: str, 
-                                 days_late: int = 0, amount: float = 0) -> Dict[str, Any]:
-        """Impact d'une transaction - VERSION SIMPLIFIÉE"""
-        try:
-            current_score = self.get_cached_score(user_id)
-            
-            # Impact simple basé sur le type
-            if transaction_type == 'payment' and days_late == 0:
-                impact = 0.1
-            elif transaction_type == 'payment' and days_late > 0:
-                impact = -0.1 * (1 + days_late / 30)
-            elif transaction_type == 'missed_payment':
-                impact = -0.5
-            else:
-                impact = 0
-            
-            new_score = max(0, min(10, current_score + impact))
-            
-            # Mettre à jour le cache
-            self.score_cache[user_id] = new_score
-            
-            return {
-                'previous_score': current_score,
-                'new_score': round(new_score, 1),
-                'score_change': round(impact, 1),
-                'risk_level': self.determine_risk_level(new_score),
-                'updated_at': datetime.now().isoformat()
-            }
-            
-        except Exception as e:
-            logger.error(f"❌ Erreur impact transaction: {str(e)}")
-            return {
-                'previous_score': 6.0,
-                'new_score': 6.0,
-                'score_change': 0,
-                'error': str(e)
-            }
-
-    def get_score_trend_analysis(self, user_id: int, days: int = 90) -> Dict:
-        """Analyse de tendance - SIMPLIFIÉE"""
-        return {
-            'trend': 'stable',
-            'average_change_per_month': 0.1,
-            'consistency_score': 75,
-            'prediction_next_month': self.get_cached_score(user_id) + 0.1
-        }
-
-    def simulate_transaction_impact(self, user_id: int, transaction_type: str, 
-                                  amount: float = 0, days_late: int = 0) -> Dict:
-        """Simulation d'impact - SIMPLIFIÉE"""
-        current_score = self.get_cached_score(user_id)
-        
-        # Impact simulé
-        if transaction_type == 'payment' and days_late == 0:
-            impact = 0.1
-            description = 'Paiement à temps - Impact positif'
-        elif days_late > 0:
-            impact = -0.1 * (1 + days_late / 30)
-            description = f'Paiement en retard - Impact négatif'
-        else:
-            impact = 0
-            description = 'Impact neutre'
-        
-        estimated_score = max(0, min(10, current_score + impact))
-        
-        return {
-            'current_score': current_score,
-            'estimated_new_score': round(estimated_score, 1),
-            'estimated_change': round(impact, 2),
-            'transaction_type': transaction_type,
-            'impact_description': description,
-            'simulation': True
-        }
+            logger.error(f"Erreur mise à jour score: {e}")
+            return False
+    
+    def check_eligibility(self, user_id: int) -> Dict:
+        """Vérifie l'éligibilité"""
+        with self.get_db_connection() as conn:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                cur.execute("""
+                    SELECT 
+                        r.peut_emprunter,
+                        r.credits_actifs_count,
+                        r.raison_blocage,
+                        u.score_credit,
+                        u.montant_eligible
+                    FROM restrictions_credit r
+                    JOIN utilisateurs u ON r.utilisateur_id = u.id
+                    WHERE r.utilisateur_id = %s
+                """, (user_id,))
+                
+                result = cur.fetchone()
+                
+                if not result:
+                    return {
+                        'eligible': False,
+                        'raison': 'Profil incomplet'
+                    }
+                
+                eligibility = dict(result)
+                
+                if not eligibility['peut_emprunter']:
+                    return {
+                        'eligible': False,
+                        'raison': eligibility.get('raison_blocage', 'Non éligible')
+                    }
+                
+                if eligibility['score_credit'] < 5.0:
+                    return {
+                        'eligible': False,
+                        'raison': 'Score de crédit insuffisant'
+                    }
+                
+                return {
+                    'eligible': True,
+                    'montant_eligible': eligibility['montant_eligible'],
+                    'score': eligibility['score_credit']
+                }

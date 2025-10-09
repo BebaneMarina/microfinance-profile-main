@@ -16,6 +16,7 @@ export interface CreateLongCreditRequestDto {
     dependents?: number;
   };
   creditDetails: {
+    type?: string;  // Type de crédit (consommation_generale, immobilier, etc.)
     requestedAmount: number;
     duration: number;
     purpose: string;

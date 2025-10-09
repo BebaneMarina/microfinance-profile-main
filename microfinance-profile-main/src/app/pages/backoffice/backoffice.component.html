@@ -1,0 +1,387 @@
+<div class="backoffice-container">
+  <!-- Header -->
+  <header class="backoffice-header">
+    <div class="header-content">
+      <h1>
+        <i class="material-icons">dashboard</i>
+        Back-Office - Demandes de Crédit Long Terme
+      </h1>
+    </div>
+  </header>
+
+  <!-- Statistiques -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon" style="background: #e3f2fd;">
+        <i class="material-icons" style="color: #2196F3;">receipt_long</i>
+      </div>
+      <div class="stat-content">
+        <div class="stat-value">{{stats.total}}</div>
+        <div class="stat-label">Total Demandes</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon" style="background: #fff3e0;">
+        <i class="material-icons" style="color: #ff9800;">hourglass_empty</i>
+      </div>
+      <div class="stat-content">
+        <div class="stat-value">{{stats.submitted}}</div>
+        <div class="stat-label">En Attente</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon" style="background: #f3e5f5;">
+        <i class="material-icons" style="color: #9c27b0;">search</i>
+      </div>
+      <div class="stat-content">
+        <div class="stat-value">{{stats.inReview}}</div>
+        <div class="stat-label">En Examen</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon" style="background: #e8f5e9;">
+        <i class="material-icons" style="color: #4caf50;">check_circle</i>
+      </div>
+      <div class="stat-content">
+        <div class="stat-value">{{stats.approved}}</div>
+        <div class="stat-label">Approuvées</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon" style="background: #ffebee;">
+        <i class="material-icons" style="color: #f44336;">cancel</i>
+      </div>
+      <div class="stat-content">
+        <div class="stat-value">{{stats.rejected}}</div>
+        <div class="stat-label">Rejetées</div>
+      </div>
+    </div>
+
+    <div class="stat-card stat-highlight">
+      <div class="stat-icon" style="background: #e8f5e9;">
+        <i class="material-icons" style="color: #4caf50;">account_balance_wallet</i>
+      </div>
+      <div class="stat-content">
+        <div class="stat-value">{{formatCurrency(stats.totalAmount)}}</div>
+        <div class="stat-label">Montant Total Demandé</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filtres -->
+  <div class="filters-section">
+    <div class="filters-grid">
+      <!-- Recherche -->
+      <div class="filter-group">
+        <label>
+          <i class="material-icons">search</i>
+          Rechercher
+        </label>
+        <input 
+          type="text" 
+          [(ngModel)]="searchTerm"
+          (ngModelChange)="applyFilters()"
+          placeholder="N° demande, nom, email..."
+          class="filter-input"
+        >
+      </div>
+
+      <!-- Filtre statut -->
+      <div class="filter-group">
+        <label>
+          <i class="material-icons">filter_list</i>
+          Statut
+        </label>
+        <select 
+          [(ngModel)]="statusFilter"
+          (ngModelChange)="applyFilters()"
+          class="filter-select"
+        >
+          <option value="all">Tous les statuts</option>
+          <option value="submitted">Soumises</option>
+          <option value="soumise">Soumises</option>
+          <option value="in_review">En examen</option>
+          <option value="approved">Approuvées</option>
+          <option value="rejected">Rejetées</option>
+        </select>
+      </div>
+
+      <!-- Filtre date -->
+      <div class="filter-group">
+        <label>
+          <i class="material-icons">date_range</i>
+          Période
+        </label>
+        <select 
+          [(ngModel)]="dateFilter"
+          (ngModelChange)="applyFilters()"
+          class="filter-select"
+        >
+          <option value="all">Toutes les dates</option>
+          <option value="today">Aujourd'hui</option>
+          <option value="week">Cette semaine</option>
+          <option value="month">Ce mois</option>
+        </select>
+      </div>
+
+      <!-- Bouton refresh -->
+      <div class="filter-group">
+        <label>&nbsp;</label>
+        <button (click)="loadRequests()" class="btn-refresh">
+          <i class="material-icons">refresh</i>
+          Actualiser
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Liste des demandes -->
+  <div class="requests-section">
+    <div class="section-header">
+      <h2>Demandes de Crédit ({{filteredRequests.length}})</h2>
+    </div>
+
+    <div *ngIf="loading" class="loading-state">
+      <div class="spinner"></div>
+      <p>Chargement des demandes...</p>
+    </div>
+
+    <div *ngIf="!loading && filteredRequests.length === 0" class="empty-state">
+      <i class="material-icons">inbox</i>
+      <p>Aucune demande trouvée</p>
+    </div>
+
+    <div *ngIf="!loading && filteredRequests.length > 0" class="requests-table">
+      <table>
+        <thead>
+          <tr>
+            <th>N° Demande</th>
+            <th>Client</th>
+            <th>Montant</th>
+            <th>Durée</th>
+            <th>Score</th>
+            <th>Risque</th>
+            <th>Date</th>
+            <th>Statut</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let request of filteredRequests">
+            <td>
+              <strong>{{request.requestNumber}}</strong>
+            </td>
+            <td>
+              <div class="client-info">
+                <div class="client-name">{{getClientName(request)}}</div>
+                <div class="client-email">{{request.personalInfo?.email || request.username}}</div>
+              </div>
+            </td>
+            <td>
+              <strong>{{formatCurrency(getAmount(request))}}</strong>
+            </td>
+            <td>{{getDuration(request)}} mois</td>
+            <td>
+              <div class="score-badge" *ngIf="getScore(request) > 0">
+                {{getScore(request)}}/10
+              </div>
+              <span *ngIf="getScore(request) === 0">-</span>
+            </td>
+            <td>
+              <span 
+                *ngIf="getRiskLevel(request) !== 'N/A'"
+                class="risk-badge"
+                [style.background]="getRiskColor(getRiskLevel(request))"
+              >
+                {{getRiskLevel(request)}}
+              </span>
+              <span *ngIf="getRiskLevel(request) === 'N/A'">-</span>
+            </td>
+            <td>{{formatDate(request.submissionDate)}}</td>
+            <td>
+              <span [class]="'status-badge ' + getStatusBadgeClass(request.status)">
+                {{getStatusText(request.status)}}
+              </span>
+            </td>
+            <td>
+              <div class="action-buttons">
+                <button 
+                  (click)="viewDetails(request)" 
+                  class="btn-action btn-view"
+                  title="Voir détails"
+                >
+                  <i class="material-icons">visibility</i>
+                </button>
+                
+                <button 
+                  *ngIf="request.status === 'submitted' || request.status === 'soumise'"
+                  (click)="putInReview(request)" 
+                  class="btn-action btn-review"
+                  title="Mettre en examen"
+                >
+                  <i class="material-icons">rate_review</i>
+                </button>
+
+                <button 
+                  *ngIf="request.status === 'in_review'"
+                  (click)="approveRequest(request)" 
+                  class="btn-action btn-approve"
+                  title="Approuver"
+                >
+                  <i class="material-icons">check_circle</i>
+                </button>
+
+                <button 
+                  *ngIf="request.status === 'in_review'"
+                  (click)="rejectRequest(request)" 
+                  class="btn-action btn-reject"
+                  title="Rejeter"
+                >
+                  <i class="material-icons">cancel</i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Modal Détails -->
+  <div *ngIf="showModal && selectedRequest" class="modal-overlay" (click)="closeModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Détails de la Demande</h2>
+        <button (click)="closeModal()" class="btn-close">
+          <i class="material-icons">close</i>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Informations générales -->
+        <div class="detail-section">
+          <h3>Informations Générales</h3>
+          <div class="detail-grid">
+            <div class="detail-item">
+              <label>N° Demande:</label>
+              <strong>{{selectedRequest.requestNumber}}</strong>
+            </div>
+            <div class="detail-item">
+              <label>Date de soumission:</label>
+              <span>{{formatDate(selectedRequest.submissionDate)}}</span>
+            </div>
+            <div class="detail-item">
+              <label>Statut:</label>
+              <span [class]="'status-badge ' + getStatusBadgeClass(selectedRequest.status)">
+                {{getStatusText(selectedRequest.status)}}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Informations client -->
+        <div class="detail-section">
+          <h3>Informations Client</h3>
+          <div class="detail-grid">
+            <div class="detail-item">
+              <label>Nom complet:</label>
+              <span>{{getClientName(selectedRequest)}}</span>
+            </div>
+            <div class="detail-item">
+              <label>Email:</label>
+              <span>{{selectedRequest.personalInfo?.email || selectedRequest.username}}</span>
+            </div>
+            <div class="detail-item">
+              <label>Téléphone:</label>
+              <span>{{selectedRequest.personalInfo?.phone || 'N/A'}}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Détails du crédit -->
+        <div class="detail-section">
+          <h3>Détails du Crédit</h3>
+          <div class="detail-grid">
+            <div class="detail-item">
+              <label>Montant demandé:</label>
+              <strong class="amount">{{formatCurrency(getAmount(selectedRequest))}}</strong>
+            </div>
+            <div class="detail-item">
+              <label>Durée:</label>
+              <span>{{getDuration(selectedRequest)}} mois</span>
+            </div>
+            <div class="detail-item full-width">
+              <label>Objectif:</label>
+              <span>{{selectedRequest.creditDetails?.purpose || selectedRequest.purpose || 'N/A'}}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Simulation -->
+        <div class="detail-section" *ngIf="getScore(selectedRequest) > 0">
+          <h3>Résultats de Simulation</h3>
+          <div class="detail-grid">
+            <div class="detail-item">
+              <label>Score:</label>
+              <div class="score-display">
+                {{getScore(selectedRequest)}}/10
+              </div>
+            </div>
+            <div class="detail-item">
+              <label>Niveau de risque:</label>
+              <span 
+                *ngIf="getRiskLevel(selectedRequest) !== 'N/A'"
+                class="risk-badge"
+                [style.background]="getRiskColor(getRiskLevel(selectedRequest))"
+              >
+                {{getRiskLevel(selectedRequest)}}
+              </span>
+              <span *ngIf="getRiskLevel(selectedRequest) === 'N/A'">-</span>
+            </div>
+            <div class="detail-item" *ngIf="selectedRequest.simulationResults?.monthlyPayment">
+              <label>Mensualité estimée:</label>
+              <strong>{{formatCurrency(selectedRequest.simulationResults?.monthlyPayment || 0)}}</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button 
+          *ngIf="selectedRequest.status === 'submitted' || selectedRequest.status === 'soumise'"
+          (click)="putInReview(selectedRequest)" 
+          class="btn btn-review"
+        >
+          <i class="material-icons">rate_review</i>
+          Mettre en Examen
+        </button>
+
+        <button 
+          *ngIf="selectedRequest.status === 'in_review'"
+          (click)="approveRequest(selectedRequest)" 
+          class="btn btn-approve"
+        >
+          <i class="material-icons">check_circle</i>
+          Approuver
+        </button>
+
+        <button 
+          *ngIf="selectedRequest.status === 'in_review'"
+          (click)="rejectRequest(selectedRequest)" 
+          class="btn btn-reject"
+        >
+          <i class="material-icons">cancel</i>
+          Rejeter
+        </button>
+
+        <button (click)="closeModal()" class="btn btn-secondary">
+          Fermer
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

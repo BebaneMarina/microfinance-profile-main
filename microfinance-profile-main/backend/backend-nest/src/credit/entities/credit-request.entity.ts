@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
-import { User } from '../../app/auth/entities/user.entity';
+import { Utilisateur } from '../../app/auth/entities/user.entity';
 
 // Enums
 export enum RequestStatus {
@@ -113,9 +113,9 @@ export class CreditRequest {
   updated_at: Date;
 
   // Relations
-  @ManyToOne(() => User, user => user.creditRequests)
+  @ManyToOne(() => Utilisateur, user => user.creditRequests)
   @JoinColumn({ name: 'user_id' })
-  user: User;
+  user: Utilisateur;
 
   // Propriétés virtuelles pour compatibilité
   recommendations?: string[];

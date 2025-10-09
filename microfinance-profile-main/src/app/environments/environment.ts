@@ -1,39 +1,54 @@
-// environments/environment.ts - CORRIGÉ
+// src/environments/environment.ts - VERSION CORRIGÉE COMPLÈTE
+
 export const environment = {
   production: false,
   
-  // ✅ CORRECTION : Configuration API principale - Port 3000 pour NestJS
+  // ==========================================
+  // CONFIGURATION NESTJS (Backend Principal)
+  // ==========================================
   apiUrl: 'http://localhost:3000',
+  nestUrl: 'http://localhost:3000',
   
-  // ✅ CORRECTION : Configuration API crédit long - Port 3000 pour NestJS
-  creditLongApiUrl: 'http://localhost:3000/credit-long',
-  
-  // Configuration Flask ML (optionnelle)
+  // ==========================================
+  // CONFIGURATION FLASK (ML & Scoring)
+  // ==========================================
+  flaskUrl: 'http://localhost:5000',
   flaskApiUrl: 'http://localhost:5000',
-  mlApiUrl: 'http://localhost:5000/credit-simulation',
   
-  // Timeouts en millisecondes
+  
+  // ==========================================
+  // TIMEOUTS
+  // ==========================================
   apiTimeout: 10000,
   uploadTimeout: 30000,
   
-  // Configuration du client
+  // ==========================================
+  // CONFIGURATION CLIENT
+  // ==========================================
   maxRetries: 2,
   enableOfflineMode: true,
   enableLocalStorage: true,
   
-  // Configuration des fonctionnalités
+  // ==========================================
+  // FONCTIONNALITÉS
+  // ==========================================
   features: {
     creditLong: true,
     realTimeScoring: true,
     documentUpload: true,
-    notifications: true
+    notifications: true,
+    postgresqlIntegration: true
   },
   
-  // Configuration debug
+  // ==========================================
+  // DEBUG & LOGS
+  // ==========================================
   debug: true,
   logLevel: 'info',
   
-  // Configuration de l'application
-  appName: 'Microfinance Platform',
-  version: '1.0.0'
+  // ==========================================
+  // INFORMATIONS APPLICATION
+  // ==========================================
+  appName: 'Bamboo EMF - Microfinance Platform',
+  version: '2.0.0'
 };

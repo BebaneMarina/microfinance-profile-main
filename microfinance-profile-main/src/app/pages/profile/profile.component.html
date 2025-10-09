@@ -1,4 +1,4 @@
-<!-- profile.component.html - Enhanced avec gestion complète des crédits -->
+<!-- profile.component.html - VERSION COMPLETE CORRIGEE SANS EMOJIS -->
 
 <div class="dashboard-container">
   <!-- Header avec profil utilisateur et restrictions -->
@@ -18,10 +18,10 @@
         <h1>Bienvenue, {{ client?.name || 'Client' }}</h1>
         <p>Votre partenaire financier de confiance</p>
         
-        <!-- NOUVEAU: Indicateur de restrictions de crédit -->
+        <!-- Indicateur de restrictions de credit -->
         <div class="credit-eligibility-badge" [ngClass]="{'blocked': !canApplyForCredit, 'eligible': canApplyForCredit}">
           <i class="material-icons">{{ canApplyForCredit ? 'verified' : 'block' }}</i>
-          <span>{{ canApplyForCredit ? 'Éligible aux crédits' : 'Restrictions actives' }}</span>
+          <span>{{ canApplyForCredit ? 'Eligible aux credits' : 'Restrictions actives' }}</span>
           <div class="restriction-tooltip" *ngIf="!canApplyForCredit">
             {{ creditBlockReason }}
           </div>
@@ -29,11 +29,11 @@
       </div>
     </div>
     
-    <!-- Score de crédit amélioré -->
+    <!-- Score de credit ameliore -->
     <div class="credit-score-card" [style.background]="getCreditScoreColor() + '22'">
       <div class="score-header">
-        <h3>Votre score de crédit</h3>
-        <button class="refresh-btn" (click)="refreshCreditScore()" [disabled]="isScoreUpdating">
+        <h3>Votre score de credit</h3>
+        <button class="refresh-btn" (click)="refreshScoreML()" [disabled]="isScoreUpdating">
           <i class="material-icons" [class.rotating]="isScoreUpdating">refresh</i>
         </button>
       </div>
@@ -47,7 +47,7 @@
       </div>
       <div class="score-details">
         <div class="detail-item">
-          <span>Montant éligible</span>
+          <span>Montant eligible</span>
           <strong>{{ formatCurrency(globalStats?.eligibleAmount) }}</strong>
         </div>
         <div class="detail-item">
@@ -55,26 +55,26 @@
           <strong>{{ getRiskLevelText() }}</strong>
         </div>
         <div class="detail-item" *ngIf="isScoreRealTime()">
-          <span>Temps réel</span>
+          <span>Temps reel</span>
           <strong class="realtime-indicator">{{ getLastScoreUpdate() }}</strong>
         </div>
       </div>
     </div>
   </header>
 
-  <!-- NOUVELLE SECTION: Vue d'ensemble financière avec dettes -->
+  <!-- Vue d'ensemble financiere avec dettes -->
   <section class="financial-overview">
-    <!-- Solde de crédit disponible -->
+    <!-- Solde de credit disponible -->
     <div class="overview-card primary">
       <i class="material-icons">account_balance_wallet</i>
       <div class="card-content">
         <span class="label">Solde disponible</span>
         <span class="value">{{ formatCurrency(accountBalance?.currentBalance || 0) }}</span>
-        <span class="subtitle">Crédit utilisable</span>
+        <span class="subtitle">Credit utilisable</span>
       </div>
     </div>
 
-    <!-- NOUVELLE CARTE: Dettes actives -->
+    <!-- Dettes actives -->
     <div class="overview-card debt-card" [ngClass]="{'high-debt': shouldShowScoreDebtWarning()}">
       <i class="material-icons">trending_down</i>
       <div class="card-content">
@@ -94,526 +94,293 @@
       </div>
     </div>
     
-    <!-- Crédits actifs -->
+    <!-- Credits actifs -->
     <div class="overview-card">
       <i class="material-icons">credit_card</i>
       <div class="card-content">
-        <span class="label">Crédits actifs</span>
+        <span class="label">Credits actifs</span>
         <span class="value">{{ getActiveCreditCount() }}/2</span>
-        <span class="subtitle">Maximum autorisé</span>
+        <span class="subtitle">Maximum autorise</span>
       </div>
     </div>
 
-    <!-- Total remboursé -->
+    <!-- Total rembourse -->
     <div class="overview-card">
       <i class="material-icons">check_circle</i>
       <div class="card-content">
-        <span class="label">Total remboursé</span>
+        <span class="label">Total rembourse</span>
         <span class="value">{{ formatCurrency(globalStats?.totalReimbursed || 0) }}</span>
         <span class="subtitle">Historique complet</span>
       </div>
     </div>
   </section>
 
-  <!-- NOUVELLE SECTION: Gestion des crédits actifs -->
+  <!-- SECTION Dernieres Demandes -->
+  <section class="recent-requests-section" *ngIf="recentCreditRequests.length > 0">
+    <div class="section-header">
+      <h2>
+        <i class="material-icons">history</i>
+        Mes Dernieres Demandes
+      </h2>
+      <span class="section-count">{{ recentCreditRequests.length }}</span>
+    </div>
+
+    <div class="requests-list">
+      <div class="request-card" 
+           *ngFor="let request of recentCreditRequests"
+           [attr.data-status]="request.status">
+        
+        <div class="request-header">
+          <div class="request-info">
+            <span class="request-number">{{ request.requestNumber }}</span>
+            <span class="request-type">{{ getCreditTypeName(request.type) }}</span>
+          </div>
+          <span class="request-status-badge" 
+                [ngClass]="'status-' + request.status">
+            {{ getRequestStatusText(request.status) }}
+          </span>
+        </div>
+
+        <div class="request-details">
+          <div class="detail-item">
+            <i class="material-icons">attach_money</i>
+            <span class="detail-label">Montant demande:</span>
+            <span class="detail-value">{{ formatCurrency(request.amount) }}</span>
+          </div>
+          
+          <div class="detail-item" *ngIf="request.approvedAmount">
+            <i class="material-icons">check_circle</i>
+            <span class="detail-label">Montant approuve:</span>
+            <span class="detail-value approved">{{ formatCurrency(request.approvedAmount) }}</span>
+          </div>
+
+          <div class="detail-item">
+            <i class="material-icons">event</i>
+            <span class="detail-label">Date:</span>
+            <span class="detail-value">{{ formatDate(request.submissionDate) }}</span>
+          </div>
+        </div>
+
+        <!-- Statut de paiement -->
+        <div class="request-payment-status" *ngIf="request.status === 'APPROVED'">
+          <div class="payment-progress-bar">
+            <div class="progress-fill" 
+                 [class.paid]="isRequestFullyPaid(request.id)"
+                 [style.width.%]="getRequestPaymentPercentage(request.id)">
+            </div>
+          </div>
+          <div class="payment-stats">
+            <i class="material-icons">{{ isRequestFullyPaid(request.id) ? 'check_circle' : 'schedule' }}</i>
+            <span [class.paid-badge]="isRequestFullyPaid(request.id)">
+              {{ isRequestFullyPaid(request.id) ? 'Entierement paye' : 'Paiement en cours (' + getRequestPaymentPercentage(request.id).toFixed(0) + '%)' }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION Credits avec statut de paiement -->
   <section class="credit-management-section" *ngIf="activeCreditsFromService.length > 0">
     <div class="section-header">
       <h2>
         <i class="material-icons">account_balance</i>
-        Mes Crédits Enregistrés
+        Mes Credits Enregistres
       </h2>
       <div class="section-actions">
         <button class="btn-secondary" (click)="openActiveCreditsModal()">
           <i class="material-icons">visibility</i>
-          Voir tous
+          Voir tous ({{ activeCreditsFromService.length }})
         </button>
       </div>
     </div>
     
     <div class="credits-grid">
-      <div class="credit-card enhanced" *ngFor="let credit of getDisplayedCredits()" [attr.data-status]="credit.status">
+      <div class="credit-card enhanced" 
+           *ngFor="let credit of getDisplayedCredits()" 
+           [attr.data-status]="credit.status"
+           [class.fully-paid]="isCreditFullyPaid(credit)">
+        
         <div class="credit-header">
           <h3>{{ getCreditTypeName(credit.type) }}</h3>
-          <span class="credit-status-badge" [ngClass]="'status-' + credit.status">
+          <span class="credit-status-badge" 
+                [style.background-color]="getCreditStatusColor(credit)">
             <i class="material-icons">
-              {{ credit.status === 'active' ? 'account_balance' : (credit.status === 'paid' ? 'check_circle' : 'warning') }}
+              {{ isCreditFullyPaid(credit) ? 'check_circle' : (credit.status === 'active' ? 'account_balance' : 'warning') }}
             </i>
-            {{ getCreditStatusText(credit.status) }}
+            {{ getCreditStatusBadge(credit) }}
           </span>
+        </div>
+        
+        <!-- Badge de paiement -->
+        <div class="payment-status-badge" *ngIf="isCreditFullyPaid(credit)">
+          <i class="material-icons">check_circle</i>
+          <span>Entierement paye !</span>
         </div>
         
         <div class="credit-amounts">
           <div class="amount-row">
-            <span class="amount-label">Montant emprunté :</span>
+            <span class="amount-label">Montant emprunte :</span>
             <span class="amount-value original">{{ formatCurrency(credit.amount) }}</span>
           </div>
           <div class="amount-row">
-            <span class="amount-label">Total à rembourser :</span>
+            <span class="amount-label">Total a rembourser :</span>
             <span class="amount-value total">{{ formatCurrency(credit.totalAmount) }}</span>
           </div>
-          <div class="amount-row primary" *ngIf="isCreditActive(credit)">
-            <span class="amount-label">Restant à payer :</span>
+          
+          <!-- Montant paye -->
+          <div class="amount-row" *ngIf="hasCreditPayments(credit)">
+            <span class="amount-label">Deja rembourse :</span>
+            <span class="amount-value paid">{{ formatCurrency(credit.totalPaid || 0) }}</span>
+          </div>
+          
+          <div class="amount-row primary" *ngIf="!isCreditFullyPaid(credit)">
+            <span class="amount-label">Restant a payer :</span>
             <span class="amount-value remaining">{{ formatCurrency(credit.remainingAmount) }}</span>
           </div>
         </div>
         
-        <div class="credit-progress" *ngIf="isCreditActive(credit)">
-          <div class="progress-bar">
-            <div class="progress-fill" 
-                 [style.width.%]="getCreditReimbursementPercentage(credit)">
-            </div>
-          </div>
-          <span class="progress-label">
-            {{ getCreditReimbursementPercentage(credit).toFixed(1) }}% remboursé
+        <!-- Compteur de paiements -->
+        <div class="payment-counter" *ngIf="hasCreditPayments(credit)">
+          <i class="material-icons">payment</i>
+          <span>{{ credit.paymentsCount }} paiement(s) effectue(s)</span>
+          <span class="last-payment" *ngIf="credit.lastPaymentDate">
+            Dernier : {{ formatDate(credit.lastPaymentDate) }}
           </span>
         </div>
         
-        <div class="credit-dates">
-          <div class="date-info">
-            <i class="material-icons">event_available</i>
-            <span>Accordé le {{ formatDate(credit.approvedDate) }}</span>
-          </div>
-          <div class="date-info due-date" *ngIf="isCreditActive(credit)">
-            <i class="material-icons">schedule</i>
-            <span>Échéance : {{ formatDate(credit.dueDate) }}</span>
-          </div>
-        </div>
-        
-        <div class="credit-actions" *ngIf="isCreditActive(credit)">
-          <button class="btn-primary" (click)="makePayment(credit.id)">
-            <i class="material-icons">payment</i>
-            Rembourser
-          </button>
-        </div>
-        
-        <!-- Impact sur les dettes -->
-        <div class="debt-impact-indicator">
-          <i class="material-icons">trending_up</i>
-          <span>Impact sur vos dettes : +{{ formatCurrency(credit.remainingAmount) }}</span>
-        </div>
-      </div>
-    </div>
-    
-    <!-- Afficher un message s'il y a plus de 3 crédits -->
-    <div class="more-credits-notice" *ngIf="hasAdditionalCredits()">
-      <p>{{ getAdditionalCreditsCount() }} crédit(s) supplémentaire(s)</p>
-      <button class="btn-link" (click)="openActiveCreditsModal()">Voir tous les crédits</button>
-    </div>
-  </section>
-
-  <!-- NOUVELLE SECTION: Restrictions et prochaines demandes -->
-  <section class="credit-restrictions-section" *ngIf="creditRestrictions">
-    <div class="section-header">
-      <h2>
-        <i class="material-icons">security</i>
-        Conditions de Crédit
-      </h2>
-    </div>
-    
-    <div class="restrictions-grid">
-      <div class="restriction-card" [ngClass]="{'blocked': !canApplyForCredit}">
-        <div class="restriction-header">
-          <i class="material-icons">{{ canApplyForCredit ? 'check_circle' : 'block' }}</i>
-          <h3>{{ canApplyForCredit ? 'Éligible' : 'Restrictions' }}</h3>
-        </div>
-        
-        <div class="restriction-content">
-          <div class="restriction-item">
-            <span class="restriction-label">Crédits actifs :</span>
-            <span class="restriction-value" [ngClass]="getActiveCreditCountClasses()">
-              {{ creditRestrictions.activeCreditCount }}/2
-            </span>
-          </div>
-          
-          <div class="restriction-item">
-            <span class="restriction-label">Ratio d'endettement :</span>
-            <span class="restriction-value" [ngClass]="getCurrentDebtRatioClasses()">
-              {{ getCurrentDebtRatioPercentage().toFixed(1) }}%
-            </span>
-          </div>
-          
-          <div class="restriction-item" *ngIf="creditRestrictions.nextEligibleDate">
-            <span class="restriction-label">Prochaine demande :</span>
-            <span class="restriction-value">
-              {{ formatDate(creditRestrictions.nextEligibleDate) }}
-            </span>
-          </div>
-          
-          <div class="restriction-reasons" *ngIf="!canApplyForCredit">
-            <h4>Raisons du blocage :</h4>
-            <ul>
-              <li>{{ creditBlockReason }}</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-      
-      <!-- Conseils pour améliorer l'éligibilité -->
-      <div class="improvement-suggestions">
-        <h3>
-          <i class="material-icons">lightbulb</i>
-          Conseils pour améliorer votre éligibilité
-        </h3>
-        <ul class="suggestions-list">
-          <li *ngIf="isRestrictedByMaxCredits()">
-            <i class="material-icons">payments</i>
-            Remboursez vos crédits actuels pour pouvoir en demander de nouveaux
-          </li>
-          <li *ngIf="isRestrictedByDebtRatio()">
-            <i class="material-icons">trending_down</i>
-            Réduisez votre ratio d'endettement en remboursant vos dettes
-          </li>
-          <li *ngIf="isScoreBelowThreshold()">
-            <i class="material-icons">trending_up</i>
-            Améliorez votre score en effectuant des paiements réguliers
-          </li>
-          <li>
-            <i class="material-icons">schedule</i>
-            Respectez les délais entre les demandes (30 jours minimum)
-          </li>
-        </ul>
-      </div>
-    </div>
-  </section>
-
-  <!-- Section principale du solde de compte (existante, conservée) -->
-  <div class="account-balance-section">
-    <!-- Carte de solde de compte -->
-    <div class="account-balance-card" *ngIf="accountBalance">
-      <div class="card-header">
-        <h2>
-          <i class="material-icons">account_balance_wallet</i>
-          Mon Solde de Crédit
-        </h2>
-        <button class="toggle-btn" (click)="toggleAccountDetails()">
-          <i class="material-icons">{{ showAccountDetails ? 'expand_less' : 'expand_more' }}</i>
-        </button>
-      </div>
-      
-      <div class="balance-overview">
-        <div class="balance-grid">
-          <div class="balance-item current">
-            <div class="balance-icon">
-              <i class="material-icons">account_balance_wallet</i>
-            </div>
-            <div class="balance-content">
-              <span class="balance-label">Solde Actuel</span>
-              <span class="balance-value current">{{ formatCurrency(accountBalance.currentBalance) }}</span>
-              <span class="balance-status" 
-                    [class]="accountBalance.currentBalance > 0 ? 'positive' : 'zero'">
-                {{ accountBalance.currentBalance > 0 ? 'Disponible' : 'Aucun crédit' }}
-              </span>
-            </div>
-          </div>
-          
-          <div class="balance-item total-credited">
-            <div class="balance-icon">
-              <i class="material-icons">trending_up</i>
-            </div>
-            <div class="balance-content">
-              <span class="balance-label">Total Crédité</span>
-              <span class="balance-value credited">{{ formatCurrency(accountBalance.totalCredited) }}</span>
-              <span class="balance-info">Depuis l'ouverture</span>
-            </div>
-          </div>
-          
-          <div class="balance-item total-used">
-            <div class="balance-icon">
-              <i class="material-icons">trending_down</i>
-            </div>
-            <div class="balance-content">
-              <span class="balance-label">Total Utilisé</span>
-              <span class="balance-value used">{{ formatCurrency(accountBalance.totalUsed) }}</span>
-              <span class="balance-info">Achats effectués</span>
-            </div>
-          </div>
-        </div>
-        
-        <!-- Barre de progression du solde -->
-        <div class="balance-progress" *ngIf="accountBalance.totalCredited > 0">
-          <div class="progress-label">
-            <span>Utilisation du crédit</span>
-            <span class="progress-percentage">
-              {{ ((accountBalance.totalUsed / accountBalance.totalCredited) * 100).toFixed(1) }}%
-            </span>
+        <!-- Barre de progression -->
+        <div class="credit-progress" *ngIf="!isCreditFullyPaid(credit)">
+          <div class="progress-header">
+            <span>Progression</span>
+            <strong>{{ credit.percentagePaid || 0 }}%</strong>
           </div>
           <div class="progress-bar">
             <div class="progress-fill" 
-                 [style.width.%]="(accountBalance.totalUsed / accountBalance.totalCredited) * 100">
+                 [style.width.%]="credit.percentagePaid || 0"
+                 [style.background-color]="getCreditStatusColor(credit)">
             </div>
           </div>
           <div class="progress-info">
-            <span class="available">
-              Disponible: {{ formatCurrency(accountBalance.currentBalance) }}
-            </span>
-            <span class="used">
-              Utilisé: {{ formatCurrency(accountBalance.totalUsed) }}
-            </span>
-          </div>
-        </div>
-
-        <!-- Message si aucun crédit -->
-        <div class="no-credit-message" *ngIf="accountBalance.totalCredited === 0">
-          <div class="no-credit-icon">
-            <i class="material-icons">credit_card_off</i>
-          </div>
-          <h3>Aucun crédit actuel</h3>
-          <p>Demandez votre premier crédit pour commencer à utiliser nos services</p>
-          <button class="btn-primary" (click)="openQuickCreditModal()" [disabled]="!canApplyForCredit">
-            <i class="material-icons">add_card</i>
-            {{ canApplyForCredit ? 'Demander un crédit' : 'Demandes bloquées' }}
-          </button>
-        </div>
-      </div>
-
-      <!-- Section des détails (existante, conservée) -->
-      <div class="account-details" *ngIf="showAccountDetails">
-        <!-- Le contenu existant reste identique -->
-        <div class="details-header">
-          <h3>
-            <i class="material-icons">history</i>
-            Historique des Transactions
-          </h3>
-          <div class="transaction-stats">
-            <span class="transaction-count">{{ accountBalance.transactions.length }} transaction(s)</span>
-            <span class="last-transaction" *ngIf="accountBalance.lastTransaction">
-              Dernière: {{ getTimeAgo(accountBalance.lastTransaction) }}
-            </span>
+            {{ getCreditProgressInfo(credit) }}
           </div>
         </div>
         
-        <div class="transactions-container">
-          <div class="transactions-list" *ngIf="accountBalance.transactions.length > 0; else noTransactions">
-            <div class="transaction-item" 
-                 *ngFor="let transaction of accountBalance.transactions; let i = index"
-                 [class]="transaction.type">
-              <div class="transaction-icon">
-                <i class="material-icons" [style.color]="getTransactionColor(transaction.type)">
-                  {{ getTransactionIcon(transaction.type) }}
-                </i>
-              </div>
-              <div class="transaction-content">
-                <div class="transaction-info">
-                  <span class="transaction-description">{{ transaction.description }}</span>
-                  <span class="transaction-date">{{ formatTransactionDate(transaction.date) }}</span>
-                  <span class="transaction-id">ID: {{ transaction.id.slice(-8) }}</span>
-                </div>
-                <div class="transaction-amounts">
-                  <span class="transaction-amount" [style.color]="getTransactionColor(transaction.type)">
-                    {{ transaction.type === 'credit' ? '+' : '-' }}{{ formatCurrency(transaction.amount) }}
-                  </span>
-                  <span class="transaction-balance">
-                    Solde: {{ formatCurrency(transaction.balance) }}
-                  </span>
-                  <span class="transaction-type" [class]="transaction.type">
-                    {{ transaction.type === 'credit' ? 'Crédit' : 'Débit' }}
-                  </span>
-                </div>
-              </div>
-            </div>
+        <!-- Dates -->
+        <div class="credit-dates">
+          <div class="date-info">
+            <i class="material-icons">event_available</i>
+            <span>Accorde le {{ formatDate(credit.approvedDate) }}</span>
           </div>
-          
-          <ng-template #noTransactions>
-            <div class="no-transactions">
-              <i class="material-icons">receipt_long</i>
-              <h4>Aucune transaction</h4>
-              <p>Vos transactions apparaîtront ici une fois que vous aurez effectué votre premier crédit</p>
-            </div>
-          </ng-template>
+          <div class="date-info due-date" *ngIf="!isCreditFullyPaid(credit)">
+            <i class="material-icons">schedule</i>
+            <span>{{ getDaysUntilDueText(credit) }}</span>
+          </div>
         </div>
         
-        <!-- Actions rapides (conservées) -->
-        <div class="quick-actions" *ngIf="accountBalance.currentBalance > 0">
-          <div class="actions-header">
-            <h4>
-              <i class="material-icons">flash_on</i>
-              Actions Rapides
-            </h4>
-            <span class="actions-subtitle">Simuler des achats avec votre crédit</span>
-          </div>
-          <div class="actions-grid">
-            <button class="action-btn" 
-                    (click)="useCredit(10000, 'Simulation achat 10k')"
-                    [disabled]="accountBalance.currentBalance < 10000">
-              <i class="material-icons">shopping_cart</i>
-              <span class="action-amount">{{ formatCurrency(10000) }}</span>
-              <span class="action-label">Petit achat</span>
-            </button>
-            <button class="action-btn" 
-                    (click)="useCredit(25000, 'Simulation achat 25k')"
-                    [disabled]="accountBalance.currentBalance < 25000">
-              <i class="material-icons">store</i>
-              <span class="action-amount">{{ formatCurrency(25000) }}</span>
-              <span class="action-label">Achat moyen</span>
-            </button>
-            <button class="action-btn" 
-                    (click)="useCredit(50000, 'Simulation achat 50k')"
-                    [disabled]="accountBalance.currentBalance < 50000">
-              <i class="material-icons">local_mall</i>
-              <span class="action-amount">{{ formatCurrency(50000) }}</span>
-              <span class="action-label">Gros achat</span>
-            </button>
-            <button class="action-btn custom-amount" 
-                    (click)="openCustomAmountModal()"
-                    [disabled]="accountBalance.currentBalance <= 0">
-              <i class="material-icons">edit</i>
-              <span class="action-amount">Montant</span>
-              <span class="action-label">Personnalisé</span>
-            </button>
-          </div>
-          
-          <!-- Bouton pour utiliser tout le solde -->
-          <div class="use-all-section" *ngIf="accountBalance.currentBalance > 0">
-            <button class="use-all-btn" 
-                    (click)="useCredit(accountBalance.currentBalance, 'Utilisation totale du crédit')">
-              <i class="material-icons">money_off</i>
-              <span>Utiliser tout le solde ({{ formatCurrency(accountBalance.currentBalance) }})</span>
-            </button>
-          </div>
+        <!-- Actions -->
+        <div class="credit-actions" *ngIf="!isCreditFullyPaid(credit)">
+          <button class="btn-primary btn-pay" (click)="makePayment(credit.id)">
+            <i class="material-icons">payment</i>
+            Effectuer un paiement
+          </button>
+          <button class="btn-secondary btn-simulate" (click)="simulatePayment(credit.id)">
+            <i class="material-icons">calculate</i>
+            Simuler impact
+          </button>
         </div>
-
-        <!-- Section de résumé (conservée) -->
-        <div class="account-summary" *ngIf="accountBalance.transactions.length > 0">
-          <h4>
-            <i class="material-icons">analytics</i>
-            Résumé du Compte
-          </h4>
-          <div class="summary-grid">
-            <div class="summary-item">
-              <span class="summary-label">Nombre de crédits:</span>
-              <span class="summary-value">
-                {{ filterTransactions(accountBalance.transactions, 'credit').length }}
-              </span>
-            </div>
-            <div class="summary-item">
-              <span class="summary-label">Nombre d'achats:</span>
-              <span class="summary-value">
-                {{ filterTransactions(accountBalance.transactions, 'debit').length }}
-              </span>
-            </div>
-            <div class="summary-item">
-              <span class="summary-label">Montant moyen par achat:</span>
-              <span class="summary-value" 
-                    *ngIf="filterTransactions(accountBalance.transactions, 'debit').length > 0">
-                {{ formatCurrency(accountBalance.totalUsed / filterTransactions(accountBalance.transactions, 'debit').length) }}
-              </span>
-              <span class="summary-value" *ngIf="filterTransactions(accountBalance.transactions, 'debit').length === 0">
-                -
-              </span>
-            </div>
-            <div class="summary-item">
-              <span class="summary-label">Taux d'utilisation:</span>
-              <span class="summary-value">
-                {{ accountBalance.totalCredited > 0 ? ((accountBalance.totalUsed / accountBalance.totalCredited) * 100).toFixed(1) : 0 }}%
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Modal pour montant personnalisé (conservé) -->
-<div class="custom-amount-modal" *ngIf="showCustomAmountModal">
-  <div class="modal-backdrop" (click)="closeCustomAmountModal()"></div>
-  <div class="modal-content">
-    <div class="modal-header">
-      <h3>
-        <i class="material-icons">edit</i>
-        Montant Personnalisé
-      </h3>
-      <button class="close-btn" (click)="closeCustomAmountModal()">
-        <i class="material-icons">close</i>
-      </button>
-    </div>
-    
-    <div class="modal-body">
-      <div class="balance-display">
-        <span class="balance-label">Solde disponible:</span>
-        <span class="balance-amount">{{ formatCurrency(accountBalance.currentBalance) }}</span>
-      </div>
-      
-      <div class="form-group">
-        <label for="customAmount">Montant à utiliser:</label>
-        <div class="amount-input-container">
-          <input 
-            type="number" 
-            id="customAmount"
-            [(ngModel)]="customAmount"
-            name="customAmount"
-            [min]="1000" 
-            [max]="accountBalance.currentBalance"
-            step="1000"
-            class="amount-input"
-            placeholder="Entrez le montant">
-          <span class="currency-suffix">FCFA</span>
-        </div>
-      </div>
-      
-      <div class="form-group">
-        <label for="customDescription">Description (optionnelle):</label>
-        <input 
-          type="text" 
-          id="customDescription"
-          [(ngModel)]="customDescription"
-          name="customDescription"
-          class="description-input"
-          placeholder="Ex: Achat en ligne, Paiement service...">
-      </div>
-      
-      <div class="amount-suggestions">
-        <span>Montants rapides:</span>
-        <div class="suggestion-buttons">
-          <button type="button" 
-                  class="suggestion-btn" 
-                  (click)="customAmount = 5000"
-                  [disabled]="accountBalance.currentBalance < 5000">
-            5k
-          </button>
-          <button type="button" 
-                  class="suggestion-btn" 
-                  (click)="customAmount = 15000"
-                  [disabled]="accountBalance.currentBalance < 15000">
-            15k
-          </button>
-          <button type="button" 
-                  class="suggestion-btn" 
-                  (click)="customAmount = 30000"
-                  [disabled]="accountBalance.currentBalance < 30000">
-            30k
-          </button>
-          <button type="button" 
-                  class="suggestion-btn" 
-                  (click)="customAmount = accountBalance.currentBalance">
-            Tout
-          </button>
+        
+        <!-- Message si paye -->
+        <div class="paid-congratulations" *ngIf="isCreditFullyPaid(credit)">
+          <i class="material-icons">celebration</i>
+          <span>Felicitations ! Credit integralement rembourse</span>
         </div>
       </div>
     </div>
     
-    <div class="modal-footer">
-      <button class="btn-secondary" (click)="closeCustomAmountModal()">
-        Annuler
-      </button>
-      <button class="btn-primary" 
-              (click)="useCustomAmount()"
-              [disabled]="!customAmount || customAmount <= 0 || customAmount > accountBalance.currentBalance">
-        <i class="material-icons">payment</i>
-        Utiliser {{ formatCurrency(customAmount || 0) }}
+    <!-- Plus de credits -->
+    <div class="more-credits-notice" *ngIf="hasAdditionalCredits()">
+      <p>+ {{ getAdditionalCreditsCount() }} credit(s) supplementaire(s)</p>
+      <button class="btn-link" (click)="openActiveCreditsModal()">Voir tous les credits</button>
+    </div>
+  </section>
+
+  <!-- SECTION Solde de compte -->
+  <section class="account-balance-section" *ngIf="accountBalance">
+    <div class="section-header">
+      <h2>
+        <i class="material-icons">account_balance_wallet</i>
+        Mon Solde de Credit
+      </h2>
+      <button class="toggle-btn" (click)="toggleAccountDetails()">
+        <i class="material-icons">{{ showAccountDetails ? 'expand_less' : 'expand_more' }}</i>
       </button>
     </div>
+    
+    <div class="balance-overview">
+      <div class="balance-grid">
+        <div class="balance-item current">
+          <div class="balance-icon">
+            <i class="material-icons">account_balance_wallet</i>
+          </div>
+          <div class="balance-content">
+            <span class="balance-label">Solde Actuel</span>
+            <span class="balance-value current">{{ formatCurrency(accountBalance.currentBalance) }}</span>
+            <span class="balance-status" 
+                  [class]="accountBalance.currentBalance > 0 ? 'positive' : 'zero'">
+              {{ accountBalance.currentBalance > 0 ? 'Disponible' : 'Aucun credit' }}
+            </span>
+          </div>
+        </div>
+        
+        <div class="balance-item total-credited">
+          <div class="balance-icon">
+            <i class="material-icons">trending_up</i>
+          </div>
+          <div class="balance-content">
+            <span class="balance-label">Total Credite</span>
+            <span class="balance-value credited">{{ formatCurrency(accountBalance.totalCredited) }}</span>
+            <span class="balance-info">Depuis l'ouverture</span>
+          </div>
+        </div>
+        
+        <div class="balance-item total-used">
+          <div class="balance-icon">
+            <i class="material-icons">trending_down</i>
+          </div>
+          <div class="balance-content">
+            <span class="balance-label">Total Utilise</span>
+            <span class="balance-value used">{{ formatCurrency(accountBalance.totalUsed) }}</span>
+            <span class="balance-info">Achats effectues</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Bouton de demande rapide -->
+  <div class="quick-action-section">
+    <button class="btn-primary-large" 
+            (click)="openQuickCreditModal()" 
+            [disabled]="!canApplyForCredit">
+      <i class="material-icons">add_card</i>
+      <span *ngIf="canApplyForCredit">Demander un Credit Rapide</span>
+      <span *ngIf="!canApplyForCredit">Demandes bloquees</span>
+    </button>
+    <p class="action-note" *ngIf="!canApplyForCredit">
+      {{ creditBlockReason }}
+    </p>
   </div>
 </div>
 
-<!-- MODAL DE CRÉDIT RAPIDE AMÉLIORÉ avec vérifications -->
+<!-- MODAL CREDIT RAPIDE -->
 <div class="quick-credit-modal enhanced" *ngIf="showQuickCreditModal">
   <div class="modal-backdrop" (click)="closeQuickCreditModal()"></div>
   <div class="modal-content">
     <div class="modal-header">
       <h2>
         <i class="material-icons">flash_on</i>
-        Demande de Crédit Rapide
+        Demande de Credit Rapide
       </h2>
       <button class="close-btn" (click)="closeQuickCreditModal()">
         <i class="material-icons">close</i>
@@ -621,12 +388,12 @@
     </div>
     
     <div class="modal-body">
-      <!-- NOUVEAU: Vérification des restrictions -->
+      <!-- Verification restrictions -->
       <div class="restrictions-check" *ngIf="!canApplyForCredit">
         <div class="restriction-alert">
           <i class="material-icons">block</i>
           <div class="restriction-content">
-            <h3>Demande bloquée</h3>
+            <h3>Demande bloquee</h3>
             <p>{{ creditBlockReason }}</p>
           </div>
         </div>
@@ -637,71 +404,39 @@
         </div>
       </div>
 
-      <!-- Formulaire de demande (visible seulement si éligible) -->
+      <!-- Formulaire -->
       <div class="credit-form-container" *ngIf="canApplyForCredit">
-        <!-- Affichage du score de crédit -->
+        <!-- Score ML -->
         <div class="credit-score-display">
-          <div class="score-circle" [style.background]="getCreditScoreColor()">
-            <div class="score-value">{{ getCurrentScore() | number:'1.1-1' }}/10</div>
+          <div class="score-circle" [style.border-color]="getCreditScoreColor()">
+            <div class="score-value">{{ getCurrentScore() | number:'1.1-1' }}</div>
+            <div class="score-label">/10</div>
           </div>
           <div class="score-info">
             <h3>{{ getCreditScoreStatus() }}</h3>
             <p>{{ getRiskLevelText() }}</p>
-            <p class="debt-warning" *ngIf="shouldShowScoreDebtWarning()">
-              <i class="material-icons">warning</i>
-              Ratio d'endettement élevé: {{ getFormattedDebtRatioFromService() }}%
+            
+            <p class="ml-indicator" *ngIf="hasRealTimeScore()">
+              <i class="material-icons">smart_toy</i>
+              Score calcule par {{ getModelType() }}
             </p>
           </div>
         </div>
         
-        <!-- NOUVEAU: Impact sur les dettes -->
-        <div class="debt-impact-preview" *ngIf="quickCredit.amount > 0">
-          <h4>
-            <i class="material-icons">trending_up</i>
-            Impact sur vos dettes
-          </h4>
-          <div class="impact-details">
-            <div class="impact-row">
-              <span>Dettes actuelles:</span>
-              <span class="current-debt">{{ formatCurrency(getTotalActiveDebt()) }}</span>
-            </div>
-            <div class="impact-row">
-              <span>Nouveau crédit (total):</span>
-              <span class="new-debt">+{{ formatCurrency(quickCredit.amount + (quickCredit.amount * 0.015)) }}</span>
-            </div>
-            <div class="impact-row total">
-              <span>Total après crédit:</span>
-              <span class="total-debt">{{ formatCurrency(getNewTotalDebtWithQuickCredit()) }}</span>
-            </div>
-            <div class="impact-row ratio">
-              <span>Nouveau ratio d'endettement:</span>
-              <span class="debt-ratio" [ngClass]="getDebtRatioClasses()">
-                {{ getNewDebtRatioWithQuickCredit().toFixed(1) }}%
-              </span>
-            </div>
-          </div>
-        </div>
-        
-        <!-- Montant approuvé -->
+        <!-- Montant approuve -->
         <div class="approved-amount">
-          <h3>Montant maximum approuvé</h3>
+          <h3>Montant maximum approuve</h3>
           <div class="amount-value">{{ formatCurrency(globalStats.eligibleAmount) }}</div>
           <p class="amount-note">
-            <i class="material-icons">info</i>
-            Vous pouvez choisir un montant inférieur à celui proposé
+            <i class="material-icons">auto_awesome</i>
+            Calcule automatiquement par notre IA
           </p>
-          <div class="restrictions-summary" *ngIf="creditRestrictions">
-            <small>
-              Crédits actifs: {{ creditRestrictions.activeCreditCount }}/2 • 
-              Ratio dette: {{ getCurrentDebtRatioPercentage().toFixed(1) }}%
-            </small>
-          </div>
         </div>
         
-        <!-- Formulaire de demande rapide -->
+        <!-- Formulaire -->
         <form class="quick-credit-form" (ngSubmit)="submitQuickCredit()">
           <div class="form-group">
-            <label for="creditType">Type de crédit</label>
+            <label for="creditType">Type de credit</label>
             <select 
               id="creditType" 
               [(ngModel)]="quickCredit.type" 
@@ -716,7 +451,7 @@
           </div>
           
           <div class="form-group">
-            <label for="amount">Montant souhaité</label>
+            <label for="amount">Montant souhaite</label>
             <div class="amount-input-container">
               <input 
                 type="number" 
@@ -727,7 +462,7 @@
                 [max]="globalStats.eligibleAmount"
                 step="5000"
                 class="amount-input"
-                placeholder="Entrez le montant souhaité">
+                required>
               <span class="currency-suffix">FCFA</span>
             </div>
             <div class="amount-slider-container">
@@ -739,92 +474,32 @@
                 [max]="globalStats.eligibleAmount"
                 [step]="5000"
                 class="amount-slider">
-              <div class="slider-labels">
-                <span>{{ formatCurrency(10000) }}</span>
-                <span>{{ formatCurrency(globalStats.eligibleAmount) }}</span>
-              </div>
             </div>
             <div class="amount-suggestions">
-              <span>Montants suggérés:</span>
-              <div class="suggestion-buttons">
-                <button type="button" 
-                        class="suggestion-btn" 
-                        (click)="setQuickCreditAmount(0.25)">
-                  25%
-                </button>
-                <button type="button" 
-                        class="suggestion-btn" 
-                        (click)="setQuickCreditAmount(0.50)">
-                  50%
-                </button>
-                <button type="button" 
-                        class="suggestion-btn" 
-                        (click)="setQuickCreditAmount(0.75)">
-                  75%
-                </button>
-                <button type="button" 
-                        class="suggestion-btn" 
-                        (click)="setQuickCreditAmount(1.0)">
-                  Max
-                </button>
-              </div>
+              <button type="button" class="suggestion-btn" (click)="setQuickCreditAmount(0.25)">25%</button>
+              <button type="button" class="suggestion-btn" (click)="setQuickCreditAmount(0.50)">50%</button>
+              <button type="button" class="suggestion-btn" (click)="setQuickCreditAmount(0.75)">75%</button>
+              <button type="button" class="suggestion-btn" (click)="setQuickCreditAmount(1.0)">Max</button>
             </div>
           </div>
           
-          <div class="form-group">
-            <label for="frequency">Fréquence de remboursement</label>
-            <select 
-              id="frequency" 
-              [(ngModel)]="quickCredit.frequency" 
-              name="frequency"
-              required>
-              <option value="mensuel">Mensuel</option>
-              <option value="bimensuel">Bi-mensuel</option>
-              <option value="fin_du_mois">Fin du mois</option>
-            </select>
-          </div>
-          
-          <!-- NOUVEAU: Avertissements conditionnels -->
-          <div class="credit-warnings" *ngIf="quickCredit.amount > 0">
-            <div class="warning-item" *ngIf="shouldShowHighDebtWarning()">
-              <i class="material-icons">error</i>
-              <span>⚠️ Ce crédit porterait votre ratio d'endettement au-dessus de 70%</span>
-            </div>
-            <div class="warning-item" *ngIf="shouldShowMultipleCreditInfo()">
-              <i class="material-icons">info</i>
-              <span>ℹ️ Vous aurez {{ getNewCreditCountAfterApplication() }}/2 crédits actifs après cette demande</span>
-            </div>
-          </div>
-          
-          <!-- Récapitulatif amélioré -->
+          <!-- Recapitulatif -->
           <div class="credit-summary">
             <h4>
               <i class="material-icons">receipt</i>
-              Récapitulatif
+              Recapitulatif
             </h4>
             <div class="summary-item">
-              <span>Montant demandé:</span>
+              <span>Montant demande:</span>
               <span class="summary-value">{{ formatCurrency(quickCredit.amount) }}</span>
             </div>
             <div class="summary-item">
-              <span>Frais de dossier (1.5%):</span>
+              <span>Frais (1.5%):</span>
               <span class="summary-value">{{ formatCurrency(quickCredit.amount * 0.015) }}</span>
             </div>
             <div class="summary-item total">
-              <span>Total à rembourser:</span>
-              <span class="summary-value">{{ formatCurrency(quickCredit.amount + (quickCredit.amount * 0.015)) }}</span>
-            </div>
-            <div class="summary-note">
-              <i class="material-icons">account_balance_wallet</i>
-              <span>Le montant sera crédité immédiatement sur votre compte</span>
-            </div>
-            <div class="summary-note debt-note">
-              <i class="material-icons">trending_up</i>
-              <span>Ce montant sera automatiquement ajouté à vos dettes enregistrées</span>
-            </div>
-            <div class="summary-note restriction-note">
-              <i class="material-icons">schedule</i>
-              <span>Prochaine demande possible dans 30 jours après approbation</span>
+              <span>Total a rembourser:</span>
+              <span class="summary-value">{{ formatCurrency(quickCredit.amount * 1.015) }}</span>
             </div>
           </div>
           
@@ -835,21 +510,20 @@
             [disabled]="isSubmitting || quickCredit.amount < 10000 || quickCredit.amount > globalStats.eligibleAmount">
             <i class="material-icons" *ngIf="!isSubmitting">send</i>
             <i class="material-icons spinning" *ngIf="isSubmitting">sync</i>
-            {{ isSubmitting ? 'Traitement en cours...' : 'Valider et enregistrer le crédit' }}
+            {{ isSubmitting ? 'Traitement...' : 'Valider et recevoir le credit' }}
           </button>
           
-          <!-- NOUVEAU: Notice importante -->
+          <!-- Notice -->
           <div class="important-notice">
             <h5>
               <i class="material-icons">info</i>
-              Important à savoir
+              Important
             </h5>
             <ul>
-              <li>✅ Ce crédit sera automatiquement enregistré dans vos dettes</li>
-              <li>📊 Votre score de crédit sera recalculé avec les nouvelles dettes</li>
-              <li>🔒 Des restrictions s'appliqueront pour les prochaines demandes</li>
-              <li>⏰ Délai minimum de 30 jours avant la prochaine demande</li>
-              <li>📈 Maximum 2 crédits actifs simultanément</li>
+              <li>Credit enregistre automatiquement dans vos dettes</li>
+              <li>Score recalcule avec Random Forest ML</li>
+              <li>30 jours minimum avant nouvelle demande</li>
+              <li>Maximum 2 credits actifs</li>
             </ul>
           </div>
         </form>
@@ -858,14 +532,81 @@
   </div>
 </div>
 
-<!-- NOUVEAU: Modal des crédits actifs détaillé -->
+<!-- MODAL MESSAGE SUCCES DECAISSEMENT -->
+<div class="success-modal" *ngIf="showSuccessModal">
+  <div class="modal-backdrop" (click)="closeSuccessModal()"></div>
+  <div class="modal-content success">
+    <div class="modal-header success-header">
+      <div class="success-icon-container">
+        <i class="material-icons success-icon">check_circle</i>
+      </div>
+      <h2>Demande Enregistree avec Succes</h2>
+      <button class="close-btn" (click)="closeSuccessModal()">
+        <i class="material-icons">close</i>
+      </button>
+    </div>
+    
+    <div class="modal-body success-body">
+      <div class="success-message">
+        <i class="material-icons">info</i>
+        <p>{{ successMessage }}</p>
+      </div>
+
+      <div class="next-steps">
+        <h3>Prochaines Etapes</h3>
+        <div class="step">
+          <div class="step-number">1</div>
+          <div class="step-content">
+            <h4>Verification du Dossier</h4>
+            <p>Votre demande est en cours de traitement (24-48h)</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-number">2</div>
+          <div class="step-content">
+            <h4>Notification de Decaissement</h4>
+            <p>Vous recevrez un SMS et email avec les details</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-number">3</div>
+          <div class="step-content">
+            <h4>Reception des Fonds</h4>
+            <p>Le montant sera disponible dans 2-5 jours ouvrables</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="important-info">
+        <i class="material-icons">warning</i>
+        <div>
+          <h4>Important</h4>
+          <ul>
+            <li>Gardez votre telephone accessible</li>
+            <li>Verifiez vos emails regulierement</li>
+            <li>Le delai peut varier selon votre banque</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-primary" (click)="closeSuccessModal()">
+        <i class="material-icons">done</i>
+        J'ai Compris
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CREDITS DETAILLES -->
 <div class="active-credits-modal" *ngIf="showActiveCreditsModal">
   <div class="modal-backdrop" (click)="closeActiveCreditsModal()"></div>
   <div class="modal-content large">
     <div class="modal-header">
       <h2>
         <i class="material-icons">account_balance</i>
-        Tous mes Crédits Enregistrés
+        Tous mes Credits
       </h2>
       <button class="close-btn" (click)="closeActiveCreditsModal()">
         <i class="material-icons">close</i>
@@ -874,113 +615,230 @@
     
     <div class="modal-body">
       <div class="credits-summary">
-        <div class="summary-stats">
-          <div class="stat">
-            <span class="stat-value">{{ activeCreditsFromService.length }}</span>
-            <span class="stat-label">Total crédits</span>
-          </div>
-          <div class="stat">
-            <span class="stat-value">{{ getActiveCreditCount() }}</span>
-            <span class="stat-label">Actifs</span>
-          </div>
-          <div class="stat">
-            <span class="stat-value">{{ formatCurrency(getTotalActiveDebt()) }}</span>
-            <span class="stat-label">Dettes restantes</span>
-          </div>
+        <div class="stat">
+          <span class="stat-value">{{ activeCreditsFromService.length }}</span>
+          <span class="stat-label">Total</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value">{{ getActiveCreditCount() }}</span>
+          <span class="stat-label">Actifs</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value">{{ formatCurrency(getTotalActiveDebt()) }}</span>
+          <span class="stat-label">Dettes</span>
         </div>
       </div>
       
-      <div class="credits-list">
-        <div class="credit-item-detailed" *ngFor="let credit of activeCreditsFromService" [attr.data-status]="credit.status">
-          <div class="credit-main-info">
-            <div class="credit-header-detailed">
-              <h3>{{ getCreditTypeName(credit.type) }}</h3>
-              <span class="credit-status-badge-detailed" [ngClass]="'status-' + credit.status">
-                {{ getCreditStatusText(credit.status) }}
-              </span>
+      <div class="credits-list-modal">
+        <div class="credit-item-detailed" 
+             *ngFor="let credit of activeCreditsFromService"
+             [class.fully-paid]="isCreditFullyPaid(credit)">
+          
+          <div class="credit-header-detailed">
+            <h3>{{ getCreditTypeName(credit.type) }}</h3>
+            <span class="credit-status-badge-detailed"
+                  [style.background-color]="getCreditStatusColor(credit)">
+              {{ getCreditStatusBadge(credit) }}
+            </span>
+          </div>
+          
+          <!-- Badge paye -->
+          <div class="payment-status-badge" *ngIf="isCreditFullyPaid(credit)">
+            <i class="material-icons">check_circle</i>
+            <span>Entierement paye</span>
+          </div>
+          
+          <!-- Montants -->
+          <div class="credit-amounts-detailed">
+            <div class="amount-item">
+              <span>Emprunte:</span>
+              <span>{{ formatCurrency(credit.amount) }}</span>
             </div>
-            
-            <div class="credit-amounts-detailed">
-              <div class="amount-grid">
-                <div class="amount-item">
-                  <span class="amount-label">Emprunté:</span>
-                  <span class="amount-value">{{ formatCurrency(credit.amount) }}</span>
-                </div>
-                <div class="amount-item">
-                  <span class="amount-label">Total à rembourser:</span>
-                  <span class="amount-value">{{ formatCurrency(credit.totalAmount) }}</span>
-                </div>
-                <div class="amount-item" *ngIf="isCreditActive(credit)">
-                  <span class="amount-label">Restant:</span>
-                  <span class="amount-value remaining">{{ formatCurrency(credit.remainingAmount) }}</span>
-                </div>
-                <div class="amount-item">
-                  <span class="amount-label">Taux:</span>
-                  <span class="amount-value">{{ formatInterestRate(credit.interestRate) }}%</span>
-                </div>
-              </div>
+            <div class="amount-item">
+              <span>Total:</span>
+              <span>{{ formatCurrency(credit.totalAmount) }}</span>
             </div>
-            
-            <div class="credit-dates-detailed">
-              <div class="date-item">
-                <i class="material-icons">event_available</i>
-                <span>Accordé: {{ formatDateWithTime(credit.approvedDate) }}</span>
-              </div>
-              <div class="date-item">
-                <i class="material-icons">event_busy</i>
-                <span>Échéance: {{ formatDate(credit.dueDate) }}</span>
-              </div>
+            <div class="amount-item" *ngIf="hasCreditPayments(credit)">
+              <span>Paye:</span>
+              <span class="paid">{{ formatCurrency(credit.totalPaid || 0) }}</span>
             </div>
-            
-            <div class="credit-progress-detailed" *ngIf="isCreditActive(credit)">
-              <div class="progress-info">
-                <span>Progression du remboursement</span>
-                <span>{{ getCreditReimbursementPercentage(credit).toFixed(1) }}%</span>
-              </div>
-              <div class="progress-bar">
-                <div class="progress-fill" 
-                     [style.width.%]="getCreditReimbursementPercentage(credit)">
-                </div>
+            <div class="amount-item" *ngIf="!isCreditFullyPaid(credit)">
+              <span>Restant:</span>
+              <span class="remaining">{{ formatCurrency(credit.remainingAmount) }}</span>
+            </div>
+          </div>
+          
+          <!-- Compteur paiements -->
+          <div class="payment-counter" *ngIf="hasCreditPayments(credit)">
+            <i class="material-icons">payment</i>
+            <span>{{ credit.paymentsCount }} paiement(s)</span>
+            <span class="last-payment" *ngIf="credit.lastPaymentDate">
+              Dernier: {{ formatDate(credit.lastPaymentDate) }} - {{ formatCurrency(credit.lastPaymentAmount || 0) }}
+            </span>
+          </div>
+          
+          <!-- Progression -->
+          <div class="credit-progress-detailed" *ngIf="!isCreditFullyPaid(credit)">
+            <div class="progress-info">
+              <span>Progression</span>
+              <span>{{ credit.percentagePaid || 0 }}%</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" 
+                   [style.width.%]="credit.percentagePaid || 0"
+                   [style.background-color]="getCreditStatusColor(credit)">
               </div>
             </div>
           </div>
           
-          <div class="credit-actions-detailed" *ngIf="isCreditActive(credit)">
+          <!-- Dates -->
+          <div class="credit-dates-detailed">
+            <div class="date-item">
+              <i class="material-icons">event_available</i>
+              <span>{{ formatDate(credit.approvedDate) }}</span>
+            </div>
+            <div class="date-item" *ngIf="!isCreditFullyPaid(credit)">
+              <i class="material-icons">event</i>
+              <span>{{ getDaysUntilDueText(credit) }}</span>
+            </div>
+          </div>
+          
+          <!-- Actions -->
+          <div class="credit-actions-detailed" *ngIf="!isCreditFullyPaid(credit)">
             <button class="btn-primary" (click)="makePayment(credit.id)">
               <i class="material-icons">payment</i>
-              Effectuer un paiement
+              Payer
             </button>
             <button class="btn-secondary" (click)="simulatePayment(credit.id)">
               <i class="material-icons">calculate</i>
-              Simuler impact
+              Simuler
             </button>
           </div>
         </div>
       </div>
       
+      <!-- Aucun credit -->
       <div class="no-credits" *ngIf="activeCreditsFromService.length === 0">
         <i class="material-icons">credit_card_off</i>
-        <h3>Aucun crédit enregistré</h3>
-        <p>Vous n'avez pas encore de crédit enregistré dans le système</p>
+        <h3>Aucun credit enregistre</h3>
+        <p>Vous n'avez pas encore de credit dans le systeme</p>
         <button class="btn-primary" (click)="closeActiveCreditsModal(); openQuickCreditModal()" [disabled]="!canApplyForCredit">
           <i class="material-icons">add</i>
-          Demander un crédit
+          Demander un credit
         </button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Styles CSS pour les nouvelles fonctionnalités -->
+<!-- STYLES CSS COMPLETS -->
 <style>
-/* Styles pour les restrictions de crédit */
+/* Variables globales */
+:root {
+  --primary-color: #2196F3;
+  --success-color: #4CAF50;
+  --warning-color: #FF9800;
+  --danger-color: #f44336;
+  --text-primary: #333;
+  --text-secondary: #666;
+  --border-color: #e0e0e0;
+  --bg-light: #f8f9fa;
+}
+
+/* Container principal */
+.dashboard-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* Header */
+.dashboard-header {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2rem;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.user-section {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+}
+
+.user-avatar {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  overflow: hidden;
+  cursor: pointer;
+  border: 3px solid var(--primary-color);
+}
+
+.user-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatar-placeholder i {
+  font-size: 48px;
+  color: white;
+}
+
+.avatar-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.user-avatar:hover .avatar-overlay {
+  opacity: 1;
+}
+
+.avatar-overlay i {
+  color: white;
+  font-size: 24px;
+}
+
+.user-info h1 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.8rem;
+  color: var(--text-primary);
+}
+
+.user-info p {
+  margin: 0 0 0.75rem 0;
+  color: var(--text-secondary);
+}
+
+/* Badge eligibilite */
 .credit-eligibility-badge {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 12px;
+  padding: 8px 16px;
   border-radius: 20px;
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   font-weight: 500;
   position: relative;
 }
@@ -997,288 +855,1813 @@
   border: 1px solid rgba(244, 67, 54, 0.3);
 }
 
+.credit-eligibility-badge i {
+  font-size: 20px;
+}
+
 .restriction-tooltip {
   position: absolute;
-  top: 100%;
+  top: calc(100% + 8px);
   left: 0;
-  right: 0;
   background: #333;
   color: white;
-  padding: 8px 12px;
-  border-radius: 4px;
-  font-size: 0.75rem;
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  white-space: nowrap;
   z-index: 1000;
-  margin-top: 4px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 }
 
-/* Styles pour les cartes de dettes */
-.debt-card {
-  border-left: 4px solid #FF9800;
+.restriction-tooltip::before {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 20px;
+  border: 6px solid transparent;
+  border-bottom-color: #333;
 }
 
-.debt-card.high-debt {
-  border-left-color: #F44336;
-  background: linear-gradient(135deg, rgba(244, 67, 54, 0.05), transparent);
+/* Carte de score */
+.credit-score-card {
+  padding: 1.5rem;
+  border-radius: 12px;
+  min-width: 300px;
+}
+
+.score-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.score-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--text-primary);
+}
+
+.refresh-btn {
+  background: rgba(255,255,255,0.8);
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.refresh-btn:hover:not(:disabled) {
+  background: white;
+  transform: scale(1.05);
+}
+
+.refresh-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.refresh-btn i.rotating {
+  animation: rotate 1s linear infinite;
+}
+
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.score-display {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.score-value {
+  font-size: 3rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.score-status {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0.5rem 0;
+}
+
+.score-change {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-top: 0.5rem;
+}
+
+.score-change.positive {
+  background: rgba(76, 175, 80, 0.1);
+  color: #2e7d32;
+}
+
+.score-change.negative {
+  background: rgba(244, 67, 54, 0.1);
+  color: #c62828;
+}
+
+.score-details {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(0,0,0,0.1);
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.detail-item span {
+  font-size: 0.8rem;
+  color: rgba(0,0,0,0.6);
+}
+
+.detail-item strong {
+  font-size: 0.95rem;
+  color: var(--text-primary);
+}
+
+.realtime-indicator {
+  color: var(--success-color) !important;
+}
+
+/* Vue d'ensemble financiere */
+.financial-overview {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.overview-card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  transition: all 0.3s;
+}
+
+.overview-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+}
+
+.overview-card.primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.overview-card.debt-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.overview-card.debt-card.high-debt {
+  border: 2px solid var(--danger-color);
+}
+
+.overview-card i {
+  font-size: 2.5rem;
+  opacity: 0.8;
+}
+
+.overview-card.primary i {
+  color: white;
+}
+
+.card-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.card-content .label {
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.card-content .value {
+  font-size: 1.8rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.card-content .subtitle {
+  font-size: 0.8rem;
+  opacity: 0.7;
 }
 
 .debt-amount {
-  color: #FF9800;
-}
-
-.debt-card.high-debt .debt-amount {
-  color: #F44336;
+  color: var(--danger-color);
 }
 
 .debt-progress-mini {
-  margin-top: 8px;
-}
-
-.debt-progress-mini .progress-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
   height: 4px;
-  background: rgba(0,0,0,0.1);
-  border-radius: 2px;
-  overflow: hidden;
+  background: rgba(0,0,0,0.05);
 }
 
 .debt-progress-mini .progress-fill {
   height: 100%;
-  background: #FF9800;
-  transition: all 0.3s ease;
+  transition: width 0.5s ease, background-color 0.3s;
 }
 
 .debt-progress-mini .progress-fill.warning {
-  background: #FF9800;
+  background: var(--warning-color);
 }
 
 .debt-progress-mini .progress-fill.danger {
-  background: #F44336;
+  background: var(--danger-color);
 }
 
-/* Styles pour la section des restrictions */
-.credit-restrictions-section {
-  margin: 2rem 0;
-  padding: 1.5rem;
-  background: #f8f9fa;
+/* Section Score ML */
+.ml-score-section {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border-radius: 12px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  color: white;
 }
 
-.restrictions-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.5rem;
-  margin-top: 1rem;
-}
-
-.restriction-card {
-  background: white;
-  padding: 1.5rem;
-  border-radius: 8px;
-  border: 1px solid #e0e0e0;
-}
-
-.restriction-card.blocked {
-  border-color: #f44336;
-  background: linear-gradient(135deg, rgba(244, 67, 54, 0.05), white);
-}
-
-.restriction-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 1rem;
-}
-
-.restriction-item {
+.ml-score-section .section-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 0;
-  border-bottom: 1px solid #f0f0f0;
+  margin-bottom: 1.5rem;
 }
 
-.restriction-value.warning {
-  color: #FF9800;
-  font-weight: 600;
-}
-
-.restriction-value.danger {
-  color: #F44336;
-  font-weight: 600;
-}
-
-.improvement-suggestions {
-  background: white;
-  padding: 1.5rem;
-  border-radius: 8px;
-  border: 1px solid #e0e0e0;
-}
-
-.suggestions-list {
-  list-style: none;
-  padding: 0;
-  margin: 1rem 0 0 0;
-}
-
-.suggestions-list li {
+.ml-score-section .section-header h2 {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 0;
-  border-bottom: 1px solid #f0f0f0;
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.ml-badge {
+  background: rgba(255,255,255,0.2);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.ml-score-content {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.score-ml-display {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  padding: 1.5rem;
+  background: rgba(255,255,255,0.1);
+  border-radius: 12px;
+}
+
+.score-circle {
+  width: 120px;
+  height: 120px;
+  border: 6px solid white;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  color: var(--text-primary);
+}
+
+.score-circle .score-value {
+  font-size: 2.5rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.score-circle .score-max {
+  font-size: 1.2rem;
+  color: var(--text-secondary);
+}
+
+.score-ml-info {
+  flex: 1;
+}
+
+.score-ml-info h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.5rem;
+}
+
+.score-ml-info p {
+  margin: 0.5rem 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.95rem;
+}
+
+.score-ml-info i {
+  font-size: 20px;
+}
+
+/* Analyse paiements */
+.payment-analysis-card {
+  background: rgba(255,255,255,0.1);
+  padding: 1.5rem;
+  border-radius: 12px;
+}
+
+.payment-analysis-card h4 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 1rem 0;
+  font-size: 1.2rem;
+}
+
+.analysis-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1.5rem;
+}
+
+.analysis-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.analysis-item .label {
   font-size: 0.9rem;
+  opacity: 0.9;
 }
 
-.suggestions-list li:last-child {
-  border-bottom: none;
+.analysis-item .value {
+  font-size: 1.5rem;
+  font-weight: 700;
 }
 
-/* Styles pour la gestion des crédits */
+.analysis-item .value.success {
+  color: var(--success-color);
+}
+
+/* Carte nouveau client */
+.new-client-card {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 2rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  margin: 1.5rem 0;
+}
+
+.new-client-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.new-client-icon i {
+  font-size: 40px;
+  color: white;
+}
+
+.new-client-content {
+  flex: 1;
+}
+
+.new-client-content h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.3rem;
+  color: white;
+}
+
+.new-client-content p {
+  margin: 0.5rem 0;
+  font-size: 1rem;
+  opacity: 0.9;
+}
+
+.client-note {
+  font-size: 0.9rem !important;
+  opacity: 0.7 !important;
+  font-style: italic;
+}
+
+/* Montant eligible ML */
+.eligible-amount-ml {
+  text-align: center;
+  padding: 2rem;
+  background: rgba(255,255,255,0.15);
+  border-radius: 12px;
+}
+
+.eligible-amount-ml .amount-label {
+  font-size: 1rem;
+  opacity: 0.9;
+  margin-bottom: 0.5rem;
+}
+
+.eligible-amount-ml .amount-value {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.eligible-amount-ml .amount-note {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  opacity: 0.8;
+  margin: 0;
+}
+
+/* Recommandations ML */
+.recommendations-ml {
+  background: rgba(255,255,255,0.1);
+  padding: 1.5rem;
+  border-radius: 12px;
+}
+
+.recommendations-ml h4 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 1rem 0;
+  font-size: 1.1rem;
+}
+
+.recommendations-ml ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.recommendations-ml li {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.recommendations-ml li i {
+  font-size: 20px;
+  margin-top: 2px;
+  opacity: 0.8;
+}
+
+/* Section dernieres demandes */
+.recent-requests-section {
+  margin: 2rem 0;
+  padding: 1.5rem;
+  background: var(--bg-light);
+  border-radius: 12px;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.section-header h2 {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  font-size: 1.3rem;
+  color: var(--text-primary);
+}
+
+.section-count {
+  background: #e3f2fd;
+  color: #1976d2;
+  padding: 6px 14px;
+  border-radius: 16px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.requests-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 1.5rem;
+}
+
+.request-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  border: 2px solid transparent;
+  transition: all 0.3s;
+}
+
+.request-card:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  transform: translateY(-2px);
+}
+
+.request-card[data-status="APPROVED"] {
+  border-color: var(--success-color);
+}
+
+.request-card[data-status="REJECTED"] {
+  border-color: var(--danger-color);
+}
+
+.request-card[data-status="IN_REVIEW"] {
+  border-color: var(--warning-color);
+}
+
+.request-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.request-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.request-number {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  font-family: 'Courier New', monospace;
+}
+
+.request-type {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 1.05rem;
+}
+
+.request-status-badge {
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.request-status-badge.status-APPROVED {
+  background: rgba(76, 175, 80, 0.1);
+  color: #2e7d32;
+}
+
+.request-status-badge.status-REJECTED {
+  background: rgba(244, 67, 54, 0.1);
+  color: #c62828;
+}
+
+.request-status-badge.status-IN_REVIEW {
+  background: rgba(255, 152, 0, 0.1);
+  color: #e65100;
+}
+
+.request-status-badge.status-SUBMITTED {
+  background: rgba(33, 150, 243, 0.1);
+  color: #1565c0;
+}
+
+.request-details {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.detail-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.95rem;
+}
+
+.detail-item i {
+  font-size: 20px;
+  color: var(--text-secondary);
+}
+
+.detail-label {
+  color: var(--text-secondary);
+  flex: 1;
+}
+
+.detail-value {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.detail-value.approved {
+  color: var(--success-color);
+}
+
+.request-payment-status {
+  background: var(--bg-light);
+  padding: 1rem;
+  border-radius: 8px;
+  margin-top: 1rem;
+}
+
+.payment-progress-bar {
+  height: 8px;
+  background: #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 0.75rem;
+}
+
+.payment-progress-bar .progress-fill {
+  height: 100%;
+  background: var(--warning-color);
+  transition: width 0.5s ease;
+}
+
+.payment-progress-bar .progress-fill.paid {
+  background: var(--success-color);
+}
+
+.payment-stats {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.payment-stats i {
+  font-size: 18px;
+}
+
+.paid-badge {
+  color: var(--success-color);
+  font-weight: 600;
+}
+
+/* Section gestion credits */
 .credit-management-section {
   margin: 2rem 0;
 }
 
-.credits-grid .credit-card.enhanced {
-  border: 1px solid #e0e0e0;
-  border-radius: 12px;
-  overflow: hidden;
-  transition: all 0.3s ease;
+.section-actions {
+  display: flex;
+  gap: 1rem;
 }
 
-.credits-grid .credit-card.enhanced:hover {
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+.credits-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.credit-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  border: 2px solid var(--border-color);
+  transition: all 0.3s;
+}
+
+.credit-card:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
   transform: translateY(-2px);
 }
 
-.credit-card.enhanced[data-status="paid"] {
-  opacity: 0.7;
-  background: linear-gradient(135deg, rgba(76, 175, 80, 0.05), white);
+.credit-card.fully-paid {
+  border-color: var(--success-color);
+  background: linear-gradient(135deg, #ffffff 0%, #f1f8f4 100%);
 }
 
-.credit-card.enhanced[data-status="overdue"] {
-  border-color: #f44336;
-  background: linear-gradient(135deg, rgba(244, 67, 54, 0.05), white);
-}
-
-.debt-impact-indicator {
-  margin-top: 1rem;
-  padding: 8px 12px;
-  background: rgba(255, 152, 0, 0.1);
-  border-radius: 6px;
-  font-size: 0.85rem;
-  color: #e65100;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-/* Styles pour le modal de crédit amélioré */
-.quick-credit-modal.enhanced .modal-content {
-  max-width: 600px;
-}
-
-.debt-impact-preview {
-  background: rgba(255, 152, 0, 0.1);
-  padding: 1rem;
-  border-radius: 8px;
-  margin: 1rem 0;
-}
-
-.impact-details {
-  margin-top: 0.5rem;
-}
-
-.impact-row {
+.credit-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 4px 0;
-  font-size: 0.9rem;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-color);
 }
 
-.impact-row.total {
-  border-top: 1px solid #ddd;
-  padding-top: 8px;
-  margin-top: 8px;
-  font-weight: 600;
+.credit-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: var(--text-primary);
 }
 
-.impact-row.ratio {
-  color: #666;
+.credit-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 20px;
   font-size: 0.85rem;
+  font-weight: 600;
+  color: white;
 }
 
-.debt-ratio.warning {
-  color: #FF9800;
+.credit-status-badge i {
+  font-size: 18px;
+}
+
+/* Badge paiement */
+.payment-status-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.1), rgba(76, 175, 80, 0.05));
+  border: 1px solid rgba(76, 175, 80, 0.3);
+  border-radius: 24px;
+  margin: 1rem 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #2e7d32;
+  animation: slideInBadge 0.5s ease-out;
+}
+
+.payment-status-badge i {
+  font-size: 20px;
+  color: var(--success-color);
+}
+
+@keyframes slideInBadge {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Compteur paiements */
+.payment-counter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  background: var(--bg-light);
+  border-radius: 8px;
+  margin: 1rem 0;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.payment-counter i {
+  font-size: 20px;
+  color: var(--success-color);
+}
+
+.payment-counter .last-payment {
+  margin-left: auto;
+  font-size: 0.85rem;
+  color: #999;
+}
+
+/* Montants credits */
+.credit-amounts {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.amount-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.95rem;
+}
+
+.amount-row.primary {
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border-color);
   font-weight: 600;
 }
 
-.debt-ratio.danger {
-  color: #F44336;
-  font-weight: 600;
+.amount-label {
+  color: var(--text-secondary);
 }
 
-.credit-warnings {
+.amount-value {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.amount-value.paid {
+  color: var(--success-color);
+}
+
+.amount-value.remaining {
+  color: var(--danger-color);
+  font-size: 1.1rem;
+}
+
+/* Progression credit */
+.credit-progress {
+  margin: 1rem 0;
+  padding: 1rem;
+  background: var(--bg-light);
+  border-radius: 8px;
+}
+
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.progress-header strong {
+  color: var(--primary-color);
+  font-size: 1rem;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 12px;
+  background: #e0e0e0;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+.progress-fill {
+  height: 100%;
+  transition: width 0.5s ease, background-color 0.3s;
+  border-radius: 6px;
+}
+
+.progress-info {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+/* Dates credit */
+.credit-dates {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
   margin: 1rem 0;
 }
 
-.warning-item {
+.date-info {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 12px;
-  background: rgba(255, 152, 0, 0.1);
-  border-radius: 4px;
-  margin-bottom: 8px;
-  font-size: 0.85rem;
-  color: #e65100;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
 }
 
-.important-notice {
-  margin-top: 1.5rem;
-  padding: 1rem;
-  background: rgba(33, 150, 243, 0.1);
+.date-info i {
+  font-size: 18px;
+  color: var(--primary-color);
+}
+
+.date-info.due-date {
+  color: var(--warning-color);
+  font-weight: 500;
+}
+
+/* Actions credit */
+.credit-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.btn-primary, .btn-secondary, .btn-link {
+  flex: 1;
+  padding: 12px 20px;
+  border: none;
   border-radius: 8px;
-  border: 1px solid rgba(33, 150, 243, 0.2);
-}
-
-.important-notice h5 {
-  margin: 0 0 0.5rem 0;
-  color: #1976d2;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
+  transition: all 0.3s;
 }
 
-.important-notice ul {
-  margin: 0;
-  padding-left: 1rem;
+.btn-primary {
+  background: var(--primary-color);
+  color: white;
 }
 
-.important-notice li {
-  margin-bottom: 4px;
+.btn-primary:hover:not(:disabled) {
+  background: #1976D2;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
+}
+
+.btn-primary:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.btn-secondary {
+  background: var(--bg-light);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: #e9ecef;
+  border-color: var(--text-secondary);
+}
+
+.btn-link {
+  background: transparent;
+  color: var(--primary-color);
+  text-decoration: underline;
+}
+
+.btn-pay {
+  background: var(--success-color);
+}
+
+.btn-pay:hover:not(:disabled) {
+  background: #388e3c;
+}
+
+.btn-simulate {
+  background: var(--bg-light);
+  color: var(--text-primary);
+}
+
+/* Message felicitations */
+.paid-congratulations {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 1rem;
+  background: linear-gradient(135deg, var(--success-color), #66bb6a);
+  color: white;
+  border-radius: 8px;
+  font-weight: 600;
+  margin-top: 1rem;
+  animation: celebrationPulse 2s infinite;
+}
+
+.paid-congratulations i {
+  font-size: 28px;
+}
+
+@keyframes celebrationPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+/* Notice credits supplementaires */
+.more-credits-notice {
+  text-align: center;
+  padding: 1.5rem;
+  background: var(--bg-light);
+  border-radius: 8px;
+  margin-top: 1.5rem;
+}
+
+.more-credits-notice p {
+  margin: 0 0 0.75rem 0;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+
+/* Section solde compte */
+.account-balance-section {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  margin: 2rem 0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.balance-overview {
+  margin-top: 1.5rem;
+}
+
+.balance-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.balance-item {
+  display: flex;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: var(--bg-light);
+  border-radius: 12px;
+  transition: all 0.3s;
+}
+
+.balance-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.balance-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+}
+
+.balance-icon i {
+  font-size: 28px;
+}
+
+.balance-item.current .balance-icon i {
+  color: var(--primary-color);
+}
+
+.balance-item.total-credited .balance-icon i {
+  color: var(--success-color);
+}
+
+.balance-item.total-used .balance-icon i {
+  color: var(--warning-color);
+}
+
+.balance-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.balance-label {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.balance-value {
+  font-size: 1.8rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.balance-value.current {
+  color: var(--primary-color);
+}
+
+.balance-value.credited {
+  color: var(--success-color);
+}
+
+.balance-value.used {
+  color: var(--warning-color);
+}
+
+.balance-status, .balance-info {
   font-size: 0.85rem;
-  color: #424242;
+  color: var(--text-secondary);
 }
 
-/* Styles pour le modal des crédits actifs */
-.active-credits-modal .modal-content.large {
-  max-width: 800px;
+.balance-status.positive {
+  color: var(--success-color);
+}
+
+.balance-status.zero {
+  color: var(--text-secondary);
+}
+
+/* Action rapide */
+.quick-action-section {
+  text-align: center;
+  margin: 2rem 0;
+}
+
+.btn-primary-large {
+  padding: 1.5rem 3rem;
+  font-size: 1.2rem;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--primary-color), #1976D2);
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  transition: all 0.3s;
+  box-shadow: 0 4px 16px rgba(33, 150, 243, 0.3);
+}
+
+.btn-primary-large:hover:not(:disabled) {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(33, 150, 243, 0.4);
+}
+
+.btn-primary-large:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.btn-primary-large i {
+  font-size: 32px;
+}
+
+.action-note {
+  margin-top: 1rem;
+  color: var(--danger-color);
+  font-size: 0.95rem;
+}
+
+/* MODAL STYLES */
+.quick-credit-modal, .active-credits-modal, .success-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.success-modal {
+  z-index: 2000;
+}
+
+.modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.3s ease-out;
+}
+
+.modal-content {
+  position: relative;
+  width: 100%;
+  max-width: 600px;
   max-height: 90vh;
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  animation: modalSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+
+.modal-content.large {
+  max-width: 900px;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-50px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 2rem;
+  background: linear-gradient(135deg, var(--primary-color), #1976D2);
+  color: white;
+}
+
+.modal-header h2 {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.close-btn {
+  background: rgba(255,255,255,0.2);
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: white;
+  transition: all 0.3s;
+}
+
+.close-btn:hover {
+  background: rgba(255,255,255,0.3);
+  transform: scale(1.1);
+}
+
+.modal-body {
+  padding: 2rem;
+  max-height: calc(90vh - 200px);
   overflow-y: auto;
 }
 
-.credits-summary {
+.modal-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.modal-body::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Alert restriction */
+.restrictions-check {
+  text-align: center;
+}
+
+.restriction-alert {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 2rem;
+  background: rgba(244, 67, 54, 0.05);
+  border: 2px solid rgba(244, 67, 54, 0.2);
+  border-radius: 12px;
   margin-bottom: 1.5rem;
-  padding: 1rem;
-  background: #f8f9fa;
+}
+
+.restriction-alert i {
+  font-size: 64px;
+  color: var(--danger-color);
+}
+
+.restriction-content h3 {
+  margin: 0 0 0.5rem 0;
+  color: var(--danger-color);
+  font-size: 1.3rem;
+}
+
+.restriction-content p {
+  margin: 0;
+  color: var(--text-secondary);
+}
+
+/* Formulaire credit */
+.credit-score-display {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  padding: 1.5rem;
+  background: var(--bg-light);
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+}
+
+.score-info {
+  flex: 1;
+}
+
+.score-info h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.3rem;
+  color: var(--text-primary);
+}
+
+.score-info p {
+  margin: 0.25rem 0;
+  color: var(--text-secondary);
+}
+
+.ml-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: var(--primary-color) !important;
+  font-weight: 500;
+}
+
+.ml-indicator i {
+  font-size: 18px;
+}
+
+.approved-amount {
+  text-align: center;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.1), rgba(76, 175, 80, 0.05));
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+}
+
+.approved-amount h3 {
+  margin: 0 0 0.75rem 0;
+  font-size: 1.1rem;
+  color: var(--text-primary);
+}
+
+.approved-amount .amount-value {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--success-color);
+  margin-bottom: 0.5rem;
+}
+
+.approved-amount .amount-note {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+/* Formulaire */
+.quick-credit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+}
+
+.form-group select,
+.form-group input[type="number"] {
+  padding: 12px;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: all 0.3s;
+}
+
+.form-group select:focus,
+.form-group input[type="number"]:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+}
+
+.amount-input-container {
+  position: relative;
+}
+
+.amount-input {
+  width: 100%;
+  padding-right: 70px;
+}
+
+.currency-suffix {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.amount-slider-container {
+  margin-top: 0.5rem;
+}
+
+.amount-slider {
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(to right, var(--primary-color) 0%, var(--primary-color) var(--value), #e0e0e0 var(--value), #e0e0e0 100%);
+  outline: none;
+  -webkit-appearance: none;
+}
+
+.amount-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--primary-color);
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+
+.amount-slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--primary-color);
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+
+.amount-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin-top: 0.75rem;
+}
+
+.suggestion-btn {
+  padding: 8px 16px;
+  background: var(--bg-light);
+  border: 2px solid var(--border-color);
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.suggestion-btn:hover:not(:disabled) {
+  background: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+.suggestion-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Recapitulatif */
+.credit-summary {
+  background: var(--bg-light);
+  padding: 1.5rem;
+  border-radius: 12px;
+}
+
+.credit-summary h4 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 1rem 0;
+  font-size: 1.1rem;
+  color: var(--text-primary);
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.summary-item:last-of-type {
+  border-bottom: none;
+}
+
+.summary-item.total {
+  padding-top: 1rem;
+  margin-top: 0.5rem;
+  border-top: 2px solid var(--border-color);
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.summary-value {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* Notice importante */
+.important-notice {
+  background: rgba(255, 152, 0, 0.05);
+  border-left: 4px solid var(--warning-color);
+  padding: 1.5rem;
   border-radius: 8px;
 }
 
-.summary-stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+.important-notice h5 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 1rem 0;
+  color: var(--warning-color);
+  font-size: 1rem;
+}
+
+.important-notice ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.important-notice li {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+/* Bouton submit */
+.submit-btn {
+  padding: 1rem 2rem;
+  font-size: 1.1rem;
+  margin-top: 1rem;
+}
+
+.submit-btn i.spinning {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* STYLES MODAL SUCCES */
+.success-header {
+  background: linear-gradient(135deg, #4CAF50, #45a049);
+  color: white;
+  padding: 2rem;
+  text-align: center;
+  position: relative;
+}
+
+.success-icon-container {
+  width: 80px;
+  height: 80px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1rem;
+  animation: successIconPulse 2s infinite ease-in-out;
+}
+
+.success-icon {
+  font-size: 48px;
+  animation: iconBounce 0.6s ease-out 0.2s both;
+}
+
+.success-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.success-header .close-btn {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.success-header .close-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
+}
+
+.success-body {
+  padding: 2rem;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.success-message {
+  display: flex;
   gap: 1rem;
+  padding: 1.5rem;
+  background: rgba(76, 175, 80, 0.1);
+  border-radius: 12px;
+  border-left: 4px solid #4CAF50;
+  margin-bottom: 2rem;
+}
+
+.success-message i {
+  color: #4CAF50;
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.success-message p {
+  margin: 0;
+  color: #2e7d32;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.next-steps {
+  margin-bottom: 2rem;
+}
+
+.next-steps h3 {
+  margin: 0 0 1.5rem 0;
+  font-size: 1.2rem;
+  color: #333;
+}
+
+.step {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  align-items: flex-start;
+}
+
+.step-number {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #4CAF50, #45a049);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-content h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1rem;
+  color: #333;
+}
+
+.step-content p {
+  margin: 0;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.important-info {
+  display: flex;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: rgba(255, 152, 0, 0.1);
+  border-radius: 12px;
+  border-left: 4px solid #FF9800;
+}
+
+.important-info i {
+  color: #FF9800;
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.important-info h4 {
+  margin: 0 0 0.75rem 0;
+  color: #e65100;
+  font-size: 1rem;
+}
+
+.important-info ul {
+  margin: 0;
+  padding-left: 20px;
+  color: #f57c00;
+}
+
+.important-info li {
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.success-modal .modal-footer {
+  padding: 1.5rem 2rem;
+  background: #f8f9fa;
+  border-top: 1px solid #e0e0e0;
+  display: flex;
+  justify-content: center;
+}
+
+.success-modal .btn-primary {
+  padding: 1rem 2.5rem;
+  font-size: 1.1rem;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #4CAF50, #45a049);
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.3s;
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+}
+
+.success-modal .btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(76, 175, 80, 0.4);
+}
+
+@keyframes successIconPulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+@keyframes iconBounce {
+  0% {
+    transform: scale(0) rotate(-180deg);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1) rotate(-90deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+/* Modal credits detailles */
+.credits-summary {
+  display: flex;
+  justify-content: space-around;
+  padding: 1.5rem;
+  background: var(--bg-light);
+  border-radius: 12px;
+  margin-bottom: 2rem;
 }
 
 .stat {
@@ -1287,27 +2670,38 @@
 
 .stat-value {
   display: block;
-  font-size: 1.5rem;
+  font-size: 2rem;
   font-weight: 700;
-  color: #2e7d32;
+  color: var(--primary-color);
+  line-height: 1;
+  margin-bottom: 0.5rem;
 }
 
 .stat-label {
-  font-size: 0.85rem;
-  color: #666;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.credits-list-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
 .credit-item-detailed {
-  background: white;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
+  background: var(--bg-light);
+  border-radius: 12px;
   padding: 1.5rem;
-  margin-bottom: 1rem;
+  transition: all 0.3s;
 }
 
-.credit-item-detailed[data-status="paid"] {
-  opacity: 0.7;
-  background: linear-gradient(135deg, rgba(76, 175, 80, 0.05), white);
+.credit-item-detailed:hover {
+  background: white;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.credit-item-detailed.fully-paid {
+  border: 2px solid var(--success-color);
 }
 
 .credit-header-detailed {
@@ -1317,38 +2711,49 @@
   margin-bottom: 1rem;
 }
 
-.amount-grid {
+.credit-header-detailed h3 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.credit-status-badge-detailed {
+  padding: 6px 14px;
+  border-radius: 20px;
+  color: white;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.credit-amounts-detailed {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 1rem;
-  margin-bottom: 1rem;
+  margin: 1rem 0;
 }
 
 .amount-item {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 0;
+  flex-direction: column;
+  gap: 4px;
 }
 
-.amount-value.remaining {
-  color: #f44336;
+.amount-item span:first-child {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.amount-item span:last-child {
+  font-size: 1.1rem;
   font-weight: 600;
+  color: var(--text-primary);
 }
 
-.credit-dates-detailed {
-  display: flex;
-  gap: 1.5rem;
-  margin-bottom: 1rem;
-  flex-wrap: wrap;
+.amount-item span.paid {
+  color: var(--success-color);
 }
 
-.date-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.9rem;
-  color: #666;
+.amount-item span.remaining {
+  color: var(--danger-color);
 }
 
 .credit-progress-detailed {
@@ -1358,100 +2763,713 @@
 .progress-info {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: 0.5rem;
   font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.credit-dates-detailed {
+  display: flex;
+  gap: 1.5rem;
+  margin: 1rem 0;
+  flex-wrap: wrap;
+}
+
+.date-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.date-item i {
+  font-size: 18px;
 }
 
 .credit-actions-detailed {
   display: flex;
   gap: 1rem;
-  justify-content: flex-end;
-  margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid #f0f0f0;
+  margin-top: 1.5rem;
 }
 
 .no-credits {
   text-align: center;
-  padding: 2rem;
-  color: #666;
+  padding: 3rem 2rem;
 }
 
 .no-credits i {
-  font-size: 4rem;
-  margin-bottom: 1rem;
+  font-size: 64px;
+  color: var(--text-secondary);
   opacity: 0.5;
+  margin-bottom: 1rem;
 }
 
-/* Responsive design */
+.no-credits h3 {
+  margin: 0 0 0.5rem 0;
+  color: var(--text-primary);
+}
+
+.no-credits p {
+  color: var(--text-secondary);
+  margin-bottom: 1.5rem;
+}
+
+/* Classes utilitaires */
+.warning {
+  color: var(--warning-color) !important;
+}
+
+.danger {
+  color: var(--danger-color) !important;
+}
+
+.success {
+  color: var(--success-color) !important;
+}
+
+/* Toggle button */
+.toggle-btn {
+  background: var(--bg-light);
+  border: 1px solid var(--border-color);
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.toggle-btn:hover {
+  background: #e9ecef;
+  transform: scale(1.05);
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .dashboard-header {
+    grid-template-columns: 1fr;
+  }
+  
+  .credit-score-card {
+    max-width: 100%;
+  }
+}
+
 @media (max-width: 768px) {
-  .restrictions-grid {
-    grid-template-columns: 1fr;
+  .dashboard-container {
+    padding: 10px;
   }
   
-  .amount-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .credit-dates-detailed {
+  .user-section {
     flex-direction: column;
-    gap: 0.5rem;
+    text-align: center;
   }
   
-  .credit-actions-detailed {
+  .financial-overview {
+    grid-template-columns: 1fr;
+  }
+  
+  .score-details {
+    grid-template-columns: 1fr;
+  }
+  
+  .credits-grid, .requests-list {
+    grid-template-columns: 1fr;
+  }
+  
+  .balance-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .credit-actions {
     flex-direction: column;
   }
   
-  .summary-stats {
+  .modal-content {
+    max-width: 95%;
+  }
+  
+  .modal-header h2 {
+    font-size: 1.2rem;
+  }
+  
+  .modal-body {
+    padding: 1.5rem;
+  }
+  
+  .score-ml-display {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .analysis-grid {
     grid-template-columns: 1fr;
+  }
+  
+  .payment-counter {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .payment-counter .last-payment {
+    margin-left: 0;
+  }
+  
+  .request-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+  
+  .credit-score-display {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .new-client-card {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .new-client-icon {
+    margin-bottom: 1rem;
+  }
+  
+  .step {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  
+  .important-info {
+    flex-direction: column;
+    text-align: center;
   }
 }
 
-/* Animations */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+@media (max-width: 480px) {
+  .btn-primary-large {
+    padding: 1rem 2rem;
+    font-size: 1rem;
+  }
+  
+  .amount-value {
+    font-size: 1.5rem;
+  }
+  
+  .score-value {
+    font-size: 2rem;
+  }
+  
+  .suggestion-btn {
+    flex: 1;
+  }
 }
 
-.credit-card.enhanced {
-  animation: fadeIn 0.3s ease-out;
+/* Animations additionnelles */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
-.restriction-card {
-  animation: fadeIn 0.4s ease-out;
+@keyframes slideOut {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(20px);
+  }
 }
 
-.credit-item-detailed {
-  animation: fadeIn 0.2s ease-out;
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
-/* Styles pour les indicateurs temps réel */
-.realtime-indicator {
-  color: #4CAF50;
-  font-size: 0.8rem;
+@keyframes slideOutRight {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(100%);
+  }
 }
 
-.score-change {
+/* Styles pour les notifications personnalisees */
+.custom-notification {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  max-width: 400px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  z-index: 1000;
+  animation: slideIn 0.3s ease-out;
+  padding: 16px;
+}
+
+.custom-notification.success {
+  border-left: 4px solid var(--success-color);
+}
+
+.custom-notification.error {
+  border-left: 4px solid var(--danger-color);
+}
+
+.custom-notification.warning {
+  border-left: 4px solid var(--warning-color);
+}
+
+.custom-notification.info {
+  border-left: 4px solid var(--primary-color);
+}
+
+.notification-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.notification-content i {
+  font-size: 24px;
+}
+
+.custom-notification.success i {
+  color: var(--success-color);
+}
+
+.custom-notification.error i {
+  color: var(--danger-color);
+}
+
+.custom-notification.warning i {
+  color: var(--warning-color);
+}
+
+.custom-notification.info i {
+  color: var(--primary-color);
+}
+
+.notification-content p {
+  flex: 1;
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+}
+
+.notification-content .close-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  color: var(--text-secondary);
+  transition: color 0.3s;
+}
+
+.notification-content .close-btn:hover {
+  color: var(--text-primary);
+}
+
+.notification-content .close-btn i {
+  font-size: 20px;
+}
+
+/* Styles pour score-updating */
+.score-number.score-updating {
+  animation: scoreUpdate 1s ease-in-out;
+}
+
+@keyframes scoreUpdate {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+    color: var(--primary-color);
+  }
+}
+
+/* Styles additionnels pour les etats de chargement */
+.loading-spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 1s ease-in-out infinite;
+}
+
+/* Amelioration de l'affichage des cartes au survol */
+.credit-card.enhanced:hover,
+.request-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+}
+
+/* Styles pour les badges de statut */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.status-badge.active {
+  background: rgba(76, 175, 80, 0.1);
+  color: #2e7d32;
+}
+
+.status-badge.paid {
+  background: rgba(33, 150, 243, 0.1);
+  color: #1565c0;
+}
+
+.status-badge.overdue {
+  background: rgba(244, 67, 54, 0.1);
+  color: #c62828;
+}
+
+/* Styles pour les transitions fluides */
+* {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+button, a, .clickable {
+  transition: all 0.3s ease;
+}
+
+/* Amelioration de l'accessibilite */
+button:focus,
+input:focus,
+select:focus,
+textarea:focus {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+/* Styles pour les etats desactives */
+button:disabled,
+input:disabled,
+select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Styles pour les liens */
+a {
+  color: var(--primary-color);
+  text-decoration: none;
+  transition: color 0.3s;
+}
+
+a:hover {
+  color: #1976D2;
+  text-decoration: underline;
+}
+
+/* Styles pour les tableaux si necessaire */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+th {
+  font-weight: 600;
+  color: var(--text-primary);
+  background: var(--bg-light);
+}
+
+/* Styles pour les formulaires */
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+input[type="number"],
+input[type="password"],
+textarea,
+select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 2px solid var(--border-color);
+  border-radius: 6px;
+  font-size: 0.95rem;
+  transition: all 0.3s;
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="tel"]:focus,
+input[type="number"]:focus,
+input[type="password"]:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+}
+
+/* Styles pour les checkboxes et radios */
+input[type="checkbox"],
+input[type="radio"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+/* Styles pour les labels */
+label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+/* Styles pour les messages d'erreur */
+.error-message {
+  color: var(--danger-color);
+  font-size: 0.85rem;
+  margin-top: 4px;
+}
+
+/* Styles pour les messages de succes */
+.success-message {
+  color: var(--success-color);
+  font-size: 0.85rem;
+  margin-top: 4px;
+}
+
+/* Styles pour les tooltips */
+.tooltip {
+  position: relative;
+  display: inline-block;
+}
+
+.tooltip .tooltiptext {
+  visibility: hidden;
+  width: 200px;
+  background-color: #333;
+  color: white;
+  text-align: center;
+  border-radius: 6px;
+  padding: 8px;
+  position: absolute;
+  z-index: 1;
+  bottom: 125%;
+  left: 50%;
+  margin-left: -100px;
+  opacity: 0;
+  transition: opacity 0.3s;
+  font-size: 0.85rem;
+}
+
+.tooltip:hover .tooltiptext {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* Styles pour les badges */
+.badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
   font-size: 0.8rem;
   font-weight: 600;
-  margin-left: 8px;
+  line-height: 1;
 }
 
-.score-change.positive {
-  color: #4CAF50;
+.badge.primary {
+  background: var(--primary-color);
+  color: white;
 }
 
-.score-change.negative {
-  color: #f44336;
+.badge.success {
+  background: var(--success-color);
+  color: white;
 }
 
-.rotating {
-  animation: spin 1s linear infinite;
+.badge.warning {
+  background: var(--warning-color);
+  color: white;
 }
 
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+.badge.danger {
+  background: var(--danger-color);
+  color: white;
 }
+
+/* Styles pour les alertes */
+.alert {
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.alert.info {
+  background: rgba(33, 150, 243, 0.1);
+  color: #1565c0;
+  border-left: 4px solid var(--primary-color);
+}
+
+.alert.success {
+  background: rgba(76, 175, 80, 0.1);
+  color: #2e7d32;
+  border-left: 4px solid var(--success-color);
+}
+
+.alert.warning {
+  background: rgba(255, 152, 0, 0.1);
+  color: #e65100;
+  border-left: 4px solid var(--warning-color);
+}
+
+.alert.danger {
+  background: rgba(244, 67, 54, 0.1);
+  color: #c62828;
+  border-left: 4px solid var(--danger-color);
+}
+
+/* Styles pour les dividers */
+.divider {
+  height: 1px;
+  background: var(--border-color);
+  margin: 1.5rem 0;
+}
+
+/* Styles pour les cartes empilables */
+.stacked-cards {
+  position: relative;
+}
+
+.stacked-cards .card {
+  margin-bottom: 1rem;
+}
+
+/* Impression */
+@media print {
+  .modal-backdrop,
+  .btn-primary,
+  .btn-secondary,
+  .close-btn,
+  .toggle-btn {
+    display: none !important;
+  }
+  
+  .modal-content {
+    box-shadow: none;
+    border: 1px solid #ddd;
+  }
+}
+
+/* Dark mode support (si necessaire a l'avenir) */
+@media (prefers-color-scheme: dark) {
+  /* Les styles dark mode peuvent etre ajoutes ici */
+}
+
+/* Animations de chargement */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.loading {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* Styles pour les skeleton loaders */
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s ease-in-out infinite;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Styles finaux pour assurer la coherence */
+.text-center {
+  text-align: center;
+}
+
+.text-left {
+  text-align: left;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.d-flex {
+  display: flex;
+}
+
+.align-center {
+  align-items: center;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.gap-1 {
+  gap: 0.5rem;
+}
+
+.gap-2 {
+  gap: 1rem;
+}
+
+.gap-3 {
+  gap: 1.5rem;
+}
+
+.mt-1 { margin-top: 0.5rem; }
+.mt-2 { margin-top: 1rem; }
+.mt-3 { margin-top: 1.5rem; }
+.mb-1 { margin-bottom: 0.5rem; }
+.mb-2 { margin-bottom: 1rem; }
+.mb-3 { margin-bottom: 1.5rem; }
+.p-1 { padding: 0.5rem; }
+.p-2 { padding: 1rem; }
+.p-3 { padding: 1.5rem; }
 </style>

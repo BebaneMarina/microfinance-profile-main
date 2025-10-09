@@ -8,11 +8,11 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 
-import { LongCreditRequestEntity, LongCreditStatus } from './entities/long-credit-request.entity';
+import { LongCreditRequestEntity, LongCreditStatus, TypeCredit, NiveauRisque } from './entities/long-credit-request.entity';
 import { LongCreditDocumentEntity } from './entities/long-credit-document.entity';
 import { LongCreditCommentEntity } from './entities/long-credit-comment.entity';
 import { LongCreditReviewHistoryEntity } from './entities/long-credit-review-history.entity';
-import { User } from '../app/auth/entities/user.entity';
+import { Utilisateur } from '../app/auth/entities/user.entity';
 
 import { 
   CreateLongCreditRequestDto,
@@ -39,8 +39,8 @@ export class CreditLongRequestService {
     @InjectRepository(LongCreditReviewHistoryEntity)
     private historyRepository: Repository<LongCreditReviewHistoryEntity>,
     
-    @InjectRepository(User)
-    private userRepository: Repository<User>,
+    @InjectRepository(Utilisateur)
+    private userRepository: Repository<Utilisateur>,
 
     private httpService: HttpService
   ) {
@@ -55,61 +55,6 @@ export class CreditLongRequestService {
       this.logger.log(`Created upload directory: ${this.uploadPath}`);
     }
   }
-
-  // === GESTION DES DEMANDES ===
-
-  async createRequest(requestData: CreateLongCreditRequestDto): Promise<LongCreditRequestEntity> {
-  try {
-    this.logger.log(`Creating long credit request for user: ${requestData.username}`);
-
-    const user = await this.userRepository.findOne({ 
-      where: [
-        { email: requestData.username }
-      ]
-    });
-
-    if (!user) {
-      throw new BadRequestException(
-        `Utilisateur non trouvé avec l'identifiant: ${requestData.username}`
-      );
-    }
-
-    const requestNumber = await this.generateRequestNumber();
-
-    const requestEntity = this.requestRepository.create({
-      requestNumber,
-      username: requestData.username,
-      userId: user.id,
-      status: requestData.status || LongCreditStatus.DRAFT,
-      personalInfo: requestData.personalInfo,
-      creditDetails: requestData.creditDetails,
-      financialDetails: requestData.financialDetails,
-      documents: requestData.documents || {},
-      simulationResults: requestData.simulation,
-      submissionDate: requestData.status === 'submitted' ? new Date() : undefined,  // ✅ undefined au lieu de null
-      createdBy: user.id
-    });
-
-    const savedRequest = await this.requestRepository.save(requestEntity);
-
-    // Ajouter une entrée d'historique
-    await this.addHistoryEntry(savedRequest.id.toString(), {
-      action: requestData.status === 'submitted' ? 'Demande créée et soumise' : 'Brouillon créé',
-      agentName: 'Client',
-      agentId: user.id,
-      comment: requestData.status === 'submitted' 
-        ? 'Demande créée et soumise directement par le client' 
-        : 'Brouillon sauvegardé'
-    });
-
-    this.logger.log(`Long credit request created: ${savedRequest.id}`);
-    return savedRequest;
-
-  } catch (error) {
-    this.logger.error(`Error creating request: ${error.message}`, error.stack);
-    throw new BadRequestException(error.message || 'Impossible de créer la demande');
-  }
-}
 
   async getUserRequests(
     username: string,
@@ -252,7 +197,7 @@ export class CreditLongRequestService {
         const agent = agentId ? await this.userRepository.findOne({ where: { id: agentId } }) : null;
         await this.addHistoryEntry(id, {
           action: `Statut changé: ${request.status} → ${updates.status}`,
-          agentName: agent?.firstName || 'Système',
+          agentName: agent?.prenom || 'Système',
           agentId,
           comment: updates.decisionNotes || 'Changement de statut automatique'
         });
@@ -272,65 +217,234 @@ export class CreditLongRequestService {
     }
   }
 
-  async submitRequest(id: string): Promise<LongCreditRequestEntity> {
-  try {
-    const request = await this.getRequestById(id, false);
+  async getAllRequestsForBackoffice(options: {
+    status?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<{
+    requests: LongCreditRequestEntity[];
+    total: number;
+    page: number;
+    totalPages: number;
+  }> {
+    try {
+      const { status, page = 1, limit = 50 } = options;
+      
+      const queryBuilder = this.requestRepository
+        .createQueryBuilder('request')
+        .orderBy('request.submissionDate', 'DESC')
+        .skip((page - 1) * limit)
+        .take(limit);
 
-    if (request.status !== LongCreditStatus.DRAFT && request.status !== LongCreditStatus.REQUIRES_INFO) {
-      throw new BadRequestException('Seuls les brouillons et demandes nécessitant des infos peuvent être soumis');
-    }
+      // Filtrer par statut si spécifié
+      if (status && status !== 'all') {
+        queryBuilder.andWhere('request.status = :status', { status });
+      }
 
-    const validation = await this.validateRequestForSubmission(request);
-    if (!validation.isValid) {
-      throw new BadRequestException(`Demande invalide: ${validation.errors.join(', ')}`);
-    }
-  
-    return await this.updateRequest(id, {
-      status: LongCreditStatus.SUBMITTED,
-      submissionDate: new Date()  // ✅ Passer Date directement
-    });
+      const [requests, total] = await queryBuilder.getManyAndCount();
 
-  } catch (error) {
-    if (error instanceof NotFoundException || error instanceof BadRequestException) {
-      throw error;
+      this.logger.log(`📋 ${total} demandes trouvées (page ${page})`);
+
+      return {
+        requests,
+        total,
+        page,
+        totalPages: Math.ceil(total / limit)
+      };
+
+    } catch (error) {
+      this.logger.error(`Error fetching all requests: ${error.message}`, error.stack);
+      throw new BadRequestException('Impossible de récupérer les demandes');
     }
-    this.logger.error(`Error submitting request: ${error.message}`, error.stack);
-    throw new BadRequestException('Impossible de soumettre la demande');
   }
-}
+
+  async getBackofficeStatistics(): Promise<any> {
+    try {
+      const allRequests = await this.requestRepository.find();
+
+      const stats = {
+        total: allRequests.length,
+        draft: allRequests.filter(r => r.status === LongCreditStatus.DRAFT).length,
+        submitted: allRequests.filter(r => r.status === LongCreditStatus.SUBMITTED).length,
+        inReview: allRequests.filter(r => r.status === LongCreditStatus.IN_REVIEW).length,
+        approved: allRequests.filter(r => r.status === LongCreditStatus.APPROVED).length,
+        rejected: allRequests.filter(r => r.status === LongCreditStatus.REJECTED).length,
+        requiresInfo: allRequests.filter(r => r.status === LongCreditStatus.REQUIRES_INFO).length,
+        
+        // Montants
+        totalRequestedAmount: allRequests.reduce((sum, r) => {
+          return sum + (r.creditDetails?.requestedAmount || 0);
+        }, 0),
+        
+        totalApprovedAmount: allRequests
+          .filter(r => r.status === LongCreditStatus.APPROVED)
+          .reduce((sum, r) => sum + (r.approvedAmount || 0), 0),
+        
+        averageRequestedAmount: allRequests.length > 0
+          ? allRequests.reduce((sum, r) => sum + (r.creditDetails?.requestedAmount || 0), 0) / allRequests.length
+          : 0,
+        
+        // Périodes
+        todayRequests: allRequests.filter(r => {
+          const today = new Date();
+          const requestDate = new Date(r.submissionDate);
+          return requestDate.toDateString() === today.toDateString();
+        }).length,
+        
+        thisWeekRequests: allRequests.filter(r => {
+          const weekAgo = new Date();
+          weekAgo.setDate(weekAgo.getDate() - 7);
+          return new Date(r.submissionDate) >= weekAgo;
+        }).length,
+        
+        thisMonthRequests: allRequests.filter(r => {
+          const monthAgo = new Date();
+          monthAgo.setMonth(monthAgo.getMonth() - 1);
+          return new Date(r.submissionDate) >= monthAgo;
+        }).length,
+        
+        // Taux d'approbation
+        approvalRate: allRequests.filter(r => 
+          r.status === LongCreditStatus.APPROVED || r.status === LongCreditStatus.REJECTED
+        ).length > 0
+          ? (allRequests.filter(r => r.status === LongCreditStatus.APPROVED).length / 
+             allRequests.filter(r => 
+               r.status === LongCreditStatus.APPROVED || r.status === LongCreditStatus.REJECTED
+             ).length) * 100
+          : 0
+      };
+
+      this.logger.log(`📊 Statistiques calculées: ${stats.total} demandes`);
+
+      return stats;
+
+    } catch (error) {
+      this.logger.error(`Error calculating statistics: ${error.message}`, error.stack);
+      throw new BadRequestException('Impossible de calculer les statistiques');
+    }
+  }
+
+  async createRequest(requestData: CreateLongCreditRequestDto): Promise<LongCreditRequestEntity> {
+    try {
+      this.logger.log(`Creating long credit request for user: ${requestData.username}`);
+
+      // Chercher l'utilisateur par email
+      const user = await this.userRepository.findOne({ 
+        where: { email: requestData.username }
+      });
+
+      if (!user) {
+        throw new BadRequestException('Utilisateur non trouvé');
+      }
+
+      const requestNumber = await this.generateRequestNumber();
+
+      // Préparer les données pour correspondre à la nouvelle structure
+      const newRequest: Partial<LongCreditRequestEntity> = {
+        requestNumber: requestNumber,
+        username: requestData.username,
+        userId: user.id,
+        status: requestData.status || LongCreditStatus.DRAFT,
+        
+        // Mapper vers les nouvelles colonnes avec le bon type enum
+        creditType: (requestData.creditDetails?.type as TypeCredit) || TypeCredit.CONSOMMATION_GENERALE,
+        requestedAmount: requestData.creditDetails?.requestedAmount || 0,
+        duration: requestData.creditDetails?.duration || 12,
+        purpose: requestData.creditDetails?.purpose || '',
+        
+        // Données JSONB
+        personalInfo: requestData.personalInfo,
+        creditDetails: requestData.creditDetails,
+        financialDetails: requestData.financialDetails,
+        documents: requestData.documents || {},
+        simulationResults: requestData.simulation,
+        
+        // Scoring au moment de la soumission
+        scoreAtSubmission: user.score_credit,
+        riskLevel: user.niveau_risque as unknown as NiveauRisque,
+        
+        submissionDate: requestData.status === LongCreditStatus.SUBMITTED ? new Date() : undefined,
+        createdBy: user.id
+      };
+
+      const savedRequest = await this.requestRepository.save(newRequest);
+
+      // Ajouter entrée historique
+      await this.addHistoryEntry(savedRequest.id.toString(), {
+        action: requestData.status === LongCreditStatus.SUBMITTED ? 'Demande créée et soumise' : 'Brouillon créé',
+        agentName: 'Client',
+        agentId: user.id,
+        comment: 'Demande initiale'
+      });
+
+      this.logger.log(`✅ Demande créée: ${savedRequest.id}`);
+      return savedRequest;
+
+    } catch (error) {
+      this.logger.error(`❌ Erreur création: ${error.message}`, error.stack);
+      throw new BadRequestException(error.message || 'Impossible de créer la demande');
+    }
+  }
+
+  async submitRequest(id: string): Promise<LongCreditRequestEntity> {
+    try {
+      const request = await this.getRequestById(id, false);
+
+      if (request.status !== LongCreditStatus.DRAFT && request.status !== LongCreditStatus.REQUIRES_INFO) {
+        throw new BadRequestException('Seuls les brouillons et demandes nécessitant des infos peuvent être soumis');
+      }
+
+      const validation = await this.validateRequestForSubmission(request);
+      if (!validation.isValid) {
+        throw new BadRequestException(`Demande invalide: ${validation.errors.join(', ')}`);
+      }
+    
+      return await this.updateRequest(id, {
+        status: LongCreditStatus.SUBMITTED,
+        submissionDate: new Date()
+      });
+
+    } catch (error) {
+      if (error instanceof NotFoundException || error instanceof BadRequestException) {
+        throw error;
+      }
+      this.logger.error(`Error submitting request: ${error.message}`, error.stack);
+      throw new BadRequestException('Impossible de soumettre la demande');
+    }
+  }
 
   async deleteRequest(id: string): Promise<void> {
-  try {
-    const request = await this.getRequestById(id, false);
+    try {
+      const request = await this.getRequestById(id, false);
 
-    if (request.status !== LongCreditStatus.DRAFT) {
-      throw new BadRequestException('Seuls les brouillons peuvent être supprimés');
-    }
+      if (request.status !== LongCreditStatus.DRAFT) {
+        throw new BadRequestException('Seuls les brouillons peuvent être supprimés');
+      }
 
-    const numericId = parseInt(id);
-    
-    await this.historyRepository.delete({ longCreditRequestId: numericId });
-    await this.documentRepository.delete({ longCreditRequestId: numericId });
-    
-    // ✅ Correction pour les commentaires
-    await this.commentRepository
-      .createQueryBuilder()
-      .delete()
-      .where('long_credit_request_id = :id', { id: numericId })
-      .execute();
+      const numericId = parseInt(id);
       
-    await this.requestRepository.delete(numericId);
+      await this.historyRepository.delete({ longCreditRequestId: numericId });
+      await this.documentRepository.delete({ longCreditRequestId: numericId });
+      
+      await this.commentRepository
+        .createQueryBuilder()
+        .delete()
+        .where('long_credit_request_id = :id', { id: numericId })
+        .execute();
+        
+      await this.requestRepository.delete(numericId);
 
-    this.logger.log(`Request deleted: ${id}`);
+      this.logger.log(`Request deleted: ${id}`);
 
-  } catch (error) {
-    if (error instanceof NotFoundException || error instanceof BadRequestException) {
-      throw error;
+    } catch (error) {
+      if (error instanceof NotFoundException || error instanceof BadRequestException) {
+        throw error;
+      }
+      this.logger.error(`Error deleting request: ${error.message}`, error.stack);
+      throw new BadRequestException('Impossible de supprimer la demande');
     }
-    this.logger.error(`Error deleting request: ${error.message}`, error.stack);
-    throw new BadRequestException('Impossible de supprimer la demande');
   }
-}
+
   async saveDraft(draftData: any): Promise<LongCreditRequestEntity> {
     try {
       const username = draftData.username;
@@ -541,41 +655,41 @@ export class CreditLongRequestService {
   }
 
   async addComment(
-  requestId: string, 
-  comment: string, 
-  authorName: string, 
-  authorId?: number,
-  commentType: string = 'general',
-  isPrivate: boolean = false
-): Promise<LongCreditCommentEntity> {
-  try {
-    await this.getRequestById(requestId, false);
+    requestId: string, 
+    comment: string, 
+    authorName: string, 
+    authorId?: number,
+    commentType: string = 'general',
+    isPrivate: boolean = false
+  ): Promise<LongCreditCommentEntity> {
+    try {
+      await this.getRequestById(requestId, false);
 
-    const commentEntity = this.commentRepository.create({
-      longCreditRequestId: parseInt(requestId),
-      authorName,
-      authorId,
-      commentType,
-      content: comment,
-      isPrivate
-    });
+      const commentEntity = this.commentRepository.create({
+        longCreditRequestId: parseInt(requestId),
+        authorName,
+        authorId,
+        commentType,
+        content: comment,
+        isPrivate
+      });
 
-    const savedComment = await this.commentRepository.save(commentEntity);
+      const savedComment = await this.commentRepository.save(commentEntity);
 
-    await this.addHistoryEntry(requestId, {
-      action: 'Commentaire ajouté',
-      agentName: authorName,
-      agentId: authorId,
-      comment: isPrivate ? '[Commentaire privé]' : comment.substring(0, 100) + '...'
-    });
+      await this.addHistoryEntry(requestId, {
+        action: 'Commentaire ajouté',
+        agentName: authorName,
+        agentId: authorId,
+        comment: isPrivate ? '[Commentaire privé]' : comment.substring(0, 100) + '...'
+      });
 
-    return savedComment;
+      return savedComment;
 
-  } catch (error) {
-    this.logger.error(`Error adding comment: ${error.message}`, error.stack);
-    throw new BadRequestException('Impossible d\'ajouter le commentaire');
+    } catch (error) {
+      this.logger.error(`Error adding comment: ${error.message}`, error.stack);
+      throw new BadRequestException('Impossible d\'ajouter le commentaire');
+    }
   }
-}
 
   // === VALIDATION ===
 

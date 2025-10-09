@@ -1,3 +1,5 @@
+// profile.component.ts - VERSION CORRIGEE SANS EMOJIS
+
 import { Component, OnInit, OnDestroy, Input, Output, EventEmitter } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -9,7 +11,7 @@ import { ApiProxyService } from '../../services/proxy.service';
 import { StorageService } from '../../services/storage.service';
 import { ScoringService } from '../../services/scoring.service';
 import { AuthService, User } from '../../services/auth.service';
-import { CreditManagementService } from '../../services/credit-management.service'; // Service pour la gestion des dettes
+import { CreditManagementService } from '../../services/credit-management.service';
 import { CreditRequestsService } from '../../services/credit-requests.service';
 import { Subscription, interval } from 'rxjs';
 import { switchMap, catchError } from 'rxjs/operators';
@@ -46,6 +48,7 @@ interface ScoreHistoryEntry {
 }
 
 interface RealTimeScoreUpdate {
+  [x: string]: any;
   user_id: number;
   score: number;
   previous_score?: number;
@@ -63,7 +66,6 @@ interface RealTimeScoreUpdate {
   payment_analysis?: any;
 }
 
-// NOUVELLES INTERFACES pour la gestion des dettes et restrictions
 interface RegisteredCredit {
   id: string;
   type: string;
@@ -77,6 +79,14 @@ interface RegisteredCredit {
   nextPaymentDate?: string;
   nextPaymentAmount?: number;
   paymentsHistory: PaymentRecord[];
+  
+  isPaid?: boolean;
+  totalPaid?: number;
+  percentagePaid?: number;
+  paymentsCount?: number;
+  lastPaymentDate?: string;
+  lastPaymentAmount?: number;
+  requestId?: number;
 }
 
 interface PaymentRecord {
@@ -106,6 +116,17 @@ interface AccountBalance {
   currentBalance: number;
   lastTransaction: string;
   transactions: AccountTransaction[];
+}
+
+interface RecentCreditRequest {
+  id: number;
+  requestNumber: string;
+  type: string;
+  amount: number;
+  status: string;
+  submissionDate: string;
+  approvedAmount?: number;
+  isPaid?: boolean;
 }
 
 interface AccountTransaction {
@@ -153,12 +174,12 @@ export class ProfileComponent implements OnInit, OnDestroy {
   creditTypes: CreditType[] = [
     {
       id: 'consommation_generale',
-      name: 'Crédit Consommation',
+      name: 'Credit Consommation',
       icon: 'shopping_cart',
       color: '#4CAF50',
       description: 'Pour vos besoins personnels (max 2M FCFA)',
       maxAmount: 2000000,
-      duration: '1 mois (1 à 3 remboursements)',
+      duration: '1 mois (1 a 3 remboursements)',
       available: true
     },
     {
@@ -166,54 +187,23 @@ export class ProfileComponent implements OnInit, OnDestroy {
       name: 'Avance sur Salaire',
       icon: 'account_balance_wallet',
       color: '#2196F3',
-      description: 'Jusqu\'à 70% de votre salaire net',
+      description: 'Jusqu\'a 70% de votre salaire net',
       maxAmount: 2000000,
       duration: '1 mois (fin du mois)',
       available: true
     },
     {
       id: 'depannage',
-      name: 'Crédit Dépannage',
+      name: 'Credit Depannage',
       icon: 'medical_services',
       color: '#FF5722',
-      description: 'Solution urgente pour liquidités',
+      description: 'Solution urgente pour liquidites',
       maxAmount: 2000000,
       duration: '1 mois (remboursement unique)',
       available: true
-    },
-    {
-      id: 'investissement',
-      name: 'Crédit Investissement',
-      icon: 'trending_up',
-      color: '#9C27B0',
-      description: 'Pour les entreprises uniquement',
-      maxAmount: 100000000,
-      duration: 'Jusqu\'à 36 mois',
-      available: false
-    },
-    {
-      id: 'tontine',
-      name: 'Crédit Tontine',
-      icon: 'groups',
-      color: '#FF9800',
-      description: 'Réservé aux membres cotisants',
-      maxAmount: 5000000,
-      duration: 'Variable',
-      available: false
-    },
-    {
-      id: 'retraite',
-      name: 'Crédit Retraite',
-      icon: 'elderly',
-      color: '#607D8B',
-      description: 'Pour les retraités CNSS/CPPF',
-      maxAmount: 2000000,
-      duration: '12 mois max',
-      available: false
     }
   ];
 
-  // DONNÉES EXISTANTES
   activeCredits: ActiveCredit[] = [];
   globalStats: ProfileStats = {
     totalBorrowed: 0,
@@ -226,7 +216,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
     riskLevel: 'medium'
   };
 
-  // NOUVELLES DONNÉES pour la gestion des dettes
   activeCreditsFromService: RegisteredCredit[] = [];
   creditRestrictions: CreditRestrictions = {
     canApplyForCredit: true,
@@ -236,8 +225,8 @@ export class ProfileComponent implements OnInit, OnDestroy {
     debtRatio: 0
   };
   showActiveCreditsModal!: boolean;
+  animateScoreChange: any;
   
-  // PROPRIÉTÉS CALCULÉES
   get canApplyForCredit(): boolean {
     return this.creditRestrictions?.canApplyForCredit ?? true;
   }
@@ -251,6 +240,8 @@ export class ProfileComponent implements OnInit, OnDestroy {
   errorMessage = '';
 
   showQuickCreditModal = false;
+  showSuccessModal = false;
+  successMessage = '';
 
   isSubmitting = false;
   quickCredit = {
@@ -260,7 +251,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
     frequency: 'mensuel'
   };
 
-  // GESTION DU SOLDE
   accountBalance: AccountBalance = {
     totalCredited: 0,
     totalUsed: 0,
@@ -279,7 +269,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
   currentUser: User | null = null;
   savedScore: SavedScore | null = null;
 
-  // SCORING TEMPS RÉEL
   realTimeScore: RealTimeScoreUpdate | null = null;
   isScoreUpdating = false;
   scoreChangeAnimation = false;
@@ -288,6 +277,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
   scoreHistory: ScoreHistoryEntry[] = [];
   realTimeSubscription?: Subscription;
   paymentAnalysis: any = null;
+  recentCreditRequests: RecentCreditRequest[] = [];
   
   private apiUrl = environment.apiUrl || 'http://localhost:5000';
   private creditsSubscription?: Subscription;
@@ -303,7 +293,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private creditRequestsService: CreditRequestsService,
     private http: HttpClient,
-    public creditManagementService: CreditManagementService, // Service injecté
+    public creditManagementService: CreditManagementService,
     private apiProxy: ApiProxyService
   ) {}
 
@@ -314,11 +304,12 @@ export class ProfileComponent implements OnInit, OnDestroy {
       if (user) {
         this.currentUser = user;
         this.loadUserProfile(user);
-        this.loadUserScore(user);
-        this.loadAccountBalance();
         
-        // NOUVEAU : Charger les crédits enregistrés et restrictions
-        this.loadRegisteredCredits();
+        // Initialisation securisee
+        this.loadInitialScore(user);
+        this.loadAccountBalance();
+        this.loadCompleteStats(user.id);
+        this.loadCreditsWithPaymentStatus(user.id);
         this.loadCreditRestrictions();
         
         this.startRealTimeScoreMonitoring(user.id);
@@ -326,47 +317,136 @@ export class ProfileComponent implements OnInit, OnDestroy {
         this.router.navigate(['/login']);
       }
     });
-
-
-    // Abonnements existants conservés
-    this.creditsSubscription = this.profileService.activeCredits$.subscribe(
-      credits => {
-        this.activeCredits = credits;
-        this.isLoading = false;
-      },
-      error => {
-        this.handleError('Erreur lors du chargement des crédits actifs', error);
-      }
-    );
-
-    this.statsSubscription = this.profileService.profileStats$.subscribe(
-      stats => {
-        if (this.currentUser) {
-          this.globalStats = {
-            ...stats,
-            creditScore: this.realTimeScore?.score || this.currentUser.creditScore || stats.creditScore || 0,
-            eligibleAmount: this.currentUser.eligibleAmount || stats.eligibleAmount || 0,
-            riskLevel: this.realTimeScore?.risk_level || this.currentUser.riskLevel || stats.riskLevel || 'medium'
-          };
-        } else {
-          this.globalStats = stats;
-        }
-        
-        if (this.client?.clientType !== 'entreprise') {
-          this.globalStats.eligibleAmount = Math.min(this.globalStats.eligibleAmount, 2000000);
-        }
-      },
-      error => {
-        this.handleError('Erreur lors du chargement des statistiques', error);
-      }
-    );
-
-    this.storageSubscription = this.storageService.applications$.subscribe(() => {
-      this.profileService.refreshData();
-    });
-
-    this.checkEligibility();
   }
+  // Remplacer ces methodes dans profile.component.ts
+
+private handleRealTimeScoreUpdate(scoreUpdate: RealTimeScoreUpdate): void {
+  const previousScore = Number(this.realTimeScore?.score) || Number(this.globalStats.creditScore) || 0;
+  const newScore = Number(scoreUpdate.score) || 0;
+  
+  console.log('Mise a jour score temps reel:', {
+    previous: previousScore,
+    new: newScore,
+    change: newScore - previousScore,
+    analysis: scoreUpdate.payment_analysis
+  });
+
+  if (scoreUpdate.payment_analysis) {
+    this.paymentAnalysis = scoreUpdate.payment_analysis;
+  }
+
+  // Mise a jour directe sans animation pour eviter les erreurs
+  this.realTimeScore = scoreUpdate;
+  this.globalStats.creditScore = newScore;
+  this.globalStats.riskLevel = scoreUpdate.risk_level;
+  
+  // Mise a jour du montant eligible depuis la reponse Flask
+  if (scoreUpdate['eligible_amount']) {
+    this.globalStats.eligibleAmount = Number(scoreUpdate['eligible_amount']) || 0;
+  }
+  
+  this.savedScore = {
+    score: newScore,
+    eligibleAmount: this.globalStats.eligibleAmount,
+    riskLevel: scoreUpdate.risk_level,
+    recommendations: scoreUpdate.recommendations,
+    lastUpdate: scoreUpdate.last_updated,
+    factors: scoreUpdate.factors,
+    scoreHistory: this.scoreHistory
+  };
+
+  this.checkEligibility();
+  this.loadScoreHistory();
+  
+  // Afficher notification uniquement si changement significatif
+  if (Math.abs(newScore - previousScore) >= 0.1 && previousScore > 0) {
+    this.showScoreChangeNotification(previousScore, newScore, scoreUpdate);
+  }
+}
+
+private showScoreChangeNotification(oldScore: number, newScore: number, scoreUpdate: RealTimeScoreUpdate): void {
+  const oldScoreNum = Number(oldScore) || 0;
+  const newScoreNum = Number(newScore) || 0;
+  const change = newScoreNum - oldScoreNum;
+  const isPositive = change > 0;
+  const trend = scoreUpdate.payment_analysis?.trend || 'stable';
+  
+  let trendIcon = 'trending_flat';
+  let trendText = 'Stable';
+  
+  if (trend === 'improving') {
+    trendIcon = 'trending_up';
+    trendText = 'En amelioration';
+  } else if (trend === 'declining') {
+    trendIcon = 'trending_down';
+    trendText = 'En baisse';
+  }
+  
+  const notification = document.createElement('div');
+  notification.className = `score-change-notification ${isPositive ? 'positive' : 'negative'}`;
+  notification.innerHTML = `
+    <div style="position: fixed; top: 100px; right: 20px; max-width: 350px; 
+                background: ${isPositive ? '#4CAF50' : '#f44336'}; color: white; 
+                border-radius: 8px; padding: 16px; z-index: 1001; 
+                box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                animation: slideInRight 0.3s ease-out;">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <i class="material-icons" style="font-size: 24px;">
+          ${isPositive ? 'trending_up' : 'trending_down'}
+        </i>
+        <div>
+          <h4 style="margin: 0; font-size: 16px;">Score Mis a Jour</h4>
+          <p style="margin: 5px 0 0 0; font-size: 14px;">
+            ${oldScoreNum.toFixed(1)} -> ${newScoreNum.toFixed(1)} 
+            (${isPositive ? '+' : ''}${change.toFixed(1)})
+          </p>
+          <p style="margin: 5px 0 0 0; font-size: 12px; display: flex; align-items: center; gap: 4px;">
+            <i class="material-icons" style="font-size: 16px;">${trendIcon}</i>
+            ${trendText}
+          </p>
+          ${scoreUpdate.recommendations && scoreUpdate.recommendations.length > 0 ? 
+            `<p style="margin: 5px 0 0 0; font-size: 12px; opacity: 0.9;">
+              ${scoreUpdate.recommendations[0]}
+            </p>` : ''
+          }
+        </div>
+        <button onclick="this.parentElement.parentElement.remove()" 
+                style="background: none; border: none; color: white; 
+                       font-size: 18px; cursor: pointer; opacity: 0.8;">×</button>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(notification);
+  
+  setTimeout(() => {
+    if (notification.parentNode) {
+      notification.style.animation = 'slideOutRight 0.3s ease-in';
+      setTimeout(() => notification.remove(), 300);
+    }
+  }, 5000);
+}
+
+getCurrentScore(): number {
+  return Number(this.realTimeScore?.score) || Number(this.globalStats.creditScore) || 0;
+}
+
+getScoreChange(): number {
+  if (!this.realTimeScore?.score_change) return 0;
+  return Number(this.realTimeScore.score_change) || 0;
+}
+
+isScoreRealTime(): boolean {
+  return this.realTimeScore?.is_real_time || false;
+}
+
+getLastScoreUpdate(): string {
+  if (!this.realTimeScore?.last_updated) return '';
+  return this.getTimeAgo(this.realTimeScore.last_updated);
+}
+
+
+
 
   ngOnDestroy(): void {
     this.creditsSubscription?.unsubscribe();
@@ -376,978 +456,130 @@ export class ProfileComponent implements OnInit, OnDestroy {
     this.realTimeSubscription?.unsubscribe();
   }
 
-  // ========================================
-  // NOUVELLES MÉTHODES - GESTION DES DETTES ET RESTRICTIONS
-  // ========================================
-
-
-  private loadCreditsFromStorage(): void {
-    try {
-      const storageKey = `user_credits_${this.currentUser?.username}`;
-      const savedCredits = localStorage.getItem(storageKey);
-      
-      if (savedCredits) {
-        this.activeCreditsFromService = JSON.parse(savedCredits);
-        this.updateDebtCalculations();
-        console.log('📁 Crédits chargés depuis localStorage:', this.activeCreditsFromService.length);
-      }
-    } catch (error) {
-      console.error('❌ Erreur chargement localStorage:', error);
-      this.activeCreditsFromService = [];
-    }
-  }
-
-  private saveCreditsToStorage(): void {
-    try {
-      const storageKey = `user_credits_${this.currentUser?.username}`;
-      localStorage.setItem(storageKey, JSON.stringify(this.activeCreditsFromService));
-      console.log('💾 Crédits sauvegardés en local');
-    } catch (error) {
-      console.error('❌ Erreur sauvegarde localStorage:', error);
-    }
-  }
-
-
-  private calculateLocalRestrictions(): void {
-    const activeCredits = this.activeCreditsFromService.filter(c => c.status === 'active');
-    const totalDebt = activeCredits.reduce((sum, credit) => sum + credit.remainingAmount, 0);
-    const monthlyIncome = this.currentUser?.monthlyIncome || 1;
-    const debtRatio = totalDebt / monthlyIncome;
+  private loadCompleteStats(userId: number): void {
+    console.log('Chargement statistiques completes pour user:', userId);
     
-    // Vérifier la dernière demande
-    const lastApplicationKey = `last_application_${this.currentUser?.username}`;
-    const lastApplicationDate = localStorage.getItem(lastApplicationKey);
-    const daysSinceLastApplication = lastApplicationDate ? 
-      Math.floor((Date.now() - new Date(lastApplicationDate).getTime()) / (1000 * 60 * 60 * 24)) : 30;
-    
-    let canApply = true;
-    let blockingReason = '';
-    let nextEligibleDate = undefined;
-    
-    // Règle 1: Maximum 2 crédits actifs
-    if (activeCredits.length >= 2) {
-      canApply = false;
-      blockingReason = 'Maximum 2 crédits actifs atteint';
-    }
-    
-    // Règle 2: Ratio d'endettement maximum 70%
-    else if (debtRatio > 0.7) {
-      canApply = false;
-      blockingReason = `Ratio d'endettement trop élevé (${(debtRatio * 100).toFixed(1)}%)`;
-    }
-    
-    // Règle 3: Délai minimum de 30 jours entre demandes
-    else if (daysSinceLastApplication < 30) {
-      canApply = false;
-      const remainingDays = 30 - daysSinceLastApplication;
-      blockingReason = `Délai d'attente: ${remainingDays} jour(s) restant(s)`;
-      
-      const nextDate = new Date();
-      nextDate.setDate(nextDate.getDate() + remainingDays);
-      nextEligibleDate = nextDate.toISOString();
-    }
-    
-    this.creditRestrictions = {
-      canApplyForCredit: canApply,
-      maxCreditsAllowed: 2,
-      activeCreditCount: activeCredits.length,
-      totalActiveDebt: totalDebt,
-      debtRatio: debtRatio,
-      nextEligibleDate: nextEligibleDate,
-      lastApplicationDate: lastApplicationDate || undefined,
-      blockingReason: blockingReason,
-      daysUntilNextApplication: canApply ? 0 : (30 - daysSinceLastApplication)
-    };
-    
-    console.log('🔒 Restrictions calculées localement:', this.creditRestrictions);
-  }
-
-  private loadCreditRestrictions(): void {
-  if (!this.currentUser?.username) return;
-  
-  // ✅ Utiliser apiProxy au lieu de http.get
-  this.apiProxy.getRestrictions(this.currentUser.username).subscribe({
-    next: (restrictions) => {
-      this.creditRestrictions = restrictions;
-      console.log('🔒 Restrictions chargées:', restrictions);
-    },
-    error: (error) => {
-      console.error('❌ Erreur chargement restrictions:', error);
-      this.calculateLocalRestrictions();
-    }
-  });
-}
-
-  private updateDebtCalculations(): void {
-    // Mettre à jour les dettes du client
-    const totalActiveDebt = this.activeCreditsFromService
-      .filter(c => c.status === 'active')
-      .reduce((sum, credit) => sum + credit.remainingAmount, 0);
-    
-    if (this.client) {
-      this.client.existingDebts = totalActiveDebt;
-      this.saveClientData();
-    }
-    
-    // Recalculer les restrictions
-    this.calculateLocalRestrictions();
-    
-    // Mettre à jour le score si nécessaire
-    if (totalActiveDebt !== this.creditRestrictions.totalActiveDebt) {
-      this.refreshCreditScore();
-    }
-  }
-
-  // ========================================
-  // MÉTHODES PRINCIPALES DU HTML
-  // ========================================
-
-  /**
-   * Ouvre le modal des crédits actifs
-   */
-  openActiveCreditsModal(): void {
-  this.showActiveCreditsModal = true;
-}
-
-  /**
-   * Ferme le modal des crédits actifs
-   */
-  closeActiveCreditsModal(): void {
-    this.showActiveCreditsModal = false;
-  }
-
-  /**
-   * Obtient le nom du type de crédit
-   */
-  getCreditTypeName(creditTypeId: string): string {
-    const creditType = this.creditTypes.find(type => type.id === creditTypeId);
-    return creditType ? creditType.name : 'Crédit';
-  }
-
-  /**
-   * Obtient le texte du statut de crédit
-   */
-  getCreditStatusText(status: string): string {
-    const statusMap: Record<string, string> = {
-      'active': 'Actif',
-      'paid': 'Remboursé',
-      'overdue': 'En retard'
-    };
-    return statusMap[status] || status;
-  }
-
-  /**
-   * Effectue un paiement sur un crédit
-   */
-  makePayment(creditId: string): void {
-    const credit = this.activeCreditsFromService.find(c => c.id === creditId);
-    if (!credit || credit.status !== 'active') {
-      this.showNotification('Crédit non trouvé ou déjà remboursé', 'error');
-      return;
-    }
-
-    const paymentAmount = Math.min(50000, credit.remainingAmount); // Paiement partiel de 50k ou le solde restant
-    
-    if (confirm(`Confirmer le paiement de ${this.formatCurrency(paymentAmount)} pour le crédit ${this.getCreditTypeName(credit.type)} ?`)) {
-      this.processPayment(creditId, paymentAmount);
-    }
-  }
-
-  /**
-   * Simule l'impact d'un paiement
-   */
-  simulatePayment(creditId: string): void {
-    // Simulation simple d'impact de paiement
-    const credit = this.activeCreditsFromService.find(c => c.id === creditId);
-    if (!credit) return;
-    
-    const currentScore = this.getCurrentScore();
-    const estimatedImprovement = credit.remainingAmount > 100000 ? 0.2 : 0.1;
-    const estimatedNewScore = Math.min(10, currentScore + estimatedImprovement);
-    
-    this.showNotification(
-      `💡 Simulation: Rembourser ce crédit améliorerait votre score de ${currentScore.toFixed(1)} à ${estimatedNewScore.toFixed(1)} (+${estimatedImprovement.toFixed(1)})`,
-      'info'
-    );
-  }
-
-  /**
-   * Traite un paiement
-   */
-  private processPayment(creditId: string, amount: number): void {
-    const creditIndex = this.activeCreditsFromService.findIndex(c => c.id === creditId);
-    if (creditIndex === -1) return;
-
-    const credit = this.activeCreditsFromService[creditIndex];
-    const isFullPayment = amount >= credit.remainingAmount;
-    
-    // Créer l'enregistrement de paiement
-    const payment: PaymentRecord = {
-      id: this.generatePaymentId(),
-      amount: amount,
-      date: new Date().toISOString(),
-      type: isFullPayment ? 'full' : 'partial',
-      late: false, // Simplification: on considère tous les paiements à temps
-      daysLate: 0
-    };
-    
-    // Mettre à jour le crédit
-    credit.remainingAmount = Math.max(0, credit.remainingAmount - amount);
-    credit.paymentsHistory.push(payment);
-    
-    if (credit.remainingAmount === 0) {
-      credit.status = 'paid';
-    }
-    
-    this.activeCreditsFromService[creditIndex] = credit;
-    this.saveCreditsToStorage();
-    
-    // Envoyer au serveur
-    const paymentData = {
-      username: this.currentUser?.username,
-      credit_id: creditId,
-      payment: payment,
-      remaining_amount: credit.remainingAmount,
-      credit_status: credit.status
-    };
-    
-    this.http.post(`${this.apiUrl}/process-payment`, paymentData)
-      .subscribe({
-        next: (response: any) => {
-          console.log('✅ Paiement traité:', response);
+    this.apiProxy.getUserStats(userId).subscribe({
+      next: (response: { success: any; data: any; }) => {
+        if (response.success) {
+          const stats = response.data;
+          console.log('Stats recues:', stats);
           
-          if (response.score_impact) {
-            this.showScoreChangeNotification(
-              response.score_impact.previous_score,
-              response.score_impact.new_score,
-              {
-                recommendations: ['Paiement effectué avec succès'],
-                user_id: 0,
-                score: response.score_impact.new_score,
-                risk_level: response.score_impact.risk_level || 'moyen',
-                factors: [],
-                last_updated: new Date().toISOString(),
-                is_real_time: true
-              }
-            );
-          }
-        },
-        error: (error) => {
-          console.error('❌ Erreur traitement paiement serveur:', error);
+          this.globalStats = {
+            totalBorrowed: stats.totalBorrowed || 0,
+            totalReimbursed: stats.totalReimbursed || 0,
+            activeCredits: stats.activeCredits || 0,
+            creditScore: stats.creditScore || 0,
+            eligibleAmount: stats.eligibleAmount || 0,
+            totalApplications: stats.totalApplications || 0,
+            approvedApplications: stats.approvedApplications || 0,
+            riskLevel: stats.riskLevel || 'medium'
+          };
+          
+          this.recentCreditRequests = (stats.recentRequests || []).map((req: any) => ({
+            id: req.id,
+            requestNumber: req.requestNumber,
+            type: req.type,
+            amount: req.amount,
+            status: req.status,
+            submissionDate: req.submissionDate,
+            approvedAmount: req.approvedAmount,
+            isPaid: req.isPaid || false
+          }));
+          
+          console.log('Stats mises a jour:', this.globalStats);
+          console.log('Dernieres demandes:', this.recentCreditRequests.length);
         }
-      });
-    
-    // Mettre à jour localement
-    this.updateDebtCalculations();
-    
-    // Notification
-    if (isFullPayment) {
-      this.showNotification(`✅ Crédit intégralement remboursé ! Votre score va s'améliorer.`, 'success');
-    } else {
-      this.showNotification(`✅ Paiement de ${this.formatCurrency(amount)} effectué. Restant: ${this.formatCurrency(credit.remainingAmount)}`, 'success');
-    }
+      },
+      error: (error: any) => {
+        console.error('Erreur chargement stats:', error);
+        this.recentCreditRequests = [];
+      }
+    });
   }
 
-  /**
-   * Génère un ID de paiement unique
-   */
-  private generatePaymentId(): string {
-    return `PAY_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+  private loadInitialScore(user: User): void {
+    if (!user.id) return;
+    
+    this.apiProxy.getUserScoring(user.id, false).subscribe({
+      next: (scoreUpdate: RealTimeScoreUpdate) => {
+        if (scoreUpdate && scoreUpdate.user_id) {
+          this.handleRealTimeScoreUpdate(scoreUpdate);
+        }
+      },
+      error: (error) => {
+        console.error('Erreur chargement score initial:', error);
+        if (user.creditScore !== undefined) {
+          this.globalStats.creditScore = user.creditScore;
+          this.globalStats.eligibleAmount = user.eligibleAmount || 0;
+          this.globalStats.riskLevel = user.riskLevel || 'medium';
+        }
+      }
+    });
   }
 
-  // ========================================
-  // MÉTHODE PRINCIPALE - CRÉDIT RAPIDE AMÉLIORÉ
-  // ========================================
 
-  /**
-   * Soumet une demande de crédit rapide
-   */
+
   async submitQuickCredit(): Promise<void> {
-  if (this.quickCredit.amount < 10000) {
-    this.showNotification('Le montant minimum est de 10 000 FCFA', 'error');
-    return;
-  }
-
-  this.isSubmitting = true;
-  
-  try {
-    // Préparer les données pour le service
-    const requestData = {
-      username: this.currentUser?.username,
-      type: this.quickCredit.type,
-      amount: this.quickCredit.amount,
-      totalAmount: this.quickCredit.amount + Math.round(this.quickCredit.amount * 0.015),
-      client_data: {
-        name: this.client?.name || '',
-        email: this.client?.email || '',
-        phone: this.client?.phone || '',
-        monthly_income: this.client?.monthlyIncome || 0,
-        existing_debts: this.client?.existingDebts || 0
-      }
-    };
-
-    // Créer la demande via le service
-    const newCredit = await this.creditRequestsService.createShortRequest(requestData);
-    
-    // Traitement local immédiat (pour compatibilité avec le code existant)
-    this.processLocalCredit({
-      id: newCredit.id,
-      type: newCredit.creditType,
-      amount: newCredit.amount,
-      totalAmount: newCredit.totalAmount,
-      remainingAmount: newCredit.remainingAmount,
-      interestRate: newCredit.interestRate,
-      status: newCredit.status,
-      approvedDate: newCredit.approvedDate,
-      dueDate: newCredit.dueDate,
-      paymentsHistory: []
-    });
-    
-    this.showCreditNotification(
-      newCredit.amount,
-      Math.round(newCredit.amount * 0.015),
-      newCredit.totalAmount
-    );
-    
-  } catch (error) {
-    console.error('Erreur création demande courte:', error);
-    this.showNotification('Erreur lors de la création de la demande', 'error');
-  } finally {
-    this.isSubmitting = false;
-    this.showQuickCreditModal = false;
-  }
-}
-
-  /**
-   * Traite un crédit localement
-   */
-  private processLocalCredit(newCredit: RegisteredCredit): void {
-    // 1. Ajouter le crédit à la liste
-    this.activeCreditsFromService.push(newCredit);
-    this.saveCreditsToStorage();
-    
-    // 2. Créditer le compte
-    this.addTransaction('credit', newCredit.amount, `Crédit ${this.getCreditTypeName(newCredit.type)} approuvé`);
-    
-    // 3. Enregistrer la date de demande
-    const applicationKey = `last_application_${this.currentUser?.username}`;
-    localStorage.setItem(applicationKey, new Date().toISOString());
-    
-    // 4. Mettre à jour les calculs de dettes
-    this.updateDebtCalculations();
-    
-    // 5. Actualiser les données du profil
-    this.profileService.refreshData();
-    
-    console.log('✅ Crédit traité localement:', newCredit);
-  }
-
-  /**
-   * Génère un ID de crédit unique
-   */
-  private generateCreditId(): string {
-    const timestamp = Date.now();
-    const random = Math.floor(Math.random() * 1000);
-    return `CREDIT_${timestamp}_${random}`;
-  }
-
-  /**
-   * Obtient le taux d'intérêt pour un type de crédit
-   */
-  private getCreditInterestRate(creditType: string): number {
-    const rates: Record<string, number> = {
-      'consommation_generale': 0.05,
-      'avance_salaire': 0.03,
-      'depannage': 0.04,
-      'investissement': 0.08,
-      'tontine': 0.06,
-      'retraite': 0.04
-    };
-    return rates[creditType] || 0.05;
-  }
-
-  /**
-   * Calcule la date d'échéance d'un crédit
-   */
-  private calculateDueDate(creditType: string): string {
-    const dueDate = new Date();
-    
-    switch (creditType) {
-      case 'avance_salaire':
-        // Fin du mois suivant
-        dueDate.setMonth(dueDate.getMonth() + 1);
-        dueDate.setDate(new Date(dueDate.getFullYear(), dueDate.getMonth() + 1, 0).getDate());
-        break;
-      case 'depannage':
-        // 30 jours
-        dueDate.setDate(dueDate.getDate() + 30);
-        break;
-      case 'consommation_generale':
-        // 45 jours
-        dueDate.setDate(dueDate.getDate() + 45);
-        break;
-      default:
-        // 30 jours par défaut
-        dueDate.setDate(dueDate.getDate() + 30);
+    if (this.quickCredit.amount < 10000) {
+      this.showNotification('Montant minimum: 10 000 FCFA', 'error');
+      return;
     }
+
+    this.isSubmitting = true;
     
-    return dueDate.toISOString();
-  }
-
-  /**
-   * Définit le montant du crédit rapide en pourcentage
-   */
-  setQuickCreditAmount(percentage: number): void {
-    this.quickCredit.amount = Math.round(this.globalStats.eligibleAmount * percentage);
-  }
-
-
-  /**
-   * Obtient les types de crédit disponibles
-   */
-  getAvailableCreditTypes(): CreditType[] {
-    return this.creditTypes.filter(type => type.available);
-  }
-
-  // ========================================
-  // MÉTHODES DE GESTION DU SOLDE EXISTANTES CONSERVÉES
-  // ========================================
-
-  /**
-   * Charge le solde du compte depuis le localStorage
-   */
-  private loadAccountBalance(): void {
-    const savedBalance = localStorage.getItem(`accountBalance_${this.currentUser?.username}`);
-    if (savedBalance) {
-      this.accountBalance = JSON.parse(savedBalance);
-    } else {
-      this.accountBalance = {
-        totalCredited: 0,
-        totalUsed: 0,
-        currentBalance: 0,
-        lastTransaction: '',
-        transactions: []
+    try {
+      const creditData = {
+        username: this.currentUser?.username,
+        user_id: this.currentUser?.id,
+        type: this.quickCredit.type,
+        amount: this.quickCredit.amount,
+        totalAmount: this.quickCredit.amount * 1.015,
+        interestRate: 0.015
       };
-      this.saveAccountBalance();
-    }
-  }
 
-  /**
-   * Sauvegarde le solde du compte
-   */
-  private saveAccountBalance(): void {
-    localStorage.setItem(`accountBalance_${this.currentUser?.username}`, JSON.stringify(this.accountBalance));
-  }
-
-  /**
-   * Ajoute une transaction au compte
-   */
-  private addTransaction(type: 'credit' | 'debit', amount: number, description: string): void {
-    const transaction: AccountTransaction = {
-      id: Date.now().toString(),
-      type: type,
-      amount: amount,
-      description: description,
-      date: new Date().toISOString(),
-      balance: type === 'credit' ? this.accountBalance.currentBalance + amount : this.accountBalance.currentBalance - amount
-    };
-
-    if (type === 'credit') {
-      this.accountBalance.totalCredited += amount;
-      this.accountBalance.currentBalance += amount;
-    } else {
-      this.accountBalance.totalUsed += amount;
-      this.accountBalance.currentBalance -= amount;
-    }
-
-    this.accountBalance.lastTransaction = transaction.date;
-    this.accountBalance.transactions.unshift(transaction);
-
-    if (this.accountBalance.transactions.length > 50) {
-      this.accountBalance.transactions = this.accountBalance.transactions.slice(0, 50);
-    }
-
-    this.saveAccountBalance();
-  }
-
-  /**
-   * Active/désactive l'affichage des détails du compte
-   */
-  toggleAccountDetails(): void {
-    this.showAccountDetails = !this.showAccountDetails;
-  }
-
-  /**
-   * Utilise du crédit du compte
-   */
-  useCredit(amount: number, description: string = 'Utilisation du crédit'): void {
-    if (amount > this.accountBalance.currentBalance) {
-      this.showNotification(`Solde insuffisant. Solde actuel: ${this.formatCurrency(this.accountBalance.currentBalance)}`, 'error');
-      return;
-    }
-
-    if (amount <= 0) {
-      this.showNotification('Le montant doit être supérieur à 0', 'error');
-      return;
-    }
-
-    this.addTransaction('debit', amount, description);
-    this.showNotification(`${this.formatCurrency(amount)} débité de votre compte. Solde restant: ${this.formatCurrency(this.accountBalance.currentBalance)}`, 'success');
-  }
-
-  /**
-   * Ouvre le modal pour montant personnalisé
-   */
-  openCustomAmountModal(): void {
-    this.customAmount = 0;
-    this.customDescription = '';
-    this.showCustomAmountModal = true;
-  }
-
-  /**
-   * Ferme le modal pour montant personnalisé
-   */
-  closeCustomAmountModal(): void {
-    this.showCustomAmountModal = false;
-    this.customAmount = 0;
-    this.customDescription = '';
-  }
-
-  /**
-   * Utilise un montant personnalisé
-   */
-  useCustomAmount(): void {
-    if (!this.customAmount || this.customAmount <= 0) {
-      this.showNotification('Veuillez saisir un montant valide', 'error');
-      return;
-    }
-
-    if (this.customAmount > this.accountBalance.currentBalance) {
-      this.showNotification(`Solde insuffisant. Solde actuel: ${this.formatCurrency(this.accountBalance.currentBalance)}`, 'error');
-      return;
-    }
-
-    const description = this.customDescription || `Utilisation personnalisée de ${this.formatCurrency(this.customAmount)}`;
-    
-    this.useCredit(this.customAmount, description);
-    this.closeCustomAmountModal();
-  }
-
-  /**
-   * Filtre les transactions par type
-   */
-  filterTransactions(transactions: AccountTransaction[], type: string): AccountTransaction[] {
-    if (!transactions) return [];
-    return transactions.filter(transaction => transaction.type === type);
-  }
-
-  /**
-   * Formate la date d'une transaction
-   */
-  formatTransactionDate(dateString: string): string {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('fr-FR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  }
-
-  /**
-   * Obtient l'icône d'une transaction
-   */
-  getTransactionIcon(type: 'credit' | 'debit'): string {
-    return type === 'credit' ? 'add_circle' : 'remove_circle';
-  }
-
-  /**
-   * Obtient la couleur d'une transaction
-   */
-  getTransactionColor(type: 'credit' | 'debit'): string {
-    return type === 'credit' ? '#4CAF50' : '#F44336';
-  }
-
-  /**
-   * Calcule le temps écoulé depuis une date
-   */
-  getTimeAgo(dateString: string): string {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMinutes = Math.floor(diffMs / (1000 * 60));
-    
-    if (diffMinutes < 1) return 'à l\'instant';
-    if (diffMinutes < 60) return `il y a ${diffMinutes} min`;
-    
-    const diffHours = Math.floor(diffMinutes / 60);
-    if (diffHours < 24) return `il y a ${diffHours}h`;
-    
-    const diffDays = Math.floor(diffHours / 24);
-    return `il y a ${diffDays} jour${diffDays > 1 ? 's' : ''}`;
-  }
-
-  // ========================================
-  // MÉTHODES DE SCORING TEMPS RÉEL
-  // ========================================
-
-  /**
-   * Démarre le monitoring du score en temps réel
-   */
-  private startRealTimeScoreMonitoring(userId: number): void {
-    console.log('🔄 Démarrage monitoring score temps réel pour:', userId);
-    
-    this.realTimeSubscription = interval(30000).pipe(
-      switchMap(() => this.getRealTimeScore(userId)),
-      catchError(error => {
-        console.error('❌ Erreur monitoring temps réel:', error);
-        return [];
-      })
-    ).subscribe((scoreUpdate: RealTimeScoreUpdate) => {
-      if (scoreUpdate) {
-        this.handleRealTimeScoreUpdate(scoreUpdate);
-      }
-    });
-
-    this.getRealTimeScore(userId).subscribe((scoreUpdate: RealTimeScoreUpdate) => {
-      if (scoreUpdate) {
-        this.handleRealTimeScoreUpdate(scoreUpdate);
-      }
-    });
-  }
-private loadScoreHistory(): void {
-  if (!this.currentUser?.username) return;
-  
-  // ✅ Utiliser apiProxy au lieu de http.get
-  this.apiProxy.getScoreTrend(this.currentUser.username).subscribe({
-    next: (response) => {
-      this.scoreHistory = response.recent_transactions?.map((t: any) => ({
-        score: 6.5,
-        date: t.date,
-        change: 0.1,
-        reason: t.description || 'Activité automatique'
-      })) || [];
-      console.log('📈 Historique des scores chargé:', this.scoreHistory.length, 'entrées');
-    },
-    error: (error) => {
-      console.error('❌ Erreur chargement historique:', error);
-    }
-  });
-}
-
-  /**
-   * Calcule l'âge du client
-   */
-  private calculateAge(): number {
-    if (!this.client?.birthDate) return 35;
-    
-    const birthDate = new Date(this.client.birthDate);
-    const today = new Date();
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
-    }
-    
-    return age;
-  }
-
-  /**
-   * Gère la mise à jour du score en temps réel
-   */
-  private handleRealTimeScoreUpdate(scoreUpdate: RealTimeScoreUpdate): void {
-    const previousScore = this.realTimeScore?.score || this.globalStats.creditScore || 0;
-    const newScore = scoreUpdate.score;
-    
-    console.log('📊 Mise à jour score temps réel:', {
-      previous: previousScore,
-      new: newScore,
-      change: newScore - previousScore,
-      analysis: scoreUpdate.payment_analysis
-    });
-
-    if (scoreUpdate.payment_analysis) {
-      this.paymentAnalysis = scoreUpdate.payment_analysis;
-    }
-
-    if (Math.abs(newScore - previousScore) >= 0.1) {
-      this.animateScoreChange(previousScore, newScore);
-      this.showScoreChangeNotification(previousScore, newScore, scoreUpdate);
-    }
-
-    this.realTimeScore = scoreUpdate;
-    this.globalStats.creditScore = newScore;
-    this.globalStats.riskLevel = scoreUpdate.risk_level;
-    
-    this.savedScore = {
-      score: newScore,
-      eligibleAmount: this.globalStats.eligibleAmount,
-      riskLevel: scoreUpdate.risk_level,
-      recommendations: scoreUpdate.recommendations,
-      lastUpdate: scoreUpdate.last_updated,
-      factors: scoreUpdate.factors,
-      scoreHistory: this.scoreHistory
-    };
-
-    this.checkEligibility();
-    this.loadScoreHistory();
-  }
-
-  /**
-   * Anime le changement de score
-   */
-  private animateScoreChange(oldScore: number, newScore: number): void {
-    this.scoreChangeAnimation = true;
-    this.previousScore = oldScore;
-    
-    const scoreElement = document.querySelector('.score-number');
-    if (scoreElement) {
-      scoreElement.classList.add('score-updating');
+      // Enregistrer dans PostgreSQL via NestJS
+      const newCredit = await this.apiProxy.registerCredit(creditData).toPromise();
       
-      setTimeout(() => {
-        scoreElement.classList.remove('score-updating');
-        this.scoreChangeAnimation = false;
-      }, 1000);
+      console.log('Credit enregistre:', newCredit);
+      
+      // Recharger les donnees
+      this.loadRegisteredCredits();
+      this.loadCreditRestrictions();
+      
+      // Recalculer le score
+      this.refreshCreditScore();
+      
+      // Afficher le message de succes
+      this.showQuickCreditModal = false;
+      this.showSuccessMessage(creditData.amount);
+      
+    } catch (error) {
+      console.error('Erreur creation credit:', error);
+      this.showNotification('Erreur lors de la creation', 'error');
+    } finally {
+      this.isSubmitting = false;
     }
   }
 
-  /**
-   * Affiche une notification de changement de score
-   */
-  private showScoreChangeNotification(oldScore: number, newScore: number, scoreUpdate: RealTimeScoreUpdate): void {
-    const change = newScore - oldScore;
-    const isPositive = change > 0;
-    const trend = scoreUpdate.payment_analysis?.trend || 'stable';
-    
-    let trendIcon = 'trending_flat';
-    let trendText = 'Stable';
-    
-    if (trend === 'improving') {
-      trendIcon = 'trending_up';
-      trendText = 'En amélioration';
-    } else if (trend === 'declining') {
-      trendIcon = 'trending_down';
-      trendText = 'En baisse';
-    }
-    
-    const notification = document.createElement('div');
-    notification.className = `score-change-notification ${isPositive ? 'positive' : 'negative'}`;
-    notification.innerHTML = `
-      <div style="position: fixed; top: 100px; right: 20px; max-width: 350px; 
-                  background: ${isPositive ? '#4CAF50' : '#f44336'}; color: white; 
-                  border-radius: 8px; padding: 16px; z-index: 1001; 
-                  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-                  animation: slideInRight 0.3s ease-out;">
-        <div style="display: flex; align-items: center; gap: 12px;">
-          <i class="material-icons" style="font-size: 24px;">
-            ${isPositive ? 'trending_up' : 'trending_down'}
-          </i>
-          <div>
-            <h4 style="margin: 0; font-size: 16px;">Score Mis à Jour</h4>
-            <p style="margin: 5px 0 0 0; font-size: 14px;">
-              ${oldScore.toFixed(1)} → ${newScore.toFixed(1)} 
-              (${isPositive ? '+' : ''}${change.toFixed(1)})
-            </p>
-            <p style="margin: 5px 0 0 0; font-size: 12px; display: flex; align-items: center; gap: 4px;">
-              <i class="material-icons" style="font-size: 16px;">${trendIcon}</i>
-              ${trendText}
-            </p>
-            ${scoreUpdate.recommendations && scoreUpdate.recommendations.length > 0 ? 
-              `<p style="margin: 5px 0 0 0; font-size: 12px; opacity: 0.9;">
-                ${scoreUpdate.recommendations[0]}
-              </p>` : ''
-            }
-          </div>
-          <button onclick="this.parentElement.parentElement.remove()" 
-                  style="background: none; border: none; color: white; 
-                         font-size: 18px; cursor: pointer; opacity: 0.8;">×</button>
-        </div>
-      </div>
-    `;
-    
-    document.body.appendChild(notification);
-    
-    setTimeout(() => {
-      if (notification.parentNode) {
-        notification.style.animation = 'slideOutRight 0.3s ease-in';
-        setTimeout(() => notification.remove(), 300);
-      }
-    }, 5000);
+  private showSuccessMessage(amount: number): void {
+    this.successMessage = `Votre demande de credit de ${this.formatCurrency(amount)} a ete enregistree avec succes. Vous serez decaisse dans quelques jours. Vous recevrez une notification par SMS et email.`;
+    this.showSuccessModal = true;
   }
 
- /**
- * Actualise le score de crédit
- */
-refreshCreditScore(): void {
-  if (!this.currentUser || this.currentUser.username === undefined) {
-    this.showNotification('Utilisateur non connecté ou username manquant', 'error');
-    return;
+  closeSuccessModal(): void {
+    this.showSuccessModal = false;
   }
 
-  this.isScoreUpdating = true;
-  
-  const refreshBtn = document.querySelector('.refresh-btn i');
-  if (refreshBtn) {
-    refreshBtn.classList.add('rotating');
-  }
-  
-  console.log('🔄 Actualisation du score pour:', this.currentUser.name);
-  
-  const userData = {
-    username: this.currentUser.username,
-    name: this.currentUser.name || this.currentUser.fullName,
-    email: this.currentUser.email,
-    phone: this.currentUser.phone,
-    monthly_income: this.client?.monthlyIncome || 0,
-    employment_status: this.client?.employmentStatus || 'cdi',
-    job_seniority: this.client?.jobSeniority || 24,
-    profession: this.client?.profession || '',
-    company: this.client?.company || '',
-    existing_debts: this.client?.existingDebts || 0,
-    monthly_charges: this.client?.monthlyCharges || 0,
-    use_realtime: true,
-    // NOUVEAU: Inclure les crédits actifs
-    active_credits: this.activeCreditsFromService
-      .filter(c => c.status === 'active')
-      .map(credit => ({
-        amount: credit.amount,
-        remaining: credit.remainingAmount,
-        type: credit.type,
-        approved_date: credit.approvedDate
-      }))
-  };
-  
-  // ✅ Utiliser ApiProxyService pour appeler Flask
-  this.apiProxy.calculateScore(userData).subscribe({
-    next: (result: any) => {
-      console.log('✅ Score actualisé:', result);
-      
-      const adaptedResult: RealTimeScoreUpdate = {
-        user_id: this.currentUser?.id || 0,
-        score: result.score,
-        previous_score: result.previous_score,
-        risk_level: result.risk_level,
-        factors: result.factors || [],
-        recommendations: result.recommendations || [],
-        last_updated: result.calculation_date || new Date().toISOString(),
-        is_real_time: result.is_realtime || false,
-        score_change: result.score_change || 0,
-        payment_analysis: result.payment_analysis
-      };
-      
-      this.handleRealTimeScoreUpdate(adaptedResult);
-      this.checkEligibility();
-      
-      this.showNotification('Score de crédit actualisé !', 'success');
-      
-      if (refreshBtn) {
-        refreshBtn.classList.remove('rotating');
-      }
-      this.isScoreUpdating = false;
-    },
-    error: (error: any) => {
-      console.error('❌ Erreur lors du rafraîchissement du score:', error);
-      this.showNotification('Erreur lors de la mise à jour du score', 'error');
-      
-      if (refreshBtn) {
-        refreshBtn.classList.remove('rotating');
-      }
-      this.isScoreUpdating = false;
-    }
-  });
-}
-
-  /**
-   * Obtient le score actuel
-   */
-  getCurrentScore(): number {
-    return this.realTimeScore?.score || this.globalStats.creditScore || 0;
-  }
-
-  /**
-   * Obtient le changement de score
-   */
-  getScoreChange(): number {
-    if (!this.realTimeScore?.score_change) return 0;
-    return this.realTimeScore.score_change;
-  }
-
-  /**
-   * Vérifie si le score est en temps réel
-   */
-  isScoreRealTime(): boolean {
-    return this.realTimeScore?.is_real_time || false;
-  }
-
-  /**
-   * Obtient la dernière mise à jour du score
-   */
-  getLastScoreUpdate(): string {
-    if (!this.realTimeScore?.last_updated) return '';
-    return this.getTimeAgo(this.realTimeScore.last_updated);
-  }
-
-  private loadRegisteredCredits(): void {
-  if (!this.currentUser?.username) return;
-  
-  // ✅ Utiliser apiProxy au lieu de http.get
-  this.apiProxy.getUserCredits(this.currentUser.username).subscribe({
-    next: (credits) => {
-      this.activeCreditsFromService = credits;
-      this.updateDebtCalculations();
-      console.log('✅ Crédits enregistrés chargés:', credits.length);
-    },
-    error: (error) => {
-      console.error('❌ Erreur chargement crédits:', error);
-      this.loadCreditsFromStorage();
-    }
-  });
-}
-private getRealTimeScore(userId: number) {
-  const userData = {
-    username: this.currentUser?.username || 'user_' + userId,
-    monthly_income: this.client?.monthlyIncome || 0,
-    employment_status: this.client?.employmentStatus || 'cdi',
-    job_seniority: this.client?.jobSeniority || 24,
-    existing_debts: this.client?.existingDebts || 0,
-    monthly_charges: this.client?.monthlyCharges || 0,
-    age: this.calculateAge() || 35,
-    profession: this.client?.profession || '',
-    company: this.client?.company || '',
-    active_credits: this.activeCreditsFromService
-      .filter(c => c.status === 'active')
-      .map(credit => ({
-        amount: credit.amount,
-        remaining: credit.remainingAmount,
-        type: credit.type,
-        approved_date: credit.approvedDate
-      }))
-  };
-  
-  // ✅ Utiliser apiProxy au lieu de http.post
-  return this.apiProxy.getRealtimeScore(userData);
-}
-  // ========================================
-  // MÉTHODES D'INFORMATION ET STATUT
-  // ========================================
-
-  /**
-   * Obtient le statut du score de crédit
-   */
   getCreditScoreStatus(): string {
     const score = this.getCurrentScore();
     if (score >= 9) return 'Excellent';
-    if (score >= 7) return 'Très bon';
+    if (score >= 7) return 'Tres bon';
     if (score >= 5) return 'Bon';
     if (score >= 3) return 'Moyen';
-    return 'À améliorer';
+    return 'A ameliorer';
   }
 
-  /**
-   * Obtient la couleur du score de crédit
-   */
   getCreditScoreColor(): string {
     const score = this.getCurrentScore();
     if (score >= 9) return '#4CAF50';
@@ -1357,35 +589,43 @@ private getRealTimeScore(userId: number) {
     return '#F44336';
   }
 
-  /**
-   * Obtient le texte du niveau de risque
-   */
+  private loadCreditRestrictions(): void {
+    if (!this.currentUser?.username) return;
+    
+    this.apiProxy.getUserRestrictions(this.currentUser.username).subscribe({
+      next: (restrictions) => {
+        this.creditRestrictions = restrictions;
+        console.log('Restrictions chargees:', restrictions);
+      },
+      error: (error) => {
+        console.error('Erreur chargement restrictions:', error);
+      }
+    });
+  }
+
   getRiskLevelText(): string {
     const riskLevel = this.realTimeScore?.risk_level || this.globalStats?.riskLevel || this.savedScore?.riskLevel || 'medium';
     switch (riskLevel) {
-      case 'très_bas':
+      case 'tres_bas':
       case 'very_low': 
-        return 'Risque Très Faible';
+        return 'Risque Tres Faible';
       case 'bas':
       case 'low': 
         return 'Risque Faible';
       case 'moyen':
       case 'medium': 
         return 'Risque Moyen';
-      case 'élevé':
+      case 'eleve':
       case 'high': 
-        return 'Risque Élevé';
-      case 'très_élevé':
+        return 'Risque Eleve';
+      case 'tres_eleve':
       case 'very_high': 
-        return 'Risque Très Élevé';
+        return 'Risque Tres Eleve';
       default: 
-        return 'Non évalué';
+        return 'Non evalue';
     }
   }
 
-  /**
-   * Formate une valeur monétaire
-   */
   formatCurrency(amount: number | undefined): string {
     return new Intl.NumberFormat('fr-FR', {
       style: 'currency',
@@ -1395,15 +635,8 @@ private getRealTimeScore(userId: number) {
     }).format(amount || 0);
   }
 
-  // ========================================
-  // MÉTHODES DE GESTION DU PROFIL
-  // ========================================
-
-  /**
-   * Charge le profil utilisateur
-   */
   private loadUserProfile(user: User): void {
-    console.log('📋 Chargement du profil utilisateur:', user.name);
+    console.log('Chargement du profil utilisateur:', user.name);
     
     this.client = {
       name: user.fullName || user.name || '',
@@ -1436,37 +669,6 @@ private getRealTimeScore(userId: number) {
     this.saveClientData();
   }
 
-  /**
-   * Charge le score utilisateur
-   */
-  private loadUserScore(user: User): void {
-    if (user.creditScore !== undefined) {
-      console.log('📊 Score utilisateur disponible:', user.creditScore);
-      
-      this.savedScore = {
-        score: user.creditScore,
-        eligibleAmount: user.eligibleAmount || 0,
-        riskLevel: user.riskLevel || 'moyen',
-        recommendations: user.recommendations || [],
-        scoreDetails: user.scoreDetails,
-        lastUpdate: new Date().toISOString()
-      };
-
-      this.globalStats.creditScore = user.creditScore;
-      this.globalStats.eligibleAmount = user.eligibleAmount || 0;
-      this.globalStats.riskLevel = user.riskLevel || 'medium';
-
-      this.showScoreNotification(this.savedScore);
-      this.displayRecommendations();
-    } else {
-      console.log('⚠️ Aucun score disponible, rechargement...');
-      this.refreshCreditScore();
-    }
-  }
-
-  /**
-   * Sauvegarde les données client
-   */
   saveClientData(): void {
     try {
       if (!this.client) return;
@@ -1490,46 +692,452 @@ private getRealTimeScore(userId: number) {
         monthlyIncome: this.client.monthlyIncome || 0
       });
     } catch (error) {
-      console.error('Erreur lors de la sauvegarde des données client:', error);
+      console.error('Erreur lors de la sauvegarde des donnees client:', error);
     }
   }
 
-  /**
-   * Vérifie l'éligibilité pour les crédits
-   */
+  private loadRegisteredCredits(): void {
+    if (!this.currentUser?.username) return;
+    
+    this.apiProxy.getUserCredits(this.currentUser.username).subscribe({
+      next: (credits) => {
+        this.activeCreditsFromService = credits;
+        this.updateDebtCalculations();
+        console.log('Credits charges depuis PostgreSQL:', credits.length);
+      },
+      error: (error) => {
+        console.error('Erreur chargement credits:', error);
+      }
+    });
+  }
+
+  private updateDebtCalculations(): void {
+    const totalActiveDebt = this.activeCreditsFromService
+      .filter(c => c.status === 'active')
+      .reduce((sum, credit) => sum + credit.remainingAmount, 0);
+    
+    if (this.client) {
+      this.client.existingDebts = totalActiveDebt;
+      this.saveClientData();
+    }
+    
+    this.calculateLocalRestrictions();
+    
+    if (totalActiveDebt !== this.creditRestrictions.totalActiveDebt) {
+      this.refreshCreditScore();
+    }
+  }
+
+  private calculateLocalRestrictions(): void {
+    const activeCredits = this.activeCreditsFromService.filter(c => c.status === 'active');
+    const totalDebt = activeCredits.reduce((sum, credit) => sum + credit.remainingAmount, 0);
+    const monthlyIncome = this.currentUser?.monthlyIncome || 1;
+    const debtRatio = totalDebt / monthlyIncome;
+    
+    const lastApplicationKey = `last_application_${this.currentUser?.username}`;
+    const lastApplicationDate = localStorage.getItem(lastApplicationKey);
+    const daysSinceLastApplication = lastApplicationDate ? 
+      Math.floor((Date.now() - new Date(lastApplicationDate).getTime()) / (1000 * 60 * 60 * 24)) : 30;
+    
+    let canApply = true;
+    let blockingReason = '';
+    let nextEligibleDate = undefined;
+    
+    if (activeCredits.length >= 2) {
+      canApply = false;
+      blockingReason = 'Maximum 2 credits actifs atteint';
+    } else if (debtRatio > 0.7) {
+      canApply = false;
+      blockingReason = `Ratio d'endettement trop eleve (${(debtRatio * 100).toFixed(1)}%)`;
+    } else if (daysSinceLastApplication < 30) {
+      canApply = false;
+      const remainingDays = 30 - daysSinceLastApplication;
+      blockingReason = `Delai d'attente: ${remainingDays} jour(s) restant(s)`;
+      
+      const nextDate = new Date();
+      nextDate.setDate(nextDate.getDate() + remainingDays);
+      nextEligibleDate = nextDate.toISOString();
+    }
+    
+    this.creditRestrictions = {
+      canApplyForCredit: canApply,
+      maxCreditsAllowed: 2,
+      activeCreditCount: activeCredits.length,
+      totalActiveDebt: totalDebt,
+      debtRatio: debtRatio,
+      nextEligibleDate: nextEligibleDate,
+      lastApplicationDate: lastApplicationDate || undefined,
+      blockingReason: blockingReason,
+      daysUntilNextApplication: canApply ? 0 : (30 - daysSinceLastApplication)
+    };
+    
+    console.log('Restrictions calculees localement:', this.creditRestrictions);
+  }
+
+  openActiveCreditsModal(): void {
+    this.showActiveCreditsModal = true;
+  }
+
+  closeActiveCreditsModal(): void {
+    this.showActiveCreditsModal = false;
+  }
+
+  getCreditTypeName(creditTypeId: string): string {
+    const creditType = this.creditTypes.find(type => type.id === creditTypeId);
+    return creditType ? creditType.name : 'Credit';
+  }
+
+  getCreditStatusText(status: string): string {
+    const statusMap: Record<string, string> = {
+      'active': 'Actif',
+      'paid': 'Rembourse',
+      'overdue': 'En retard'
+    };
+    return statusMap[status] || status;
+  }
+
+  makePayment(creditId: string): void {
+    const credit = this.activeCreditsFromService.find(c => c.id === creditId);
+    if (!credit || credit.status !== 'active') {
+      this.showNotification('Credit non trouve ou deja rembourse', 'error');
+      return;
+    }
+
+    const paymentAmount = Math.min(50000, credit.remainingAmount);
+    
+    if (confirm(`Confirmer le paiement de ${this.formatCurrency(paymentAmount)} pour le credit ${this.getCreditTypeName(credit.type)} ?`)) {
+      this.processPayment(creditId, paymentAmount);
+    }
+  }
+
+  simulatePayment(creditId: string): void {
+    const credit = this.activeCreditsFromService.find(c => c.id === creditId);
+    if (!credit) return;
+    
+    const currentScore = this.getCurrentScore();
+    const estimatedImprovement = credit.remainingAmount > 100000 ? 0.2 : 0.1;
+    const estimatedNewScore = Math.min(10, currentScore + estimatedImprovement);
+    
+    this.showNotification(
+      `Simulation: Rembourser ce credit ameliorerait votre score de ${currentScore.toFixed(1)} a ${estimatedNewScore.toFixed(1)} (+${estimatedImprovement.toFixed(1)})`,
+      'info'
+    );
+  }
+
+  private processPayment(creditId: string, amount: number): void {
+    const creditIndex = this.activeCreditsFromService.findIndex(c => c.id === creditId);
+    if (creditIndex === -1) return;
+
+    const credit = this.activeCreditsFromService[creditIndex];
+    const isFullPayment = amount >= credit.remainingAmount;
+    
+    const payment: PaymentRecord = {
+      id: this.generatePaymentId(),
+      amount: amount,
+      date: new Date().toISOString(),
+      type: isFullPayment ? 'full' : 'partial',
+      late: false,
+      daysLate: 0
+    };
+    
+    credit.remainingAmount = Math.max(0, credit.remainingAmount - amount);
+    credit.paymentsHistory.push(payment);
+    
+    if (credit.remainingAmount === 0) {
+      credit.status = 'paid';
+    }
+    
+    this.activeCreditsFromService[creditIndex] = credit;
+    
+    const paymentData = {
+      username: this.currentUser?.username,
+      credit_id: creditId,
+      payment: payment,
+      remaining_amount: credit.remainingAmount,
+      credit_status: credit.status
+    };
+    
+    this.http.post(`${this.apiUrl}/process-payment`, paymentData)
+      .subscribe({
+        next: (response: any) => {
+          console.log('Paiement traite:', response);
+          
+          if (response.score_impact) {
+            this.showScoreChangeNotification(
+              response.score_impact.previous_score,
+              response.score_impact.new_score,
+              {
+                recommendations: ['Paiement effectue avec succes'],
+                user_id: 0,
+                score: response.score_impact.new_score,
+                risk_level: response.score_impact.risk_level || 'moyen',
+                factors: [],
+                last_updated: new Date().toISOString(),
+                is_real_time: true
+              }
+            );
+          }
+        },
+        error: (error) => {
+          console.error('Erreur traitement paiement serveur:', error);
+        }
+      });
+    
+    this.updateDebtCalculations();
+    
+    if (isFullPayment) {
+      this.showNotification(`Credit integralement rembourse ! Votre score va s'ameliorer.`, 'success');
+    } else {
+      this.showNotification(`Paiement de ${this.formatCurrency(amount)} effectue. Restant: ${this.formatCurrency(credit.remainingAmount)}`, 'success');
+    }
+  }
+
+  private generatePaymentId(): string {
+    return `PAY_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+  }
+
+  getCreditByRequestId(requestId: number): RegisteredCredit | undefined {
+    return this.activeCreditsFromService.find(c => c.requestId === requestId);
+  }
+
+  isRequestFullyPaid(requestId: number): boolean {
+    const credit = this.getCreditByRequestId(requestId);
+    return credit ? (credit.isPaid === true) : false;
+  }
+
+  getRequestPaymentPercentage(requestId: number): number {
+    const credit = this.getCreditByRequestId(requestId);
+    return credit ? (credit.percentagePaid || 0) : 0;
+  }
+
+  private loadCreditsWithPaymentStatus(userId: number): void {
+    console.log('Chargement credits avec statut paiement pour user:', userId);
+    
+    this.apiProxy.getUserCreditsDetailed(userId).subscribe({
+      next: (response: { success: any; data: any[]; }) => {
+        if (response.success) {
+          console.log('Credits detailles recus:', response.data);
+          
+          this.activeCreditsFromService = response.data.map((credit: any): RegisteredCredit => ({
+            id: credit.id?.toString() || '',
+            type: credit.type || '',
+            amount: credit.amount || 0,
+            totalAmount: credit.totalAmount || 0,
+            remainingAmount: credit.remainingAmount || 0,
+            interestRate: credit.interestRate || 0.015,
+            status: credit.isPaid ? 'paid' : (credit.status || 'active'),
+            approvedDate: credit.approvedDate || '',
+            dueDate: credit.dueDate || '',
+            paymentsHistory: credit.paymentsHistory || [],
+            
+            isPaid: credit.isPaid || false,
+            totalPaid: credit.totalPaid || 0,
+            percentagePaid: credit.percentagePaid || 0,
+            paymentsCount: credit.paymentsCount || 0,
+            lastPaymentDate: credit.lastPaymentDate || undefined,
+            lastPaymentAmount: credit.lastPaymentAmount || 0,
+            nextPaymentDate: credit.nextPaymentDate || undefined,
+            nextPaymentAmount: credit.nextPaymentAmount || 0,
+            requestId: credit.requestId || undefined
+          }));
+          
+          console.log('Credits convertis:', this.activeCreditsFromService.length);
+          this.updateDebtCalculations();
+        }
+      },
+      error: (error: any) => {
+        console.error('Erreur chargement credits detailles:', error);
+        this.loadRegisteredCredits();
+      }
+    });
+  }
+
+  getRequestStatusText(status: string): string {
+    const statusMap: Record<string, string> = {
+      'SUBMITTED': 'Soumise',
+      'IN_REVIEW': 'En cours',
+      'APPROVED': 'Approuvee',
+      'REJECTED': 'Rejetee',
+      'CANCELLED': 'Annulee'
+    };
+    return statusMap[status] || status;
+  }
+
+  setQuickCreditAmount(percentage: number): void {
+    this.quickCredit.amount = Math.round(this.globalStats.eligibleAmount * percentage);
+  }
+
+  getAvailableCreditTypes(): CreditType[] {
+    return this.creditTypes.filter(type => type.available);
+  }
+
+  private loadAccountBalance(): void {
+    const savedBalance = localStorage.getItem(`accountBalance_${this.currentUser?.username}`);
+    if (savedBalance) {
+      this.accountBalance = JSON.parse(savedBalance);
+    } else {
+      this.accountBalance = {
+        totalCredited: 0,
+        totalUsed: 0,
+        currentBalance: 0,
+        lastTransaction: '',
+        transactions: []
+      };
+      this.saveAccountBalance();
+    }
+  }
+
+  private saveAccountBalance(): void {
+    localStorage.setItem(`accountBalance_${this.currentUser?.username}`, JSON.stringify(this.accountBalance));
+  }
+
+  private addTransaction(type: 'credit' | 'debit', amount: number, description: string): void {
+    const transaction: AccountTransaction = {
+      id: Date.now().toString(),
+      type: type,
+      amount: amount,
+      description: description,
+      date: new Date().toISOString(),
+      balance: type === 'credit' ? this.accountBalance.currentBalance + amount : this.accountBalance.currentBalance - amount
+    };
+
+    if (type === 'credit') {
+      this.accountBalance.totalCredited += amount;
+      this.accountBalance.currentBalance += amount;
+    } else {
+      this.accountBalance.totalUsed += amount;
+      this.accountBalance.currentBalance -= amount;
+    }
+
+    this.accountBalance.lastTransaction = transaction.date;
+    this.accountBalance.transactions.unshift(transaction);
+
+    if (this.accountBalance.transactions.length > 50) {
+      this.accountBalance.transactions = this.accountBalance.transactions.slice(0, 50);
+    }
+
+    this.saveAccountBalance();
+  }
+
+  toggleAccountDetails(): void {
+    this.showAccountDetails = !this.showAccountDetails;
+  }
+
+  useCredit(amount: number, description: string = 'Utilisation du credit'): void {
+    if (amount > this.accountBalance.currentBalance) {
+      this.showNotification(`Solde insuffisant. Solde actuel: ${this.formatCurrency(this.accountBalance.currentBalance)}`, 'error');
+      return;
+    }
+
+    if (amount <= 0) {
+      this.showNotification('Le montant doit etre superieur a 0', 'error');
+      return;
+    }
+
+    this.addTransaction('debit', amount, description);
+    this.showNotification(`${this.formatCurrency(amount)} debite de votre compte. Solde restant: ${this.formatCurrency(this.accountBalance.currentBalance)}`, 'success');
+  }
+
+  openCustomAmountModal(): void {
+    this.customAmount = 0;
+    this.customDescription = '';
+    this.showCustomAmountModal = true;
+  }
+
+  closeCustomAmountModal(): void {
+    this.showCustomAmountModal = false;
+    this.customAmount = 0;
+    this.customDescription = '';
+  }
+
+  useCustomAmount(): void {
+    if (!this.customAmount || this.customAmount <= 0) {
+      this.showNotification('Veuillez saisir un montant valide', 'error');
+      return;
+    }
+
+    if (this.customAmount > this.accountBalance.currentBalance) {
+      this.showNotification(`Solde insuffisant. Solde actuel: ${this.formatCurrency(this.accountBalance.currentBalance)}`, 'error');
+      return;
+    }
+
+    const description = this.customDescription || `Utilisation personnalisee de ${this.formatCurrency(this.customAmount)}`;
+    
+    this.useCredit(this.customAmount, description);
+    this.closeCustomAmountModal();
+  }
+
+  filterTransactions(transactions: AccountTransaction[], type: string): AccountTransaction[] {
+    if (!transactions) return [];
+    return transactions.filter(transaction => transaction.type === type);
+  }
+
+  formatTransactionDate(dateString: string): string {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('fr-FR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }
+
+  getTransactionIcon(type: 'credit' | 'debit'): string {
+    return type === 'credit' ? 'add_circle' : 'remove_circle';
+  }
+
+  getTransactionColor(type: 'credit' | 'debit'): string {
+    return type === 'credit' ? '#4CAF50' : '#F44336';
+  }
+
+  getTimeAgo(dateString: string): string {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMinutes = Math.floor(diffMs / (1000 * 60));
+    
+    if (diffMinutes < 1) return 'a l\'instant';
+    if (diffMinutes < 60) return `il y a ${diffMinutes} min`;
+    
+    const diffHours = Math.floor(diffMinutes / 60);
+    if (diffHours < 24) return `il y a ${diffHours}h`;
+    
+    const diffDays = Math.floor(diffHours / 24);
+    return `il y a ${diffDays} jour${diffDays > 1 ? 's' : ''}`;
+  }
+
+  private calculateAge(): number {
+    if (!this.client?.birthDate) return 35;
+    
+    const birthDate = new Date(this.client.birthDate);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    
+    return age;
+  }
+
   checkEligibility(): void {
     if (!this.client) return;
 
     const isEnterprise = this.client.clientType === 'entreprise';
     
-    if (isEnterprise) {
-      this.creditTypes.forEach(type => {
-        type.available = type.id === 'investissement';
-      });
-    } else {
+    if (!isEnterprise) {
       const avanceSalaireType = this.creditTypes.find(c => c.id === 'avance_salaire');
       if (avanceSalaireType && this.client.monthlyIncome) {
-        avanceSalaireType.maxAmount = Math.min(2000000, Math.floor(this.client.monthlyIncome * 0.3333));
-        avanceSalaireType.description = `Jusqu'à 70% de votre salaire (max ${this.formatCurrency(avanceSalaireType.maxAmount)})`;
+        avanceSalaireType.maxAmount = Math.min(2000000, Math.floor(this.client.monthlyIncome * 0.7));
+        avanceSalaireType.description = `Jusqu'a 70% de votre salaire (max ${this.formatCurrency(avanceSalaireType.maxAmount)})`;
       }
       
       const consoType = this.creditTypes.find(c => c.id === 'consommation_generale');
       if (consoType && this.client.monthlyIncome) {
         consoType.maxAmount = Math.min(this.globalStats.eligibleAmount, 2000000);
         consoType.description = `Pour vos besoins personnels (max ${this.formatCurrency(consoType.maxAmount)})`;
-      }
-      
-      const isTontineMember = localStorage.getItem('isTontineMember') === 'true';
-      const tontineType = this.creditTypes.find(c => c.id === 'tontine');
-      if (tontineType) {
-        tontineType.available = isTontineMember;
-      }
-      
-      const isRetired = this.client.profession?.toLowerCase().includes('retraité') ||
-                       localStorage.getItem('isRetired') === 'true';
-      const retraiteType = this.creditTypes.find(c => c.id === 'retraite');
-      if (retraiteType) {
-        retraiteType.available = isRetired;
       }
     }
     
@@ -1542,15 +1150,8 @@ private getRealTimeScore(userId: number) {
     }
   }
 
-  // ========================================
-  // MÉTHODES DE GESTION DES MODALS
-  // ========================================
-
-  /**
-   * Ouvre le modal de crédit rapide
-   */
   openQuickCreditModal(): void {
-    this.quickCredit.amount = Math.floor((this.globalStats?.eligibleAmount || 0) * 0.3333);
+    this.quickCredit.amount = Math.floor((this.globalStats?.eligibleAmount || 0) * 0.5);
     const availableTypes = this.getAvailableCreditTypes();
     if (availableTypes.length > 0) {
       this.quickCredit.type = availableTypes[0].id;
@@ -1558,28 +1159,123 @@ private getRealTimeScore(userId: number) {
     this.showQuickCreditModal = true;
   }
 
-  /**
-   * Ferme le modal de crédit rapide
-   */
   closeQuickCreditModal(): void {
     this.showQuickCreditModal = false;
   }
 
-  // ========================================
-  // MÉTHODES DE GESTION DES FICHIERS
-  // ========================================
+  private loadScoreHistory(): void {
+    if (!this.currentUser?.username) return;
+    
+    this.apiProxy.getScoreTrend(this.currentUser.username).subscribe({
+      next: (response) => {
+        this.scoreHistory = response.recent_transactions?.map((t: any) => ({
+          score: t.score || 6.5,
+          date: t.date,
+          change: t.change || 0.1,
+          reason: t.event || t.description || 'Activite automatique'
+        })) || [];
+        console.log('Historique des scores charge:', this.scoreHistory.length, 'entrees');
+      },
+      error: (error) => {
+        console.warn('Historique non disponible:', error);
+        this.scoreHistory = [];
+      }
+    });
+  }
 
-  /**
-   * Déclenche la sélection de fichier
-   */
+  private startRealTimeScoreMonitoring(userId: number): void {
+    console.log('Demarrage monitoring score temps reel pour:', userId);
+    
+    this.realTimeSubscription = interval(30000).pipe(
+      switchMap(() => this.apiProxy.getUserScoring(userId, false)),
+      catchError(error => {
+        console.error('Erreur monitoring temps reel:', error);
+        return [];
+      })
+    ).subscribe((scoreUpdate: any) => {
+      if (scoreUpdate && scoreUpdate.user_id) {
+        this.handleRealTimeScoreUpdate(scoreUpdate);
+      }
+    });
+
+    this.apiProxy.getUserScoring(userId, false).subscribe({
+      next: (scoreUpdate: any) => {
+        if (scoreUpdate && scoreUpdate.user_id) {
+          this.handleRealTimeScoreUpdate(scoreUpdate);
+        }
+      },
+      error: (error) => {
+        console.error('Erreur chargement score initial:', error);
+      }
+    });
+  }
+
+  refreshCreditScore(): void {
+    if (!this.currentUser?.id) {
+      this.showNotification('Utilisateur non connecte', 'error');
+      return;
+    }
+
+    this.isScoreUpdating = true;
+    
+    this.apiProxy.recalculateUserScore(this.currentUser.id).subscribe({
+      next: (result) => {
+        console.log('Score recalcule:', result);
+        
+        this.globalStats.creditScore = result.score;
+        this.globalStats.eligibleAmount = result.eligible_amount;
+        this.globalStats.riskLevel = result.risk_level;
+        
+        this.showNotification('Score mis a jour !', 'success');
+        this.isScoreUpdating = false;
+      },
+      error: (error) => {
+        console.error('Erreur recalcul score:', error);
+        this.showNotification('Erreur mise a jour score', 'error');
+        this.isScoreUpdating = false;
+      }
+    });
+  }
+
+  hasCreditPayments(credit: RegisteredCredit): boolean {
+    return (credit.paymentsCount || 0) > 0;
+  }
+
+  getPaymentStatusText(credit: RegisteredCredit): string {
+    if (credit.isPaid) {
+      return 'Entierement paye';
+    }
+    
+    const percentage = credit.percentagePaid || 0;
+    if (percentage === 0) {
+      return 'Aucun paiement';
+    } else if (percentage < 50) {
+      return 'En cours de remboursement';
+    } else {
+      return 'Bientot termine';
+    }
+  }
+
+  getPaymentStatusColor(credit: RegisteredCredit): string {
+    if (credit.isPaid) {
+      return '#4CAF50';
+    }
+    
+    const percentage = credit.percentagePaid || 0;
+    if (percentage === 0) {
+      return '#F44336';
+    } else if (percentage < 50) {
+      return '#FF9800';
+    } else {
+      return '#8BC34A';
+    }
+  }
+
   triggerFileInput(): void {
     const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
     fileInput?.click();
   }
 
-  /**
-   * Gère la sélection d'un fichier image
-   */
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     if (!input || !input.files || input.files.length === 0) return;
@@ -1587,12 +1283,12 @@ private getRealTimeScore(userId: number) {
     const file = input.files[0];
     
     if (!file.type.startsWith('image/')) {
-      this.showNotification('Veuillez sélectionner un fichier image valide.', 'error');
+      this.showNotification('Veuillez selectionner un fichier image valide.', 'error');
       return;
     }
     
     if (file.size > 5 * 1024 * 1024) {
-      this.showNotification('L\'image dépasse la taille maximale de 5 Mo.', 'error');
+      this.showNotification('L\'image depasse la taille maximale de 5 Mo.', 'error');
       return;
     }
 
@@ -1605,108 +1301,12 @@ private getRealTimeScore(userId: number) {
         localStorage.setItem('profileImage', result);
         this.saveClientData();
         this.profileImageChange.emit(result);
-        this.showNotification('Photo de profil mise à jour !', 'success');
+        this.showNotification('Photo de profil mise a jour !', 'success');
       }
     };
     reader.readAsDataURL(file);
   }
 
-  // ========================================
-  // MÉTHODES D'AFFICHAGE ET NOTIFICATIONS
-  // ========================================
-
-  /**
-   * Affiche une notification de score
-   */
-  private showScoreNotification(scoreData: SavedScore): void {
-    const scoreStatus = this.getCreditScoreStatus();
-    const scoreColor = this.getCreditScoreColor();
-    
-    const notification = document.createElement('div');
-    notification.className = 'score-notification';
-    notification.innerHTML = `
-      <div style="position: fixed; top: 80px; right: 20px; max-width: 400px; 
-                  background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); 
-                  z-index: 1000; padding: 20px; animation: slideIn 0.5s ease-out;">
-        <div style="display: flex; align-items: center; gap: 15px;">
-          <div style="width: 60px; height: 60px; border-radius: 50%; 
-                      background: ${scoreColor}; display: flex; align-items: center; 
-                      justify-content: center; color: white; font-size: 24px; font-weight: bold;">
-            ${scoreData.score}/10
-          </div>
-          <div style="flex: 1;">
-            <h5 style="margin: 0; color: #333;">Votre Score de Crédit</h5>
-            <p style="margin: 5px 0 0 0; color: #666; font-size: 14px;">
-              Statut: <strong style="color: ${scoreColor}">${scoreStatus}</strong>
-            </p>
-            <p style="margin: 5px 0 0 0; color: #666; font-size: 14px;">
-              Montant éligible: <strong>${this.formatCurrency(scoreData.eligibleAmount)}</strong>
-            </p>
-            ${this.isScoreRealTime() ? 
-              '<p style="margin: 5px 0 0 0; color: #4CAF50; font-size: 12px;"><i class="material-icons" style="font-size: 16px; vertical-align: middle;">access_time</i> Temps réel</p>' 
-              : ''
-            }
-          </div>
-          <button onclick="this.parentElement.parentElement.remove()" 
-                  style="background: none; border: none; font-size: 20px; 
-                         cursor: pointer; color: #999;">×</button>
-        </div>
-      </div>
-    `;
-    
-    document.body.appendChild(notification);
-    
-    setTimeout(() => {
-      if (notification.parentNode) {
-        notification.style.animation = 'slideOut 0.3s ease-in';
-        setTimeout(() => notification.remove(), 300);
-      }
-    }, 8000);
-  }
-
-  /**
-   * Affiche les recommandations
-   */
-  private displayRecommendations(): void {
-    const recommendations = this.realTimeScore?.recommendations || this.savedScore?.recommendations;
-    
-    if (recommendations && recommendations.length > 0) {
-      setTimeout(() => {
-        const existingRec = document.querySelector('.recommendations-banner');
-        if (existingRec) return;
-
-        const recommendationsDiv = document.createElement('div');
-        recommendationsDiv.className = 'recommendations-banner';
-        recommendationsDiv.innerHTML = `
-          <div style="background: #f8f9fa; border-left: 4px solid ${this.getCreditScoreColor()}; 
-                      padding: 15px; margin: 20px 0; border-radius: 4px;">
-            <h6 style="margin: 0 0 10px 0; color: #333;">
-              <i class="material-icons" style="vertical-align: middle; margin-right: 5px;">lightbulb</i>
-              Recommandations pour améliorer votre profil
-              ${this.isScoreRealTime() ? 
-                '<span style="color: #4CAF50; font-size: 12px; margin-left: 10px;">(Mis à jour en temps réel)</span>' 
-                : ''
-              }
-            </h6>
-            ${recommendations.map(rec => `
-              <p style="margin: 5px 0; color: #666; font-size: 14px;">
-                • ${rec}
-              </p>
-            `).join('')}
-          </div>
-        `;
-        
-        const profileHeader = document.querySelector('.dashboard-header');
-        if (profileHeader && profileHeader.parentNode) {
-          profileHeader.parentNode.insertBefore(recommendationsDiv, profileHeader.nextSibling);
-        }
-      }, 1000);
-    }
-  }
-
-  /**
-   * Affiche une notification générale
-   */
   private showNotification(message: string, type: 'success' | 'warning' | 'error' | 'info' = 'info'): void {
     const notification = document.createElement('div');
     notification.className = `custom-notification ${type}`;
@@ -1743,9 +1343,6 @@ private getRealTimeScore(userId: number) {
     }, 5000);
   }
 
-  /**
-   * Obtient l'icône pour une notification
-   */
   private getNotificationIcon(type: string): string {
     switch (type) {
       case 'success': return 'check_circle';
@@ -1755,375 +1352,291 @@ private getRealTimeScore(userId: number) {
     }
   }
 
-  /**
-   * Gère les erreurs
-   */
-  private handleError(message: string, error: any): void {
-    console.error(message, error);
-    this.hasError = true;
-    this.errorMessage = message;
-    this.isLoading = false;
-    this.showNotification(message, 'error');
+  isCreditFullyPaid(credit: RegisteredCredit): boolean {
+    return credit.isPaid === true || credit.remainingAmount === 0;
   }
 
-  // ========================================
-  // NOTIFICATION CRÉDIT AMÉLIORÉE
-  // ========================================
-
-  /**
-   * Affiche une notification de crédit approuvé
-   */
-  private showCreditNotification(creditAmount: number, processingFee: number, totalAmount: number, scoreImpact?: any): void {
-    const notification = document.createElement('div');
-    notification.className = 'credit-notification-modal';
-    
-    const style = document.createElement('style');
-    style.textContent = `
-      .credit-notification-modal {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        z-index: 1050;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        backdrop-filter: blur(4px);
-      }
-      
-      .credit-notification-modal .modal-backdrop {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.6);
-        animation: fadeIn 0.3s ease-out;
-      }
-      
-      .credit-modal-content {
-        position: relative;
-        width: 90%;
-        max-width: 500px;
-        background: white;
-        border-radius: 16px;
-        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
-        z-index: 1051;
-        overflow: hidden;
-        animation: modalSlideInCredit 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-      }
-      
-      .credit-header {
-        background: linear-gradient(135deg, #4CAF50, #45a049);
-        color: white;
-        padding: 20px;
-        text-align: center;
-        position: relative;
-      }
-      
-      .success-icon {
-        background: rgba(255, 255, 255, 0.2);
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto 15px;
-        animation: successIconPulse 2s infinite ease-in-out;
-      }
-      
-      .success-icon i {
-        font-size: 32px;
-        animation: iconBounce 0.6s ease-out 0.2s both;
-      }
-      
-      .credit-header h3 {
-        margin: 0;
-        font-size: 1.3rem;
-        font-weight: 600;
-      }
-      
-      .credit-header .close-btn {
-        position: absolute;
-        top: 15px;
-        right: 15px;
-        background: rgba(255, 255, 255, 0.2);
-        border: none;
-        color: white;
-        border-radius: 50%;
-        width: 32px;
-        height: 32px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: all 0.3s ease;
-      }
-      
-      .credit-header .close-btn:hover {
-        background: rgba(255, 255, 255, 0.3);
-        transform: scale(1.1);
-      }
-      
-      .credit-body {
-        padding: 25px 20px;
-        background: #fafafa;
-      }
-      
-      .credit-summary h4 {
-        margin: 0 0 20px 0;
-        font-size: 1.1rem;
-        color: #333;
-        font-weight: 600;
-        text-align: center;
-      }
-      
-      .amount-breakdown {
-        background: white;
-        border-radius: 12px;
-        padding: 20px;
-        margin-bottom: 20px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-        border: 1px solid rgba(76, 175, 80, 0.1);
-      }
-      
-      .breakdown-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 10px 0;
-      }
-      
-      .breakdown-item:not(:last-child) {
-        border-bottom: 1px solid #f0f0f0;
-      }
-      
-      .breakdown-item.total {
-        border-top: 2px solid #4CAF50;
-        padding-top: 15px;
-        margin-top: 10px;
-        font-weight: 600;
-        background: linear-gradient(135deg, #e8f5e9, transparent);
-        padding: 15px 10px;
-        border-radius: 8px;
-      }
-      
-      .debt-notice {
-        background: rgba(255, 152, 0, 0.1);
-        border-left: 4px solid #FF9800;
-        padding: 15px;
-        margin: 15px 0;
-        border-radius: 4px;
-      }
-      
-      .debt-notice h5 {
-        margin: 0 0 8px 0;
-        color: #e65100;
-        font-size: 0.9rem;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-      }
-      
-      .debt-notice p {
-        margin: 0;
-        font-size: 0.85rem;
-        color: #f57c00;
-      }
-      
-      .score-impact {
-        background: white;
-        border-radius: 8px;
-        padding: 15px;
-        margin: 15px 0;
-        border: 1px solid #e0e0e0;
-      }
-      
-      .score-impact h5 {
-        margin: 0 0 10px 0;
-        color: #333;
-        font-size: 0.9rem;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-      }
-      
-      .score-change {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        font-size: 0.9rem;
-      }
-      
-      .score-change.negative {
-        color: #f44336;
-      }
-      
-      .score-change.positive {
-        color: #4CAF50;
-      }
-      
-      @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
-      }
-      
-      @keyframes modalSlideInCredit {
-        from {
-          opacity: 0;
-          transform: translateY(-50px) scale(0.9);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0) scale(1);
-        }
-      }
-      
-      @keyframes successIconPulse {
-        0%, 100% {
-          transform: scale(1);
-        }
-        50% {
-          transform: scale(1.05);
-        }
-      }
-      
-      @keyframes iconBounce {
-        0% {
-          transform: scale(0) rotate(-180deg);
-          opacity: 0;
-        }
-        50% {
-          transform: scale(1.1) rotate(-90deg);
-        }
-        100% {
-          transform: scale(1) rotate(0deg);
-          opacity: 1;
-        }
-      }
-    `;
-    
-    document.head.appendChild(style);
-    
-    notification.innerHTML = `
-      <div class="modal-backdrop"></div>
-      <div class="credit-modal-content">
-        <div class="credit-header">
-          <div class="success-icon">
-            <i class="material-icons">account_balance_wallet</i>
-          </div>
-          <h3>Crédit Approuvé et Enregistré !</h3>
-          <button class="close-btn">
-            <i class="material-icons">close</i>
-          </button>
-        </div>
-        
-        <div class="credit-body">
-          <div class="credit-summary">
-            <h4>Votre crédit a été traité avec succès</h4>
-            
-            <div class="amount-breakdown">
-              <div class="breakdown-item">
-                <span class="label">Montant crédité :</span>
-                <span class="value credit-amount">${this.formatCurrency(creditAmount)}</span>
-              </div>
-              <div class="breakdown-item">
-                <span class="label">Frais de dossier :</span>
-                <span class="value fee-amount">${this.formatCurrency(processingFee)}</span>
-              </div>
-              <div class="breakdown-item total">
-                <span class="label">Total à rembourser :</span>
-                <span class="value total-amount">${this.formatCurrency(totalAmount)}</span>
-              </div>
-            </div>
-
-            <div class="debt-notice">
-              <h5>
-                <i class="material-icons">trending_up</i>
-                Impact sur vos dettes
-              </h5>
-              <p>Ce montant a été automatiquement ajouté à vos dettes enregistrées et influencera votre score de crédit.</p>
-            </div>
-
-            ${scoreImpact ? `
-              <div class="score-impact">
-                <h5>
-                  <i class="material-icons">analytics</i>
-                  Impact sur votre score
-                </h5>
-                <div class="score-change ${scoreImpact.change < 0 ? 'negative' : 'positive'}">
-                  <span>Score: ${scoreImpact.previous?.toFixed(1) || 'N/A'} → ${scoreImpact.new?.toFixed(1) || 'N/A'}</span>
-                  <span>(${scoreImpact.change > 0 ? '+' : ''}${scoreImpact.change?.toFixed(1) || '0'})</span>
-                </div>
-              </div>
-            ` : ''}
-
-            <div style="background: white; border-radius: 8px; padding: 15px; margin-top: 15px;">
-              <h5 style="margin: 0 0 10px 0; color: #333;">
-                <i class="material-icons">info</i>
-                Prochaines étapes
-              </h5>
-              <ul style="margin: 0; padding-left: 20px; font-size: 0.9rem; color: #666;">
-                <li>Le montant est disponible immédiatement dans votre solde</li>
-                <li>Vous pouvez l'utiliser pour vos achats</li>
-                <li>Ce crédit est maintenant enregistré dans vos dettes</li>
-                <li>Votre prochain crédit sera possible dans 30 jours minimum</li>
-                <li>Maximum 2 crédits actifs simultanément</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
-    
-    document.body.appendChild(notification);
-    
-    const closeButtons = notification.querySelectorAll('.close-btn, .modal-backdrop');
-    closeButtons.forEach(button => {
-      button.addEventListener('click', () => {
-        if (document.head.contains(style)) {
-          document.head.removeChild(style);
-        }
-        notification.remove();
-      });
-    });
-    
-    setTimeout(() => {
-      if (notification.parentNode) {
-        if (document.head.contains(style)) {
-          document.head.removeChild(style);
-        }
-        notification.remove();
-      }
-    }, 15000);
-  }
-
-  // ========================================
-  // MÉTHODES UTILITAIRES ET LEGACY
-  // ========================================
-
-  /**
-   * Affiche un message d'inéligibilité
-   */
-  private showIneligibilityMessage(creditType: CreditType): void {
-    let message = `Vous n'êtes pas éligible pour le ${creditType.name}.`;
-    
-    if (creditType.id === 'investissement') {
-      message += '\nCe crédit est réservé aux entreprises.';
-    } else if (creditType.id === 'tontine') {
-      message += '\nVous devez être membre actif d\'une tontine.';
-    } else if (creditType.id === 'retraite') {
-      message += '\nCe crédit est réservé aux retraités CNSS/CPPF.';
+  getCreditStatusColor(credit: RegisteredCredit): string {
+    if (this.isCreditFullyPaid(credit)) {
+      return '#4CAF50';
     }
     
-    this.showNotification(message, 'warning');
+    const percentage = credit.percentagePaid || 0;
+    if (percentage === 0) {
+      return '#F44336';
+    } else if (percentage < 30) {
+      return '#FF5722';
+    } else if (percentage < 70) {
+      return '#FF9800';
+    } else {
+      return '#8BC34A';
+    }
   }
 
-  /**
-   * Applique pour un crédit (méthode legacy)
-   */
+  getCreditStatusBadge(credit: RegisteredCredit): string {
+    if (this.isCreditFullyPaid(credit)) {
+      return 'Paye';
+    }
+    
+    const percentage = credit.percentagePaid || 0;
+    if (percentage === 0) {
+      return 'Non commence';
+    } else if (percentage < 30) {
+      return 'Debut';
+    } else if (percentage < 70) {
+      return 'En cours';
+    } else {
+      return 'Presque termine';
+    }
+  }
+
+  getCreditProgressInfo(credit: RegisteredCredit): string {
+    const paid = credit.totalPaid || 0;
+    const total = credit.totalAmount || 0;
+    const remaining = credit.remainingAmount || 0;
+    
+    return `${this.formatCurrency(paid)} paye sur ${this.formatCurrency(total)} (reste: ${this.formatCurrency(remaining)})`;
+  }
+
+  getPaymentCount(credit: RegisteredCredit): string {
+    const count = credit.paymentsCount || 0;
+    return `${count} paiement${count > 1 ? 's' : ''} effectue${count > 1 ? 's' : ''}`;
+  }
+
+  getLastPaymentInfo(credit: RegisteredCredit): string {
+    if (!credit.lastPaymentDate) {
+      return 'Aucun paiement';
+    }
+    
+    const date = new Date(credit.lastPaymentDate);
+    const amount = credit.lastPaymentAmount || 0;
+    
+    return `${this.formatDate(date.toISOString())} - ${this.formatCurrency(amount)}`;
+  }
+
+  getDaysUntilDue(credit: RegisteredCredit): number {
+    if (!credit.dueDate) return 0;
+    
+    const now = new Date();
+    const due = new Date(credit.dueDate);
+    const diffTime = due.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    return diffDays;
+  }
+
+  getDaysUntilDueText(credit: RegisteredCredit): string {
+    const days = this.getDaysUntilDue(credit);
+    
+    if (days < 0) {
+      return `En retard de ${Math.abs(days)} jour${Math.abs(days) > 1 ? 's' : ''}`;
+    } else if (days === 0) {
+      return 'Echeance aujourd\'hui';
+    } else if (days <= 7) {
+      return `${days} jour${days > 1 ? 's' : ''} restant${days > 1 ? 's' : ''}`;
+    } else {
+      return `${days} jour${days > 1 ? 's' : ''} restant${days > 1 ? 's' : ''}`;
+    }
+  }
+
+  isCreditOverdue(credit: RegisteredCredit): boolean {
+    return this.getDaysUntilDue(credit) < 0 && !this.isCreditFullyPaid(credit);
+  }
+
+  private determinePaymentTrend(onTimeRatio: number): string {
+    if (onTimeRatio >= 95) return 'excellent';
+    if (onTimeRatio >= 85) return 'improving';
+    if (onTimeRatio >= 70) return 'stable';
+    return 'declining';
+  }
+
+  refreshScoreML(): void {
+    if (!this.currentUser?.id) return;
+    
+    this.isScoreUpdating = true;
+    
+    this.apiProxy.recalculateUserScore(this.currentUser.id).subscribe({
+      next: (result) => {
+        console.log('Score ML recalcule:', result);
+        
+        this.globalStats.creditScore = result.score;
+        this.globalStats.eligibleAmount = result.eligible_amount;
+        this.globalStats.riskLevel = result.risk_level;
+        
+        this.showNotification(
+          `Score mis a jour: ${result.score}/10 (${result.model_used})`,
+          'success'
+        );
+        
+        this.isScoreUpdating = false;
+      },
+      error: (error) => {
+        console.error('Erreur recalcul ML:', error);
+        this.showNotification('Erreur mise a jour score', 'error');
+        this.isScoreUpdating = false;
+      }
+    });
+  }
+
+  getTotalActiveDebt(): number {
+    return this.activeCreditsFromService
+      .filter(c => c.status === 'active')
+      .reduce((sum, c) => sum + c.remainingAmount, 0);
+  }
+
+  getActiveCreditCount(): number {
+    return this.activeCreditsFromService.filter(c => c.status === 'active').length;
+  }
+
+  getNewTotalDebtWithQuickCredit(): number {
+    const currentDebt = this.getTotalActiveDebt();
+    const newCreditTotal = this.quickCredit.amount + (this.quickCredit.amount * 0.015);
+    return currentDebt + newCreditTotal;
+  }
+
+  getNewDebtRatioWithQuickCredit(): number {
+    const newTotalDebt = this.getNewTotalDebtWithQuickCredit();
+    const monthlyIncome = this.currentUser?.monthlyIncome || 1;
+    return (newTotalDebt / monthlyIncome) * 100;
+  }
+
+  isNewDebtRatioHigh(): boolean {
+    return this.getNewDebtRatioWithQuickCredit() > 70;
+  }
+
+  isNewDebtRatioCritical(): boolean {
+    return this.getNewDebtRatioWithQuickCredit() > 50;
+  }
+
+  getDebtRatioClasses(): any {
+    return {
+      'warning': this.isNewDebtRatioCritical(),
+      'danger': this.isNewDebtRatioHigh()
+    };
+  }
+
+  shouldShowHighDebtWarning(): boolean {
+    return this.quickCredit.amount > 0 && this.isNewDebtRatioHigh();
+  }
+
+  shouldShowMultipleCreditInfo(): boolean {
+    return this.creditRestrictions && this.creditRestrictions.activeCreditCount >= 1;
+  }
+
+  formatDate(dateString: string): string {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('fr-FR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  }
+
+  formatDateWithTime(dateString: string): string {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('fr-FR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }
+
+  getCreditReimbursementPercentage(credit: RegisteredCredit): number {
+    if (!credit || credit.totalAmount === 0) return 0;
+    return ((credit.totalAmount - credit.remainingAmount) / credit.totalAmount) * 100;
+  }
+
+  isActiveCreditCountHigh(): boolean {
+    return this.getActiveCreditCount() >= 2;
+  }
+
+  getActiveCreditCountClasses(): any {
+    return {
+      'warning': this.isActiveCreditCountHigh()
+    };
+  }
+
+  getCurrentDebtRatioClasses(): any {
+    const currentRatio = this.creditRestrictions?.debtRatio || 0;
+    return {
+      'warning': currentRatio > 0.5,
+      'danger': currentRatio > 0.7
+    };
+  }
+
+  getCurrentDebtRatioPercentage(): number {
+    const currentRatio = this.creditRestrictions?.debtRatio || 0;
+    return currentRatio * 100;
+  }
+
+  formatInterestRate(rate: number): string {
+    return (rate * 100).toFixed(1);
+  }
+
+  shouldShowScoreDebtWarning(): boolean {
+    return this.currentUser ? this.creditManagementService.calculateDebtRatio(this.currentUser) > 0.5 : false;
+  }
+
+  getFormattedDebtRatioFromService(): string {
+    if (!this.currentUser) return '0.0';
+    return (this.creditManagementService.calculateDebtRatio(this.currentUser) * 100).toFixed(1);
+  }
+
+  isCreditActive(credit: RegisteredCredit): boolean {
+    return credit.status === 'active';
+  }
+
+  getAdditionalCreditsCount(): number {
+    return Math.max(0, this.activeCreditsFromService.length - 3);
+  }
+
+  hasAdditionalCredits(): boolean {
+    return this.activeCreditsFromService.length > 3;
+  }
+
+  getDisplayedCredits(): RegisteredCredit[] {
+    return this.activeCreditsFromService.slice(0, 3);
+  }
+
+  getNewCreditCountAfterApplication(): number {
+    return (this.creditRestrictions?.activeCreditCount || 0) + 1;
+  }
+
+  isRestrictedByMaxCredits(): boolean {
+    return this.getActiveCreditCount() >= 2;
+  }
+
+  isRestrictedByDebtRatio(): boolean {
+    return (this.creditRestrictions?.totalActiveDebt || 0) / (this.currentUser?.monthlyIncome || 1) > 0.7;
+  }
+
+  isScoreBelowThreshold(): boolean {
+    return this.getCurrentScore() < 7;
+  }
+
+
+  toggleScoreHistory(): void {
+    this.showScoreHistory = !this.showScoreHistory;
+    if (this.showScoreHistory && this.scoreHistory.length === 0) {
+      this.loadScoreHistory();
+    }
+  }
+
+  formatScoreHistoryDate(dateString: string): string {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('fr-FR', {
+      day: '2-digit',
+      month: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }
+
+
   applyForCredit(creditType: CreditType): void {
     if (creditType.available) {
       this.router.navigate(['/credit-request'], { 
@@ -2134,9 +1647,20 @@ private getRealTimeScore(userId: number) {
     }
   }
 
-  /**
-   * Obtient la prochaine date de paiement
-   */
+  private showIneligibilityMessage(creditType: CreditType): void {
+    let message = `Vous n'etes pas eligible pour le ${creditType.name}.`;
+    
+    if (creditType.id === 'investissement') {
+      message += '\nCe credit est reserve aux entreprises.';
+    } else if (creditType.id === 'tontine') {
+      message += '\nVous devez etre membre actif d\'une tontine.';
+    } else if (creditType.id === 'retraite') {
+      message += '\nCe credit est reserve aux retraites CNSS/CPPF.';
+    }
+    
+    this.showNotification(message, 'warning');
+  }
+
   getNextPaymentDate(): Date | null {
     const activeCreditsSorted = [...this.activeCredits]
       .filter(c => c.status === 'active')
@@ -2144,18 +1668,12 @@ private getRealTimeScore(userId: number) {
     return activeCreditsSorted.length > 0 ? activeCreditsSorted[0].nextPayment : null;
   }
 
-  /**
-   * Obtient le total des paiements mensuels
-   */
   getTotalMonthlyPayment(): number {
     return this.activeCredits
       .filter(c => c.status === 'active')
       .reduce((sum, credit) => sum + credit.nextPaymentAmount, 0);
   }
 
-  /**
-   * Affiche les détails d'un crédit (méthode legacy)
-   */
   viewCreditDetails(credit: ActiveCredit): void {
     if (!credit) return;
 
@@ -2165,18 +1683,18 @@ private getRealTimeScore(userId: number) {
       <div class="modal-backdrop" onclick="this.parentElement.remove()"></div>
       <div class="modal-content">
         <div class="modal-header">
-          <h3>Détails du crédit</h3>
+          <h3>Details du credit</h3>
           <button class="close-btn" onclick="this.parentElement.parentElement.parentElement.remove()">
             <i class="material-icons">close</i>
           </button>
         </div>
         <div class="modal-body">
           <div class="detail-row">
-            <span class="label">Type de crédit:</span>
+            <span class="label">Type de credit:</span>
             <span class="value">${credit.type}</span>
           </div>
           <div class="detail-row">
-            <span class="label">Montant emprunté:</span>
+            <span class="label">Montant emprunte:</span>
             <span class="value">${this.formatCurrency(credit.amount)}</span>
           </div>
           <div class="detail-row">
@@ -2184,11 +1702,11 @@ private getRealTimeScore(userId: number) {
             <span class="value">${this.formatCurrency(credit.remainingAmount)}</span>
           </div>
           <div class="detail-row">
-            <span class="label">Prochaine échéance:</span>
+            <span class="label">Prochaine echeance:</span>
             <span class="value">${credit.nextPayment.toLocaleDateString('fr-FR')}</span>
           </div>
           <div class="detail-row">
-            <span class="label">Montant à payer:</span>
+            <span class="label">Montant a payer:</span>
             <span class="value">${this.formatCurrency(credit.nextPaymentAmount)}</span>
           </div>
         </div>
@@ -2203,306 +1721,139 @@ private getRealTimeScore(userId: number) {
     document.body.appendChild(modal);
   }
 
-  /**
-   * Obtient le pourcentage de progression du score
-   */
-  getScoreProgressPercentage(): number {
-    const score = this.getCurrentScore();
-    return (score / 10) * 100;
-  }
+  // Ajouter ces methodes dans profile.component.ts
 
-  // ========================================
-  // MÉTHODES POUR LES CALCULS DU TEMPLATE
-  // ========================================
-
-  /**
-   * Obtient le total des dettes actives
-   */
-  getTotalActiveDebt(): number {
-    return this.activeCreditsFromService
-      .filter(c => c.status === 'active')
-      .reduce((sum, c) => sum + c.remainingAmount, 0);
+getModelType(): string {
+  if (!this.realTimeScore) {
+    return 'Regles metier';
   }
-
-  /**
-   * Obtient le nombre de crédits actifs
-   */
-  getActiveCreditCount(): number {
-    return this.activeCreditsFromService.filter(c => c.status === 'active').length;
+  
+  const modelType = this.realTimeScore['model_type'] || this.realTimeScore['model_used'];
+  
+  if (modelType === 'random_forest') {
+    return 'Random Forest ML';
   }
+  
+  return 'Regles metier';
+}
 
-  /**
-   * Calcule le nouveau total de dettes avec le crédit rapide
-   */
-  getNewTotalDebtWithQuickCredit(): number {
-    const currentDebt = this.getTotalActiveDebt();
-    const newCreditTotal = this.quickCredit.amount + (this.quickCredit.amount * 0.015);
-    return currentDebt + newCreditTotal;
+getModelConfidence(): number {
+  if (!this.realTimeScore) {
+    return 0;
   }
+  
+  const confidence = this.realTimeScore['model_confidence'] || 0;
+  return Math.round(Number(confidence) * 100);
+}
 
-  /**
-   * Calcule le nouveau ratio d'endettement avec le crédit rapide
-   */
-  getNewDebtRatioWithQuickCredit(): number {
-    const newTotalDebt = this.getNewTotalDebtWithQuickCredit();
-    const monthlyIncome = this.currentUser?.monthlyIncome || 1;
-    return (newTotalDebt / monthlyIncome) * 100;
-  }
+hasRecommendations(): boolean {
+  return !!(
+    this.realTimeScore && 
+    this.realTimeScore.recommendations && 
+    Array.isArray(this.realTimeScore.recommendations) &&
+    this.realTimeScore.recommendations.length > 0
+  );
+}
 
-  /**
-   * Vérifie si le nouveau ratio d'endettement est élevé
-   */
-  isNewDebtRatioHigh(): boolean {
-    return this.getNewDebtRatioWithQuickCredit() > 70;
+getRecommendations(): string[] {
+  if (!this.realTimeScore || !this.realTimeScore.recommendations) {
+    return [];
   }
+  return this.realTimeScore.recommendations;
+}
 
-  /**
-   * Vérifie si le nouveau ratio d'endettement est critique
-   */
-  isNewDebtRatioCritical(): boolean {
-    return this.getNewDebtRatioWithQuickCredit() > 50;
-  }
+hasPaymentHistory(): boolean {
+  return !!(
+    this.paymentAnalysis && 
+    this.paymentAnalysis.total_payments && 
+    this.paymentAnalysis.total_payments > 0
+  );
+}
 
-  /**
-   * Obtient les classes CSS pour le ratio d'endettement
-   */
-  getDebtRatioClasses(): any {
-    return {
-      'warning': this.isNewDebtRatioCritical(),
-      'danger': this.isNewDebtRatioHigh()
-    };
+getPaymentAnalysisValue(key: string): any {
+  if (!this.paymentAnalysis) {
+    return key === 'reliability' ? 'N/A' : 0;
   }
+  
+  const value = this.paymentAnalysis[key];
+  
+  if (value === null || value === undefined) {
+    return key === 'reliability' ? 'N/A' : 0;
+  }
+  
+  return value;
+}
 
-  /**
-   * Vérifie si un avertissement doit être affiché pour le ratio élevé
-   */
-  shouldShowHighDebtWarning(): boolean {
-    return this.quickCredit.amount > 0 && this.isNewDebtRatioHigh();
+getEligibleAmount(): number {
+  // Priorite 1: depuis realTimeScore
+  if (this.realTimeScore && this.realTimeScore['eligible_amount']) {
+    return Number(this.realTimeScore['eligible_amount']) || 0;
   }
+  
+  // Priorite 2: depuis globalStats
+  if (this.globalStats && this.globalStats.eligibleAmount) {
+    return Number(this.globalStats.eligibleAmount) || 0;
+  }
+  
+  return 0;
+}
 
-  /**
-   * Vérifie si l'info sur les crédits multiples doit être affichée
-   */
-  shouldShowMultipleCreditInfo(): boolean {
-    return this.creditRestrictions && this.creditRestrictions.activeCreditCount >= 1;
+getDisplayRecommendations(): string[] {
+  if (this.hasRecommendations()) {
+    return this.getRecommendations();
   }
+  
+  // Recommendations par defaut
+  return [
+    'Effectuez vos paiements a temps pour ameliorer votre score',
+    'Commencez par des petits montants pour construire votre historique',
+    'Evitez d\'avoir plusieurs credits actifs simultanement',
+    'Maintenez un ratio d\'endettement inferieur a 70%'
+  ];
+}
 
-  /**
-   * Formate une date pour l'affichage
-   */
-  formatDate(dateString: string): string {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('fr-FR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    });
-  }
+getScoreProgressPercentage(): number {
+  const score = this.getCurrentScore();
+  return (score / 10) * 100;
+}
 
-  /**
-   * Formate une date avec l'heure pour l'affichage détaillé
-   */
-  formatDateWithTime(dateString: string): string {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('fr-FR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  }
+hasRealTimeScore(): boolean {
+  return this.realTimeScore !== null && this.realTimeScore !== undefined;
+}
 
-  /**
-   * Calcule le pourcentage de remboursement d'un crédit
-   */
-  getCreditReimbursementPercentage(credit: RegisteredCredit): number {
-    if (!credit || credit.totalAmount === 0) return 0;
-    return ((credit.totalAmount - credit.remainingAmount) / credit.totalAmount) * 100;
+getPaymentTrend(): string {
+  const trend = this.getPaymentAnalysis()?.trend || 'stable';
+  switch (trend) {
+    case 'improving': return 'En amelioration';
+    case 'declining': return 'En baisse';
+    default: return 'Stable';
   }
+}
 
-  /**
-   * Vérifie si le compte de crédits actifs est élevé
-   */
-  isActiveCreditCountHigh(): boolean {
-    return this.getActiveCreditCount() >= 2;
+getPaymentTrendIcon(): string {
+  const trend = this.getPaymentAnalysis()?.trend || 'stable';
+  switch (trend) {
+    case 'improving': return 'trending_up';
+    case 'declining': return 'trending_down';
+    default: return 'trending_flat';
   }
+}
 
-  /**
-   * Obtient les classes CSS pour le compte de crédits
-   */
-  getActiveCreditCountClasses(): any {
-    return {
-      'warning': this.isActiveCreditCountHigh()
-    };
-  }
+getOnTimePaymentRatio(): number {
+  const analysis = this.getPaymentAnalysis();
+  if (!analysis) return 0;
+  
+  const ratio = analysis.on_time_ratio || 
+                (analysis.on_time_payments / Math.max(analysis.total_payments, 1)) || 0;
+  
+  return Number(ratio) * 100;
+}
 
-  /**
-   * Obtient les classes CSS pour le ratio d'endettement actuel
-   */
-  getCurrentDebtRatioClasses(): any {
-    const currentRatio = this.creditRestrictions?.debtRatio || 0;
-    return {
-      'warning': currentRatio > 0.5,
-      'danger': currentRatio > 0.7
-    };
-  }
+getPaymentAnalysis(): any {
+  return this.realTimeScore?.payment_analysis || this.paymentAnalysis;
+}
 
-  /**
-   * Obtient le pourcentage du ratio d'endettement actuel
-   */
-  getCurrentDebtRatioPercentage(): number {
-    const currentRatio = this.creditRestrictions?.debtRatio || 0;
-    return currentRatio * 100;
-  }
-
-  /**
-   * Formate le taux d'intérêt en pourcentage
-   */
-  formatInterestRate(rate: number): string {
-    return (rate * 100).toFixed(1);
-  }
-
-  /**
-   * Vérifie si le score doit déclencher un avertissement de ratio élevé
-   */
-  shouldShowScoreDebtWarning(): boolean {
-    return this.currentUser ? this.creditManagementService.calculateDebtRatio(this.currentUser) > 0.5 : false;
-  }
-
-  /**
-   * Obtient le ratio d'endettement formaté depuis le service
-   */
-  getFormattedDebtRatioFromService(): string {
-    if (!this.currentUser) return '0.0';
-    return (this.creditManagementService.calculateDebtRatio(this.currentUser) * 100).toFixed(1);
-  }
-
-  /**
-   * Vérifie si un crédit est en cours (actif)
-   */
-  isCreditActive(credit: RegisteredCredit): boolean {
-    return credit.status === 'active';
-  }
-
-  /**
-   * Obtient le nombre de crédits supplémentaires non affichés
-   */
-  getAdditionalCreditsCount(): number {
-    return Math.max(0, this.activeCreditsFromService.length - 3);
-  }
-
-  /**
-   * Vérifie s'il y a des crédits supplémentaires à afficher
-   */
-  hasAdditionalCredits(): boolean {
-    return this.activeCreditsFromService.length > 3;
-  }
-
-  /**
-   * Obtient les 3 premiers crédits pour l'affichage
-   */
-  getDisplayedCredits(): RegisteredCredit[] {
-    return this.activeCreditsFromService.slice(0, 3);
-  }
-
-  /**
-   * Calcule le nouveau nombre de crédits après demande
-   */
-  getNewCreditCountAfterApplication(): number {
-    return (this.creditRestrictions?.activeCreditCount || 0) + 1;
-  }
-
-  /**
-   * Vérifie si les restrictions sont dues au nombre de crédits
-   */
-  isRestrictedByMaxCredits(): boolean {
-    return this.getActiveCreditCount() >= 2;
-  }
-
-  /**
-   * Vérifie si les restrictions sont dues au ratio d'endettement
-   */
-  isRestrictedByDebtRatio(): boolean {
-    return (this.creditRestrictions?.totalActiveDebt || 0) / (this.currentUser?.monthlyIncome || 1) > 0.7;
-  }
-
-  /**
-   * Vérifie si le score est en dessous du seuil recommandé
-   */
-  isScoreBelowThreshold(): boolean {
-    return this.getCurrentScore() < 7;
-  }
-
-  /**
-   * Obtient les facteurs du score
-   */
-  getScoreFactors(): any[] {
-    return this.realTimeScore?.factors || [];
-  }
-
-  /**
-   * Obtient l'analyse des paiements
-   */
-  getPaymentAnalysis(): any {
-    return this.realTimeScore?.payment_analysis || this.paymentAnalysis;
-  }
-
-  /**
-   * Obtient la tendance des paiements
-   */
-  getPaymentTrend(): string {
-    const trend = this.getPaymentAnalysis()?.trend || 'stable';
-    switch (trend) {
-      case 'improving': return 'En amélioration';
-      case 'declining': return 'En baisse';
-      default: return 'Stable';
-    }
-  }
-
-  /**
-   * Obtient l'icône de tendance des paiements
-   */
-  getPaymentTrendIcon(): string {
-    const trend = this.getPaymentAnalysis()?.trend || 'stable';
-    switch (trend) {
-      case 'improving': return 'trending_up';
-      case 'declining': return 'trending_down';
-      default: return 'trending_flat';
-    }
-  }
-
-  /**
-   * Obtient le ratio de paiements à temps
-   */
-  getOnTimePaymentRatio(): number {
-    const analysis = this.getPaymentAnalysis();
-    if (!analysis) return 0;
-    return (analysis.on_time_ratio || analysis.on_time_payments / analysis.total_payments || 0) * 100;
-  }
-
-  /**
-   * Active/désactive l'historique des scores
-   */
-  toggleScoreHistory(): void {
-    this.showScoreHistory = !this.showScoreHistory;
-    if (this.showScoreHistory && this.scoreHistory.length === 0) {
-      this.loadScoreHistory();
-    }
-  }
-
-  /**
-   * Formate la date de l'historique des scores
-   */
-  formatScoreHistoryDate(dateString: string): string {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('fr-FR', {
-      day: '2-digit',
-      month: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  }
+getScoreFactors(): any[] {
+  return this.realTimeScore?.factors || [];
+}
 }

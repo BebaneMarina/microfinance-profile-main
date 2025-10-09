@@ -1,5 +1,5 @@
 import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, CreateDateColumn } from 'typeorm';
-import { User } from '../app/auth/entities/user.entity';
+import { Utilisateur} from '../app/auth/entities/user.entity';
 
 @Entity('notifications')
 export class Notification {
@@ -9,9 +9,9 @@ export class Notification {
   @Column({ name: 'user_id' })
   userId: number;
 
-  @ManyToOne(() => User)
+  @ManyToOne(() => Utilisateur)
   @JoinColumn({ name: 'user_id' })
-  user: User;
+  user: Utilisateur;
 
   @Column()
   type: string;

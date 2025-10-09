@@ -1,14 +1,21 @@
-// credit-long/credit-long.module.ts
+
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { HttpModule } from '@nestjs/axios';
-import { CreditLongController } from './credit-long-request.controller';
+
+// Services
 import { CreditLongRequestService } from './credit-long-request.service';
+
+// Controllers
+import { CreditLongController } from './credit-long-request.controller';
+import { CreditLongBackofficeController } from '../backoffice/credit-long-backoffice.controller';  
+
+// Entities
 import { LongCreditRequestEntity } from './entities/long-credit-request.entity';
 import { LongCreditDocumentEntity } from './entities/long-credit-document.entity';
 import { LongCreditCommentEntity } from './entities/long-credit-comment.entity';
 import { LongCreditReviewHistoryEntity } from './entities/long-credit-review-history.entity';
-import { User } from '../app/auth/entities/user.entity';
+import { Utilisateur } from '../app/auth/entities/user.entity';
 
 @Module({
   imports: [
@@ -17,11 +24,14 @@ import { User } from '../app/auth/entities/user.entity';
       LongCreditDocumentEntity,
       LongCreditCommentEntity,
       LongCreditReviewHistoryEntity,
-      User
+      Utilisateur
     ]),
     HttpModule
   ],
-  controllers: [CreditLongController],
+  controllers: [
+    CreditLongController,
+    CreditLongBackofficeController 
+  ],
   providers: [CreditLongRequestService],
   exports: [CreditLongRequestService]
 })

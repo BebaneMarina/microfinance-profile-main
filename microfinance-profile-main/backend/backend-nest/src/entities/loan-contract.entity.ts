@@ -1,5 +1,5 @@
 import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
-import { User } from '../app/auth/entities/user.entity';
+import { Utilisateur } from '../app/auth/entities/user.entity';
 import { CreditRequest } from '../credit/entities/credit-request.entity';
 
 @Entity('loan_contracts')
@@ -20,9 +20,9 @@ export class LoanContract {
   @Column()
   user_id: number;
 
-  @ManyToOne(() => User)
+  @ManyToOne(() => Utilisateur)
   @JoinColumn({ name: 'user_id' })
-  user: User;
+  user: Utilisateur;
 
   @Column('decimal', { precision: 12, scale: 2 })
   loan_amount: number;

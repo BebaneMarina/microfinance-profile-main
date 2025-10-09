@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn } from 'typeorm';
-import { User } from '../../app/auth/entities/user.entity';
+import { Utilisateur } from '../../app/auth/entities/user.entity';
 import { CreditRequest } from '../../credit/entities/credit-request.entity';
 
 @Entity('credit_scoring')
@@ -59,9 +59,9 @@ export class CreditScoring {
   created_by?: number;
 
   // Relations
-  @ManyToOne(() => User)
+  @ManyToOne(() => Utilisateur)
   @JoinColumn({ name: 'user_id' })
-  user: User;
+  user: Utilisateur;
 
   @ManyToOne(() => CreditRequest)
   @JoinColumn({ name: 'credit_request_id' })

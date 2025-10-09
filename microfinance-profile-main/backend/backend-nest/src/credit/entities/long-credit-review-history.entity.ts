@@ -1,36 +1,36 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
 import { LongCreditRequestEntity } from './long-credit-request.entity';
 
-@Entity('long_credit_review_history')
+@Entity('demandes_credit_longues_history')
 export class LongCreditReviewHistoryEntity {
-  @PrimaryGeneratedColumn()  // ✅ INTEGER au lieu de UUID
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column({ name: 'long_credit_request_id' })
-  longCreditRequestId: number;  // ✅ INTEGER
+  longCreditRequestId: number;
+
+  @ManyToOne(() => LongCreditRequestEntity, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'long_credit_request_id' })
+  longCreditRequest: LongCreditRequestEntity;
 
   @Column()
   action: string;
 
   @Column({ name: 'previous_status', nullable: true })
-  previousStatus?: string;
+  previousStatus: string;
 
   @Column({ name: 'new_status', nullable: true })
-  newStatus?: string;
+  newStatus: string;
 
   @Column({ name: 'agent_name' })
   agentName: string;
 
   @Column({ name: 'agent_id', nullable: true })
-  agentId?: number;
+  agentId: number;
 
   @Column({ type: 'text', nullable: true })
-  comment?: string;
+  comment: string;
 
   @CreateDateColumn({ name: 'action_date' })
   actionDate: Date;
-
-  @ManyToOne(() => LongCreditRequestEntity, request => request.reviewHistory, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'long_credit_request_id' })
-  longCreditRequest: LongCreditRequestEntity;
 }

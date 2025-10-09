@@ -148,6 +148,7 @@ export class CreditService {
     );
   }
 
+
   // Obtenir les informations du modèle
   getModelInfo(): Observable<any> {
     return this.http.get(`${this.apiUrl}/model-info`, { 

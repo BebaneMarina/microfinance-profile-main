@@ -1,14 +1,17 @@
-// entities/long-credit-document.entity.ts
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
-import { LongCreditRequestEntity } from './long-credit-request.entity';
+import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { LongCreditRequestEntity } from "./long-credit-request.entity";
 
-@Entity('long_credit_documents')
+@Entity('demandes_credit_longues_documents')
 export class LongCreditDocumentEntity {
-  @PrimaryGeneratedColumn('uuid')  // ✅ OK - UUID pour l'id du document
+  @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ name: 'long_credit_request_id', type: 'integer' })  // ✅ INTEGER pour la clé étrangère
+  @Column({ name: 'long_credit_request_id' })
   longCreditRequestId: number;
+
+  @ManyToOne(() => LongCreditRequestEntity, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'long_credit_request_id' })
+  longCreditRequest: LongCreditRequestEntity;
 
   @Column({ name: 'document_type' })
   documentType: string;
@@ -22,7 +25,7 @@ export class LongCreditDocumentEntity {
   @Column({ name: 'file_path' })
   filePath: string;
 
-  @Column({ name: 'file_size', type: 'integer' })  // ✅ INTEGER au lieu de bigint
+  @Column({ name: 'file_size', type: 'bigint' })
   fileSize: number;
 
   @Column({ name: 'mime_type' })
@@ -34,13 +37,9 @@ export class LongCreditDocumentEntity {
   @Column({ name: 'uploaded_by', nullable: true })
   uploadedBy: number;
 
-  @CreateDateColumn({ name: 'uploaded_at' })
-  uploadedAt: Date;
-
   @Column({ nullable: true })
   checksum: string;
 
-  @ManyToOne(() => LongCreditRequestEntity, request => request.documentsList, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'long_credit_request_id' })
-  longCreditRequest: LongCreditRequestEntity;
+  @CreateDateColumn({ name: 'uploaded_at' })
+  uploadedAt: Date;
 }

@@ -330,5 +330,24 @@
     "repaymentFrequency": "fin_du_mois",
     "modelUsed": "random_forest",
     "modelConfidence": 0.4237037037037037
+  },
+  {
+    "id": 3,
+    "username": "sophie_mfoubou",
+    "loan_amount": 0,
+    "loan_duration": 1,
+    "credit_type": "consommation_generale",
+    "status": "pending",
+    "created_at": "2025-09-30T14:02:22.698891",
+    "client_info": {
+      "name": "",
+      "email": "",
+      "phone": "",
+      "profession": "",
+      "monthly_income": 0
+    },
+    "score": 2.7,
+    "risk_level": "très_élevé",
+    "decision": "refusé"
   }
 ]

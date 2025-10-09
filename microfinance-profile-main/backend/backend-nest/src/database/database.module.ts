@@ -4,7 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import { CreditRequest } from '../credit/entities/credit-request.entity';
 import { CreditScoring } from '../scoring/entities/credit-scoring.entity';
-import { User } from '../app/auth/entities/user.entity';
+import { Utilisateur } from '../app/auth/entities/user.entity';
 
 @Module({
   imports: [
@@ -17,7 +17,7 @@ import { User } from '../app/auth/entities/user.entity';
         username: configService.get('DB_USERNAME', 'postgres'),
         password: configService.get('DB_PASSWORD', 'admin'),
         database: configService.get('DB_NAME', 'credit_scoring'),
-        entities: [CreditRequest, CreditScoring, User],
+        entities: [CreditRequest, CreditScoring, Utilisateur],
         synchronize: configService.get('NODE_ENV') === 'development',
         logging: configService.get('NODE_ENV') === 'development',
       }),

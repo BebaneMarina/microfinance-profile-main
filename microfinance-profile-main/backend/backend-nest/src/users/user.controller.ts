@@ -16,10 +16,10 @@ export class UsersController {
       uuid: userDetails.uuid,
       email: userDetails.email,
       name: userDetails.getFullName(),
-      role: userDetails.role,
-      monthlyIncome: userDetails.monthly_income,
+      
+      monthlyIncome: userDetails.revenu_mensuel,
       profession: userDetails.profession,
-      phone: userDetails.phone_number,
+      phone: userDetails. telephone,
       currentDate: '2025-07-26 10:47:43',
       currentUser: 'theobawana'
     };

@@ -83,13 +83,13 @@ $shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.15);
 
 // Container principal avec gestion intelligente de la sidebar
 .dashboard-container {
-  width: 70%;
+  width: 65%;
   max-width: var(--container-max-width);
-  margin: 0 auto;
   padding: var(--container-padding);
   background: $background;
   min-height: 100vh;
   box-sizing: border-box;
+  margin-left: 45%;
   
   margin-left: var(--content-margin-desktop);
   transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -1876,5 +1876,336 @@ $shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.15);
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* À ajouter dans profile.component.scss ou dans les styles du HTML */
+
+/* ==========================================
+   STYLES POUR LES BADGES DE PAIEMENT
+   ========================================== */
+
+.payment-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.1), rgba(76, 175, 80, 0.05));
+  border: 1px solid rgba(76, 175, 80, 0.3);
+  border-radius: 20px;
+  margin: 10px 0;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #2e7d32;
+}
+
+.payment-status-badge i {
+  font-size: 18px;
+  color: #4CAF50;
+}
+
+.payment-counter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  margin-top: 12px;
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.payment-counter i {
+  font-size: 18px;
+  color: #4CAF50;
+}
+
+.payment-counter .last-payment {
+  margin-left: auto;
+  font-size: 0.8rem;
+  color: #999;
+}
+
+/* Amélioration des cartes de crédit avec statut payé */
+.credit-card.enhanced[data-status="paid"] {
+  opacity: 0.85;
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.05), white);
+  border: 1px solid rgba(76, 175, 80, 0.2);
+}
+
+.credit-card.enhanced[data-status="paid"] .credit-header h3 {
+  color: #4CAF50;
+}
+
+.amount-value.paid {
+  color: #4CAF50;
+  font-weight: 600;
+}
+
+/* Badge pour les crédits entièrement payés */
+.credit-card.enhanced[data-status="paid"]::after {
+  content: '✓ Payé';
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: #4CAF50;
+  color: white;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(76, 175, 80, 0.3);
+}
+
+.credit-card.enhanced {
+  position: relative;
+}
+
+/* Animations pour les badges */
+@keyframes slideInBadge {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.payment-status-badge {
+  animation: slideInBadge 0.3s ease-out;
+}
+
+/* ==========================================
+   STYLES POUR LES BARRES DE PROGRESSION
+   ========================================== */
+
+.credit-progress-detailed {
+  margin: 1rem 0;
+}
+
+.credit-progress-detailed .progress-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.credit-progress-detailed .progress-info span:last-child {
+  font-weight: 600;
+  color: #4CAF50;
+}
+
+.progress-bar {
+  height: 8px;
+  background: rgba(0, 0, 0, 0.08);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #FF9800, #F57C00);
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 4px;
+}
+
+.progress-fill.paid {
+  background: linear-gradient(90deg, #4CAF50, #2e7d32);
+}
+
+/* État de paiement dans le modal détaillé */
+.credit-item-detailed[data-status="paid"]::before {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: -30px;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  background: #4CAF50;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: bold;
+  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+}
+
+/* ==========================================
+   INDICATEURS VISUELS AMÉLIORÉS
+   ========================================== */
+
+.payment-milestone {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  background: linear-gradient(135deg, #e8f5e9, #f1f8e9);
+  border-left: 3px solid #4CAF50;
+  border-radius: 4px;
+  margin-top: 10px;
+}
+
+.payment-milestone i {
+  color: #4CAF50;
+  font-size: 24px;
+}
+
+.payment-milestone-text {
+  flex: 1;
+}
+
+.payment-milestone-text h4 {
+  margin: 0 0 4px 0;
+  color: #2e7d32;
+  font-size: 0.9rem;
+}
+
+.payment-milestone-text p {
+  margin: 0;
+  color: #66bb6a;
+  font-size: 0.8rem;
+}
+
+/* Pulse animation pour les nouveaux paiements */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+.new-payment-indicator {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* ==========================================
+   TOOLTIPS POUR LES PAIEMENTS
+   ========================================== */
+
+.payment-tooltip {
+  position: relative;
+  cursor: help;
+}
+
+.payment-tooltip:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 8px 12px;
+  background: #333;
+  color: white;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  white-space: nowrap;
+  z-index: 1000;
+  margin-bottom: 5px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.payment-tooltip:hover::before {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: #333;
+  margin-bottom: -5px;
+}
+
+/* ==========================================
+   RESPONSIVE
+   ========================================== */
+
+@media (max-width: 768px) {
+  .payment-counter {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  
+  .payment-counter .last-payment {
+    margin-left: 0;
+    margin-top: 4px;
+  }
+  
+  .credit-card.enhanced[data-status="paid"]::after {
+    top: 10px;
+    right: 10px;
+    font-size: 0.7rem;
+    padding: 3px 8px;
+  }
+}
+
+/* Carte nouveau client */
+.new-client-card {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 2rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  margin: 1.5rem 0;
+}
+
+.new-client-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.new-client-icon i {
+  font-size: 40px;
+  color: white;
+}
+
+.new-client-content {
+  flex: 1;
+}
+
+.new-client-content h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.3rem;
+  color: white;
+}
+
+.new-client-content p {
+  margin: 0.5rem 0;
+  font-size: 1rem;
+  opacity: 0.9;
+}
+
+.client-note {
+  font-size: 0.9rem !important;
+  opacity: 0.7 !important;
+  font-style: italic;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .new-client-card {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .new-client-icon {
+    margin-bottom: 1rem;
   }
 }

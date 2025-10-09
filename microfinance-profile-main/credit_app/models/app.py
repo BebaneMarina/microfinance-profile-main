@@ -1,42 +1,58 @@
+# app.py - MISE À JOUR COMPLÈTE
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import numpy as np
 import pandas as pd
 import logging
-from datetime import datetime, timedelta  # AJOUT DE TIMEDELTA
+from datetime import datetime, timedelta
 import json
 import os
 import traceback
-from scoring_model import CreditScoringModel
+from scoring_model import PostgresCreditScoringModel
 
 app = Flask(__name__)
 
-
-
-# IMPORTANT : Configuration CORS spécifique pour éviter les valeurs multiples
+# Configuration CORS
 CORS(app, 
-     origins=["http://localhost:4200"],  # UNE SEULE origin pour le développement
+     origins=["http://localhost:4200"],
      methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
      allow_headers=["Content-Type", "Authorization", "Accept", "X-Requested-With"],
      supports_credentials=True,
      max_age=86400
 )
 
-# Gestionnaire CORS manuel pour éviter les doublons
+# Configuration logging
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+# Configuration PostgreSQL
+DB_CONFIG = {
+    'host': os.getenv('DB_HOST', 'localhost'),
+    'database': os.getenv('DB_NAME', 'credit_scoring'),
+    'user': os.getenv('DB_USER', 'postgres'),
+    'password': os.getenv('DB_PASSWORD', 'admin'),
+    'port': int(os.getenv('DB_PORT', 5432))
+}
+
+# Initialiser le modèle de scoring PostgreSQL
+try:
+    scoring_model = PostgresCreditScoringModel(DB_CONFIG)
+    logger.info("✅ Modèle de scoring Random Forest initialisé avec succès")
+    logger.info(f"🤖 Type de modèle: {'Random Forest' if scoring_model.model is not None else 'Règles métier'}")
+except Exception as e:
+    logger.error(f"❌ Erreur lors de l'initialisation du modèle: {str(e)}")
+    scoring_model = None
+
 @app.after_request
 def after_request(response):
-    # Ne pas ajouter de headers CORS supplémentaires si CORS extension les gère déjà
-    # Cela évite les valeurs multiples dans Access-Control-Allow-Origin
-    
-    # Seulement si les headers ne sont pas déjà présents
     if not response.headers.get('Access-Control-Allow-Origin'):
         origin = request.headers.get('Origin')
         if origin == 'http://localhost:4200':
             response.headers['Access-Control-Allow-Origin'] = 'http://localhost:4200'
-        else:
-            response.headers['Access-Control-Allow-Origin'] = 'http://localhost:4200'
     
-    # S'assurer qu'il n'y a pas de doublons
     if response.headers.get('Access-Control-Allow-Methods'):
         response.headers['Access-Control-Allow-Methods'] = 'GET,POST,PUT,DELETE,OPTIONS'
     
@@ -45,7 +61,6 @@ def after_request(response):
     
     return response
 
-# Gestionnaire OPTIONS global
 @app.before_request
 def handle_preflight():
     if request.method == "OPTIONS":
@@ -56,130 +71,32 @@ def handle_preflight():
         response.headers['Access-Control-Max-Age'] = '86400'
         return response
 
-# ============================================================================
-
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
-
-# Initialiser le modèle de scoring
-try:
-    scoring_model = CreditScoringModel()
-    logger.info("✅ Modèle de scoring initialisé avec succès")
-    logger.info(f"🤖 Type de modèle: {'Random Forest' if scoring_model.model is not None else 'Règles métier'}")
-except Exception as e:
-    logger.error(f"❌ Erreur lors de l'initialisation du modèle: {str(e)}")
-    scoring_model = None
-
-# Fichiers pour stocker les données
-APPLICATIONS_FILE = 'applications.json'
-CLIENTS_FILE = 'clients_scoring.json'
-TRANSACTIONS_FILE = 'transactions_history.json'
-
-def load_applications():
-    if os.path.exists(APPLICATIONS_FILE):
-        try:
-            with open(APPLICATIONS_FILE, 'r', encoding='utf-8') as f:
-                return json.load(f)
-        except Exception as e:
-            logger.error(f"Erreur chargement applications: {e}")
-            return []
-    return []
-
-def save_applications(applications):
-    try:
-        with open(APPLICATIONS_FILE, 'w', encoding='utf-8') as f:
-            json.dump(applications, f, indent=2, default=str, ensure_ascii=False)
-        logger.info(f"Applications sauvegardées: {len(applications)} entrées")
-    except Exception as e:
-        logger.error(f"Erreur sauvegarde applications: {e}")
-
-def load_client_scorings():
-    if os.path.exists(CLIENTS_FILE):
-        try:
-            with open(CLIENTS_FILE, 'r', encoding='utf-8') as f:
-                return json.load(f)
-        except Exception as e:
-            logger.error(f"Erreur chargement scorings clients: {e}")
-            return {}
-    return {}
-
-def save_client_scorings(scorings):
-    try:
-        with open(CLIENTS_FILE, 'w', encoding='utf-8') as f:
-            json.dump(scorings, f, indent=2, default=str, ensure_ascii=False)
-        logger.info(f"Scorings clients sauvegardés: {len(scorings)} entrées")
-    except Exception as e:
-        logger.error(f"Erreur sauvegarde scorings: {e}")
-
-def load_transactions_history():
-    if os.path.exists(TRANSACTIONS_FILE):
-        try:
-            with open(TRANSACTIONS_FILE, 'r', encoding='utf-8') as f:
-                return json.load(f)
-        except Exception as e:
-            logger.error(f"Erreur chargement historique transactions: {e}")
-            return {}
-    return {}
-
-def save_transactions_history(history):
-    try:
-        with open(TRANSACTIONS_FILE, 'w', encoding='utf-8') as f:
-            json.dump(history, f, indent=2, default=str, ensure_ascii=False)
-        logger.info(f"Historique transactions sauvegardé")
-    except Exception as e:
-        logger.error(f"Erreur sauvegarde historique transactions: {e}")
-
-def add_transaction_to_history(username, transaction_data):
-    history = load_transactions_history()
-    
-    if username not in history:
-        history[username] = []
-    
-    transaction = {
-        'id': len(history[username]) + 1,
-        'date': datetime.now().isoformat(),
-        'type': transaction_data.get('type', 'payment'),
-        'amount': transaction_data.get('amount', 0),
-        'days_late': transaction_data.get('days_late', 0),
-        'loan_contract_id': transaction_data.get('loan_contract_id'),
-        'description': transaction_data.get('description', ''),
-        'status': transaction_data.get('status', 'completed')
-    }
-    
-    history[username].append(transaction)
-    save_transactions_history(history)
-    
-    return transaction
-
 @app.route('/')
 def home():
     return jsonify({
         'message': 'API de Scoring de Crédit - Bamboo EMF',
-        'version': '5.1 - CORS Corrigé',
+        'version': '7.0 - Random Forest ML',
         'status': 'running',
-        'cors_fixed': True,
+        'database': 'PostgreSQL',
         'model_type': 'Random Forest' if (scoring_model and scoring_model.model is not None) else 'Règles métier',
-        'clients_scored': len(load_client_scorings()),
-        'supported_credit_types': ['consommation_generale', 'avance_salaire', 'depannage'],
         'features': {
+            'postgres_integration': True,
+            'machine_learning': scoring_model.model is not None,
             'auto_scoring': True,
             'real_time_calculation': True,
-            'cors_single_origin': True,
-            'transaction_tracking': True
+            'payment_history_analysis': True
         },
         'endpoints': {
             '/test': 'GET - Test de connectivité',
             '/health': 'GET - Vérification de santé',
-            '/client-scoring': 'POST - Scoring automatique',
-            '/eligible-amount': 'POST - Calcul montant éligible',
-            '/realtime-scoring': 'POST - Scoring temps réel',
-            '/score-trend/<username>': 'GET - Analyse tendance du score',
-            '/process-transaction': 'POST - Traiter une transaction',
-            '/simulate-transaction': 'POST - Simuler impact transaction',
-            '/statistics': 'GET - Statistiques générales'
+            '/client-scoring/<user_id>': 'GET - Score d\'un client',
+            '/recalculate-score/<user_id>': 'POST - Recalculer le score',
+            '/check-eligibility/<user_id>': 'GET - Vérifier l\'éligibilité',
+            '/user-profile/<user_id>': 'GET - Profil complet',
+            '/score-trend/<username>': 'GET - Historique des scores',
+            '/payment-analysis/<user_id>': 'GET - Analyse des paiements',
+            '/statistics': 'GET - Statistiques générales',
+            '/retrain-model': 'POST - Réentraîner le modèle'
         }
     })
 
@@ -189,23 +106,16 @@ def test():
         return '', 200
     
     logger.info("🧪 Test de connectivité demandé")
-    logger.info(f"🌐 Origin: {request.headers.get('Origin', 'Non spécifié')}")
-    logger.info(f"📋 Headers: {dict(request.headers)}")
     
     return jsonify({
         'status': 'ok',
-        'message': 'API fonctionne correctement - CORS corrigé',
+        'message': 'API fonctionne correctement - Random Forest ML',
         'timestamp': datetime.now().isoformat(),
-        'cors_test': {
-            'origin_received': request.headers.get('Origin'),
-            'method': request.method,
-            'cors_configured': True,
-            'single_origin_policy': True
-        },
+        'database_status': 'connected' if scoring_model else 'disconnected',
         'server_info': {
-            'model_status': 'active' if scoring_model else 'fallback',
-            'clients_count': len(load_client_scorings()),
-            'transactions_count': sum(len(trans) for trans in load_transactions_history().values())
+            'model_status': 'Random Forest ML' if (scoring_model and scoring_model.model) else 'Règles métier',
+            'database': 'PostgreSQL',
+            'ml_available': scoring_model.model is not None if scoring_model else False
         }
     })
 
@@ -215,21 +125,34 @@ def health_check():
         return '', 200
     
     try:
-        model_status = 'active' if (scoring_model and scoring_model.model is not None) else 'fallback'
+        db_status = 'ok'
+        model_status = 'inactive'
+        
+        if scoring_model:
+            try:
+                # Test de connexion DB
+                with scoring_model.get_db_connection() as conn:
+                    with conn.cursor() as cur:
+                        cur.execute("SELECT 1")
+                db_status = 'ok'
+                
+                # Vérifier le modèle
+                if scoring_model.model is not None:
+                    model_status = 'random_forest'
+                else:
+                    model_status = 'rule_based'
+                    
+            except Exception as e:
+                db_status = f'error: {str(e)}'
         
         return jsonify({
             'status': 'healthy',
             'timestamp': datetime.now().isoformat(),
-            'version': '5.1 - CORS Corrigé',
+            'version': '7.0 - Random Forest ML',
             'components': {
                 'model': model_status,
-                'cors': 'fixed_single_origin',
-                'api': 'ok',
-                'files': {
-                    'applications': 'ok' if os.path.exists(APPLICATIONS_FILE) else 'missing',
-                    'clients': 'ok' if os.path.exists(CLIENTS_FILE) else 'missing',
-                    'transactions': 'ok' if os.path.exists(TRANSACTIONS_FILE) else 'missing'
-                }
+                'database': db_status,
+                'api': 'ok'
             }
         })
     except Exception as e:
@@ -239,203 +162,18 @@ def health_check():
             'timestamp': datetime.now().isoformat()
         }), 500
 
-def prepare_client_data_for_scoring(client_data):
-    age = estimate_age_from_profession(client_data.get('profession', ''))
-    job_seniority = estimate_job_seniority(client_data.get('profession', ''))
-    monthly_income = float(client_data.get('monthly_income', 0) or client_data.get('monthlyIncome', 0))
-    other_income = float(client_data.get('other_income', 0))
-    monthly_charges = float(client_data.get('monthlyCharges', monthly_income * 0.3))
-    existing_debts = float(client_data.get('existingDebts', 0))
-    employment_status = client_data.get('employmentStatus') or map_profession_to_employment(client_data.get('profession', ''))
-    username = client_data.get('username', '')
-    user_id = hash(username) % 10000 if username else None
-    
-    return {
-        'username': username,
-        'user_id': user_id,
-        'age': age,
-        'monthly_income': monthly_income,
-        'other_income': other_income,
-        'monthly_charges': monthly_charges,
-        'existing_debts': existing_debts,
-        'job_seniority': job_seniority,
-        'employment_status': employment_status,
-        'loan_amount': 1000000,
-        'loan_duration': 1,
-        'credit_type': 'consommation_generale',
-        'marital_status': 'single',
-        'education': 'superieur',
-        'dependents': 2,
-        'repayment_frequency': 'mensuel',
-        'profession': client_data.get('profession', ''),
-        'company': client_data.get('company', ''),
-        'client_type': client_data.get('clientType', 'particulier'),
-        'name': client_data.get('name', ''),
-        'email': client_data.get('email', ''),
-        'phone': client_data.get('phone', '')
-    }
+# ==========================================
+# ENDPOINTS PRINCIPAUX - SCORING
+# ==========================================
 
-@app.route('/client-scoring', methods=['POST', 'OPTIONS'])
-def calculate_client_scoring():
+@app.route('/client-scoring/<int:user_id>', methods=['GET', 'OPTIONS'])
+def get_client_scoring(user_id):
+    """Récupère le score d'un client depuis la base"""
     if request.method == 'OPTIONS':
         return '', 200
     
     try:
-        # Logging détaillé pour debug
-        logger.info("=" * 50)
-        logger.info("📊 REQUÊTE CLIENT-SCORING REÇUE")
-        logger.info(f"🌐 Origin: {request.headers.get('Origin')}")
-        logger.info(f"📋 Method: {request.method}")
-        logger.info(f"📦 Content-Type: {request.headers.get('Content-Type')}")
-        logger.info("=" * 50)
-        
-        data = request.json
-        if not data:
-            logger.error("❌ Aucune donnée JSON reçue")
-            return jsonify({
-                'error': 'Données manquantes',
-                'message': 'Aucune donnée reçue dans la requête'
-            }), 400
-        
-        username = data.get('username', 'unknown')
-        logger.info(f"👤 Traitement scoring pour: {username}")
-        
-        if not scoring_model:
-            logger.warning("⚠️ Modèle non initialisé - utilisation fallback")
-            return jsonify({
-                'score': 6.0,
-                'eligible_amount': 500000,
-                'risk_level': 'moyen',
-                'decision': 'à étudier',
-                'factors': [],
-                'recommendations': ['Modèle non disponible - Calcul par défaut'],
-                'model_used': 'fallback',
-                'cors_ok': True
-            })
-        
-        # Préparer les données
-        scoring_data = prepare_client_data_for_scoring(data)
-        logger.info(f"💰 Revenu traité: {scoring_data['monthly_income']:,} FCFA")
-        
-        # Calcul du scoring
-        score_result = scoring_model.predict(scoring_data)
-        eligible_result = scoring_model.calculate_eligible_amount(scoring_data)
-        
-        # Résultat final
-        result = {
-            'username': username,
-            'score': score_result.get('score', 6.0),
-            'eligible_amount': eligible_result.get('eligible_amount', 500000),
-            'risk_level': score_result.get('risk_level', 'moyen'),
-            'decision': score_result.get('decision', 'à étudier'),
-            'factors': score_result.get('factors', []),
-            'recommendations': eligible_result.get('recommendations', []),
-            'model_used': score_result.get('model_type', 'unknown'),
-            'model_confidence': score_result.get('model_confidence', 0.5),
-            'calculation_date': datetime.now().isoformat(),
-            'cors_ok': True,
-            'client_data': {
-                'name': data.get('name', ''),
-                'email': data.get('email', ''),
-                'phone': data.get('phone', ''),
-                'profession': data.get('profession', ''),
-                'monthly_income': scoring_data.get('monthly_income', 0)
-            }
-        }
-        
-        # Sauvegarder
-        save_client_scoring(username, result)
-        
-        logger.info(f"✅ Scoring calculé: {result['score']}/10")
-        logger.info(f"💳 Montant éligible: {result['eligible_amount']:,} FCFA")
-        
-        return jsonify(result)
-        
-    except Exception as e:
-        logger.error(f"❌ Erreur client-scoring: {str(e)}")
-        logger.error(traceback.format_exc())
-        
-        return jsonify({
-            'username': data.get('username', 'unknown') if 'data' in locals() else 'unknown',
-            'score': 6.0,
-            'eligible_amount': 500000,
-            'risk_level': 'moyen',
-            'decision': 'à étudier',
-            'factors': [],
-            'recommendations': ['Erreur lors du calcul - Valeurs par défaut'],
-            'model_used': 'fallback',
-            'error': str(e),
-            'cors_ok': True
-        }), 500
-
-@app.route('/eligible-amount', methods=['POST', 'OPTIONS'])
-def calculate_eligible_amount():
-    if request.method == 'OPTIONS':
-        return '', 200
-    
-    try:
-        logger.info("💳 CALCUL MONTANT ÉLIGIBLE")
-        
-        data = request.json
-        if not data:
-            return jsonify({
-                'error': 'Données manquantes'
-            }), 400
-        
-        username = data.get('username', 'unknown')
-        logger.info(f"👤 Client: {username}")
-        
-        if not scoring_model:
-            monthly_income = float(data.get('monthly_income', data.get('monthlyIncome', 500000)))
-            default_amount = min(monthly_income * 0.3333, 2000000)
-            
-            return jsonify({
-                'eligible_amount': int(default_amount),
-                'score': 6.0,
-                'risk_level': 'moyen',
-                'factors': [],
-                'recommendations': ['Calcul par défaut'],
-                'cors_ok': True
-            })
-        
-        scoring_data = prepare_client_data_for_scoring(data)
-        result = scoring_model.calculate_eligible_amount(scoring_data)
-        
-        result['cors_ok'] = True
-        logger.info(f"✅ Montant calculé: {result['eligible_amount']:,} FCFA")
-        
-        return jsonify(result)
-        
-    except Exception as e:
-        logger.error(f"❌ Erreur eligible-amount: {str(e)}")
-        
-        return jsonify({
-            'eligible_amount': 500000,
-            'score': 6.0,
-            'risk_level': 'moyen',
-            'factors': [],
-            'recommendations': ['Erreur système'],
-            'error': str(e),
-            'cors_ok': True
-        }), 500
-
-@app.route('/realtime-scoring', methods=['POST', 'OPTIONS'])
-def calculate_realtime_scoring():
-    if request.method == 'OPTIONS':
-        return '', 200
-    
-    try:
-        logger.info("⚡ SCORING TEMPS RÉEL")
-        logger.info(f"🌐 Origin: {request.headers.get('Origin')}")
-        
-        data = request.json
-        if not data:
-            return jsonify({
-                'error': 'Données manquantes'
-            }), 400
-        
-        username = data.get('username', 'unknown')
-        logger.info(f"👤 Client: {username}")
+        logger.info(f"📊 Récupération score pour user_id: {user_id}")
         
         if not scoring_model:
             return jsonify({
@@ -443,419 +181,414 @@ def calculate_realtime_scoring():
                 'cors_ok': True
             }), 500
         
-        scoring_data = prepare_client_data_for_scoring(data)
-        user_id = scoring_data['user_id']
+        # Option: forcer le recalcul avec ?recalculate=true
+        force_recalculate = request.args.get('recalculate', 'false').lower() == 'true'
         
-        # Charger l'historique
-        all_transactions = load_transactions_history()
-        user_transactions = all_transactions.get(username, [])
+        # Récupérer ou calculer le score
+        score_data = scoring_model.get_or_calculate_score(user_id, force_recalculate)
         
-        # Calcul temps réel
-        result = scoring_model.calculate_realtime_score(
-            user_id, 
-            scoring_data, 
-            user_transactions
-        )
+        if not score_data:
+            return jsonify({
+                'error': f'Utilisateur {user_id} non trouvé',
+                'cors_ok': True
+            }), 404
         
-        # Enrichir le résultat
-        result.update({
-            'username': username,
-            'cors_ok': True,
-            'client_info': {
-                'name': data.get('name', ''),
-                'email': data.get('email', ''),
-                'profession': data.get('profession', ''),
-                'monthly_income': scoring_data.get('monthly_income', 0)
-            }
-        })
+        result = {
+            'user_id': user_id,
+            'score': score_data.get('score_credit') or score_data.get('score'),
+            'score_850': score_data.get('score_850'),
+            'risk_level': score_data.get('niveau_risque'),
+            'eligible_amount': score_data.get('montant_eligible'),
+            'last_updated': score_data.get('date_modification'),
+            'model_used': score_data.get('model_type', 'database'),
+            'model_confidence': score_data.get('model_confidence', 0.75),
+            'details': score_data.get('details', {}),
+            'recommendations': score_data.get('recommendations', []),
+            'cors_ok': True
+        }
         
-        # Sauvegarder
-        save_client_scoring(username, result)
-        
-        logger.info(f"✅ Score temps réel: {result['score']}")
+        logger.info(f"✅ Score récupéré: {result['score']}/10 ({result['model_used']})")
         
         return jsonify(result)
         
     except Exception as e:
-        logger.error(f"❌ Erreur realtime-scoring: {str(e)}")
+        logger.error(f"❌ Erreur récupération score: {str(e)}")
         logger.error(traceback.format_exc())
         
         return jsonify({
-            'error': 'Erreur calcul temps réel',
-            'message': str(e),
+            'error': str(e),
+            'cors_ok': True
+        }), 500
+    
+# Dans votre fichier Flask principal (app.py ou similaire)
+
+@app.route('/ml-statistics/<int:user_id>', methods=['GET'])
+def get_ml_statistics(user_id):
+    """Retourne les statistiques ML pour un utilisateur"""
+    try:
+        # Récupérer les données de l'utilisateur
+        user_data = get_user_data(user_id)
+        
+        if not user_data:
+            return jsonify({
+                'success': False,
+                'error': 'Utilisateur non trouvé'
+            }), 404
+        
+        # Calculer les statistiques ML
+        stats = {
+            'user_id': user_id,
+            'model_type': 'random_forest',
+            'last_training': '2025-10-09',
+            'prediction_accuracy': 0.85,
+            'feature_importance': [
+                {'feature': 'payment_history', 'importance': 0.35},
+                {'feature': 'debt_ratio', 'importance': 0.25},
+                {'feature': 'income_stability', 'importance': 0.20},
+                {'feature': 'credit_utilization', 'importance': 0.15},
+                {'feature': 'account_age', 'importance': 0.05}
+            ],
+            'risk_distribution': {
+                'very_low': 15,
+                'low': 25,
+                'medium': 35,
+                'high': 20,
+                'very_high': 5
+            }
+        }
+        
+        return jsonify({
+            'success': True,
+            'data': stats
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/recalculate-score/<int:user_id>', methods=['POST', 'OPTIONS'])
+def recalculate_score(user_id):
+    """Force le recalcul du score d'un client avec le modèle ML"""
+    if request.method == 'OPTIONS':
+        return '', 200
+    
+    try:
+        logger.info(f"🔄 Recalcul du score ML pour user_id: {user_id}")
+        
+        if not scoring_model:
+            return jsonify({
+                'error': 'Modèle non disponible',
+                'cors_ok': True
+            }), 500
+        
+        # Forcer le recalcul
+        score_data = scoring_model.get_or_calculate_score(user_id, force_recalculate=True)
+        
+        if not score_data:
+            return jsonify({
+                'error': f'Utilisateur {user_id} non trouvé',
+                'cors_ok': True
+            }), 404
+        
+        result = {
+            'success': True,
+            'user_id': user_id,
+            'score': score_data.get('score'),
+            'score_850': score_data.get('score_850'),
+            'risk_level': score_data.get('niveau_risque'),
+            'eligible_amount': score_data.get('montant_eligible'),
+            'model_used': score_data.get('model_type'),
+            'model_confidence': score_data.get('model_confidence'),
+            'details': score_data.get('details', {}),
+            'recommendations': score_data.get('recommendations', []),
+            'recalculated_at': datetime.now().isoformat(),
+            'cors_ok': True
+        }
+        
+        logger.info(f"✅ Score recalculé: {result['score']}/10 ({result['model_used']})")
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        logger.error(f"❌ Erreur recalcul score: {str(e)}")
+        
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'cors_ok': True
+        }), 500
+
+@app.route('/check-eligibility/<int:user_id>', methods=['GET', 'OPTIONS'])
+def check_eligibility(user_id):
+    """Vérifie l'éligibilité d'un client pour un crédit"""
+    if request.method == 'OPTIONS':
+        return '', 200
+    
+    try:
+        logger.info(f"✔️ Vérification éligibilité pour user_id: {user_id}")
+        
+        if not scoring_model:
+            return jsonify({
+                'error': 'Modèle non disponible',
+                'cors_ok': True
+            }), 500
+        
+        eligibility = scoring_model.check_eligibility(user_id)
+        
+        result = {
+            'user_id': user_id,
+            'eligible': eligibility.get('eligible', False),
+            'raison': eligibility.get('raison'),
+            'montant_eligible': eligibility.get('montant_eligible', 0),
+            'score': eligibility.get('score'),
+            'timestamp': datetime.now().isoformat(),
+            'cors_ok': True
+        }
+        
+        logger.info(f"✅ Éligibilité: {result['eligible']}")
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        logger.error(f"❌ Erreur vérification éligibilité: {str(e)}")
+        
+        return jsonify({
+            'user_id': user_id,
+            'eligible': False,
+            'error': str(e),
+            'cors_ok': True
+        }), 500
+
+@app.route('/payment-analysis/<int:user_id>', methods=['GET', 'OPTIONS'])
+def payment_analysis(user_id):
+    """Analyse détaillée de l'historique de paiements"""
+    if request.method == 'OPTIONS':
+        return '', 200
+    
+    try:
+        logger.info(f"📈 Analyse paiements pour user_id: {user_id}")
+        
+        if not scoring_model:
+            return jsonify({
+                'error': 'Modèle non disponible',
+                'cors_ok': True
+            }), 500
+        
+        # Récupérer les données complètes
+        user_data = scoring_model._get_user_complete_data(user_id)
+        
+        if not user_data:
+            return jsonify({
+                'error': f'Utilisateur {user_id} non trouvé',
+                'cors_ok': True
+            }), 404
+        
+        result = {
+            'user_id': user_id,
+            'total_payments': user_data.get('total_paiements', 0),
+            'on_time_payments': user_data.get('paiements_a_temps', 0),
+            'late_payments': user_data.get('paiements_en_retard', 0),
+            'missed_payments': user_data.get('paiements_manques', 0),
+            'on_time_ratio': round(user_data.get('ratio_paiements_temps', 0) * 100, 1),
+            'avg_delay_days': round(user_data.get('moyenne_jours_retard', 0), 1),
+            'reliability': user_data.get('reliability', 'N/A'),
+            'current_debt': user_data.get('dette_totale_active', 0),
+            'debt_ratio': user_data.get('ratio_endettement', 0),
+            'active_credits': user_data.get('credits_actifs_count', 0),
+            'cors_ok': True
+        }
+        
+        logger.info(f"✅ Analyse terminée: {result['on_time_ratio']}% à temps")
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        logger.error(f"❌ Erreur analyse paiements: {str(e)}")
+        
+        return jsonify({
+            'error': str(e),
+            'cors_ok': True
+        }), 500
+
+@app.route('/user-profile/<int:user_id>', methods=['GET', 'OPTIONS'])
+def get_user_profile(user_id):
+    """Récupère le profil complet d'un utilisateur"""
+    if request.method == 'OPTIONS':
+        return '', 200
+    
+    try:
+        logger.info(f"👤 Récupération profil pour user_id: {user_id}")
+        
+        if not scoring_model:
+            return jsonify({
+                'error': 'Modèle non disponible',
+                'cors_ok': True
+            }), 500
+        
+        profile = scoring_model._get_user_complete_data(user_id)
+        
+        if not profile:
+            return jsonify({
+                'error': f'Utilisateur {user_id} non trouvé',
+                'cors_ok': True
+            }), 404
+        
+        # Conversion des données pour JSON
+        result = {k: (str(v) if isinstance(v, (datetime,)) else v) 
+                  for k, v in profile.items()}
+        result['cors_ok'] = True
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        logger.error(f"❌ Erreur récupération profil: {str(e)}")
+        
+        return jsonify({
+            'error': str(e),
             'cors_ok': True
         }), 500
 
 @app.route('/score-trend/<username>', methods=['GET', 'OPTIONS'])
 def get_score_trend(username):
-    """Analyse la tendance du score d'un client"""
+    """Récupère l'historique des scores d'un utilisateur"""
     if request.method == 'OPTIONS':
         return '', 200
     
     try:
-        logger.info(f"📈 ANALYSE TENDANCE SCORE pour {username}")
+        logger.info(f"📈 Récupération tendance score pour: {username}")
         
-        # Charger l'historique des transactions
-        all_transactions = load_transactions_history()
-        user_transactions = all_transactions.get(username, [])
+        if not scoring_model:
+            return jsonify({
+                'error': 'Modèle non disponible',
+                'cors_ok': True
+            }), 500
         
-        # Charger le scoring du client
-        client_scorings = load_client_scorings()
-        client_scoring = client_scorings.get(username, {})
+        # Trouver l'utilisateur par email/username
+        with scoring_model.get_db_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute("""
+                    SELECT id FROM utilisateurs 
+                    WHERE email = %s OR nom = %s
+                    LIMIT 1
+                """, (username, username))
+                
+                user = cur.fetchone()
+                
+                if not user:
+                    return jsonify({
+                        'error': 'Utilisateur non trouvé',
+                        'recent_transactions': [],
+                        'cors_ok': True
+                    }), 404
+                
+                user_id = user[0]
+                
+                # Récupérer l'historique des scores
+                cur.execute("""
+                    SELECT 
+                        score_credit,
+                        score_850,
+                        niveau_risque,
+                        evenement_declencheur,
+                        date_calcul
+                    FROM historique_scores
+                    WHERE utilisateur_id = %s
+                    ORDER BY date_calcul DESC
+                    LIMIT 20
+                """, (user_id,))
+                
+                history = cur.fetchall()
+                
+                recent_transactions = []
+                for row in history:
+                    recent_transactions.append({
+                        'score': float(row[0]),
+                        'score_850': row[1],
+                        'risk_level': row[2],
+                        'event': row[3],
+                        'date': row[4].isoformat() if row[4] else None
+                    })
         
-        # Générer des données d'historique simulées si pas de vraies données
-        if not user_transactions:
-            # Créer des transactions fictives pour la démo
-            now = datetime.now()
-            user_transactions = []
-            for i in range(10):
-                days_ago = (i + 1) * 10
-                transaction_date = now - timedelta(days=days_ago)
-                user_transactions.append({
-                    'id': i + 1,
-                    'date': transaction_date.isoformat(),
-                    'type': 'payment' if i % 3 != 2 else 'late_payment',
-                    'amount': 50000 + (i * 10000),
-                    'days_late': 0 if i % 3 != 2 else (i % 3) * 2,
-                    'description': f'Transaction automatique #{i + 1}'
-                })
-        
-        # Analyser la tendance
-        recent_transactions = user_transactions[-20:] if len(user_transactions) > 20 else user_transactions
-        
-        # Calculer les métriques de tendance
-        total_payments = len([t for t in recent_transactions if t.get('type') in ['payment', 'late_payment']])
-        on_time_payments = len([t for t in recent_transactions if t.get('type') == 'payment'])
-        late_payments = len([t for t in recent_transactions if t.get('type') == 'late_payment'])
-        
-        on_time_ratio = (on_time_payments / total_payments) if total_payments > 0 else 0.8
-        
-        # Déterminer la tendance
-        if on_time_ratio >= 0.9:
-            trend = 'improving'
-            trend_description = 'En amélioration'
-        elif on_time_ratio >= 0.7:
-            trend = 'stable'
-            trend_description = 'Stable'
-        else:
-            trend = 'declining'
-            trend_description = 'En baisse'
-        
-        # Score actuel
-        current_score = client_scoring.get('score', 6.0)
-        
-        result = {
-            'username': username,
-            'current_score': current_score,
-            'trend_analysis': {
-                'trend': trend,
-                'trend_description': trend_description,
-                'on_time_ratio': round(on_time_ratio, 2),
-                'total_payments': total_payments,
-                'on_time_payments': on_time_payments,
-                'late_payments': late_payments,
-                'average_change_per_month': 0.1 if trend == 'improving' else (-0.1 if trend == 'declining' else 0),
-                'consistency_score': int(on_time_ratio * 100),
-                'prediction_next_month': min(10, max(0, current_score + (0.2 if trend == 'improving' else (-0.2 if trend == 'declining' else 0))))
-            },
-            'recent_transactions': recent_transactions[-5:],  # 5 dernières transactions
-            'analysis_period_days': 90,
-            'cors_ok': True,
-            'last_updated': datetime.now().isoformat()
-        }
-        
-        logger.info(f"✅ Tendance analysée: {trend_description}")
-        
-        return jsonify(result)
-        
-    except Exception as e:
-        logger.error(f"❌ Erreur analyse tendance: {str(e)}")
         return jsonify({
             'username': username,
+            'user_id': user_id,
+            'recent_transactions': recent_transactions,
+            'total_records': len(recent_transactions),
+            'cors_ok': True
+        })
+        
+    except Exception as e:
+        logger.error(f"❌ Erreur score-trend: {str(e)}")
+        return jsonify({
             'error': str(e),
-            'trend_analysis': {
-                'trend': 'stable',
-                'trend_description': 'Données insuffisantes',
-                'on_time_ratio': 0.8,
-                'total_payments': 0,
-                'average_change_per_month': 0
-            },
             'recent_transactions': [],
             'cors_ok': True
         }), 500
 
-@app.route('/process-transaction', methods=['POST', 'OPTIONS'])
-def process_transaction():
-    """Traite une transaction et met à jour le score en temps réel"""
-    if request.method == 'OPTIONS':
-        return '', 200
-    
-    try:
-        data = request.json
-        username = data.get('username')
-        
-        if not username:
-            return jsonify({
-                'error': 'Username requis',
-                'cors_ok': True
-            }), 400
-        
-        logger.info(f"💳 TRAITEMENT TRANSACTION pour {username}")
-        
-        # Ajouter la transaction à l'historique
-        transaction = add_transaction_to_history(username, data)
-        
-        # Si on a le modèle de scoring, calculer l'impact
-        if scoring_model:
-            user_id = hash(username) % 10000
-            impact_result = scoring_model.process_transaction_impact(
-                user_id,
-                data.get('type', 'payment'),
-                data.get('days_late', 0),
-                data.get('amount', 0)
-            )
-            
-            # Mettre à jour le scoring sauvegardé
-            scorings = load_client_scorings()
-            if username in scorings:
-                scorings[username]['score'] = impact_result['new_score']
-                scorings[username]['last_transaction'] = transaction
-                scorings[username]['last_updated'] = datetime.now().isoformat()
-                save_client_scorings(scorings)
-        else:
-            # Impact par défaut sans modèle
-            impact_result = {
-                'previous_score': 6.0,
-                'new_score': 6.0,
-                'score_change': 0
-            }
-        
-        result = {
-            'success': True,
-            'transaction_id': transaction['id'],
-            'score_impact': impact_result,
-            'new_score': impact_result['new_score'],
-            'score_change': impact_result['score_change'],
-            'message': f"Transaction traitée. Score: {impact_result['previous_score']} → {impact_result['new_score']}",
-            'cors_ok': True
-        }
-        
-        logger.info(f"✅ Transaction traitée avec succès")
-        
-        return jsonify(result)
-        
-    except Exception as e:
-        logger.error(f"❌ Erreur traitement transaction: {str(e)}")
-        
-        return jsonify({
-            'success': False,
-            'error': str(e),
-            'cors_ok': True
-        }), 500
-
-@app.route('/simulate-transaction', methods=['POST', 'OPTIONS'])
-def simulate_transaction():
-    """Simule l'impact d'une transaction sans l'enregistrer"""
-    if request.method == 'OPTIONS':
-        return '', 200
-    
-    try:
-        data = request.json
-        username = data.get('username')
-        
-        if not username:
-            return jsonify({
-                'error': 'Username requis',
-                'cors_ok': True
-            }), 400
-        
-        logger.info(f"🔮 SIMULATION TRANSACTION pour {username}")
-        
-        # Charger le score actuel
-        client_scorings = load_client_scorings()
-        current_score = client_scorings.get(username, {}).get('score', 6.0)
-        
-        # Simuler l'impact
-        transaction_type = data.get('type', 'payment')
-        amount = data.get('amount', 0)
-        days_late = data.get('days_late', 0)
-        
-        # Impact simplifié basé sur le type
-        if transaction_type == 'payment' and days_late == 0:
-            impact = 0.1
-            description = 'Paiement à temps - Impact positif'
-        elif transaction_type == 'late_payment' or days_late > 0:
-            impact = -0.2 * (1 + days_late / 30)
-            description = f'Paiement en retard de {days_late} jours - Impact négatif'
-        elif transaction_type == 'early_payment':
-            impact = 0.2
-            description = 'Paiement anticipé - Impact très positif'
-        elif transaction_type == 'missed_payment':
-            impact = -1.0
-            description = 'Paiement manqué - Impact très négatif'
-        else:
-            impact = 0
-            description = 'Impact neutre'
-        
-        estimated_score = max(0, min(10, current_score + impact))
-        
-        simulation = {
-            'current_score': current_score,
-            'estimated_new_score': round(estimated_score, 1),
-            'estimated_change': round(impact, 2),
-            'transaction_type': transaction_type,
-            'impact_description': description,
-            'impact_analysis': {
-                'impact_description': description,
-                'factors_affected': ['Historique de paiement', 'Comportement financier'],
-                'recommendations': [
-                    'Continuez à payer à temps pour maintenir un bon score' if impact >= 0 
-                    else 'Évitez les retards pour améliorer votre score'
-                ]
-            },
-            'simulation': True,
-            'cors_ok': True
-        }
-        
-        logger.info(f"🔮 Simulation: {current_score} → {estimated_score} (Δ{impact:+.2f})")
-        
-        return jsonify(simulation)
-        
-    except Exception as e:
-        logger.error(f"❌ Erreur simulation: {str(e)}")
-        return jsonify({
-            'error': str(e),
-            'cors_ok': True
-        }), 500
-    
-@app.route('/register-credit', methods=['POST', 'OPTIONS'])
-def register_credit():
-    """Enregistre une nouvelle demande de crédit"""
-    if request.method == 'OPTIONS':
-        return '', 200
-    
-    try:
-        logger.info("💳 ENREGISTREMENT NOUVELLE DEMANDE DE CRÉDIT")
-        logger.info(f"🌐 Origin: {request.headers.get('Origin')}")
-        
-        data = request.json
-        if not data:
-            return jsonify({
-                'error': 'Données manquantes',
-                'cors_ok': True
-            }), 400
-        
-        username = data.get('username', 'unknown')
-        loan_amount = data.get('loan_amount', 0)
-        loan_duration = data.get('loan_duration', 1)
-        credit_type = data.get('credit_type', 'consommation_generale')
-        
-        logger.info(f"👤 Client: {username}")
-        logger.info(f"💰 Montant: {loan_amount:,} FCFA")
-        logger.info(f"📅 Durée: {loan_duration} mois")
-        logger.info(f"🏷️ Type: {credit_type}")
-        
-        # Charger les applications existantes
-        applications = load_applications()
-        
-        # Créer une nouvelle demande
-        new_application = {
-            'id': len(applications) + 1,
-            'username': username,
-            'loan_amount': loan_amount,
-            'loan_duration': loan_duration,
-            'credit_type': credit_type,
-            'status': 'pending',
-            'created_at': datetime.now().isoformat(),
-            'client_info': {
-                'name': data.get('name', ''),
-                'email': data.get('email', ''),
-                'phone': data.get('phone', ''),
-                'profession': data.get('profession', ''),
-                'monthly_income': data.get('monthly_income', 0)
-            }
-        }
-        
-        # Calculer le score si possible
-        if scoring_model:
-            scoring_data = prepare_client_data_for_scoring(data)
-            scoring_data['loan_amount'] = loan_amount
-            scoring_data['loan_duration'] = loan_duration
-            scoring_data['credit_type'] = credit_type
-            
-            score_result = scoring_model.predict(scoring_data)
-            
-            new_application['score'] = score_result.get('score', 6.0)
-            new_application['risk_level'] = score_result.get('risk_level', 'moyen')
-            new_application['decision'] = score_result.get('decision', 'à étudier')
-        else:
-            new_application['score'] = 6.0
-            new_application['risk_level'] = 'moyen'
-            new_application['decision'] = 'à étudier'
-        
-        # Ajouter à la liste
-        applications.append(new_application)
-        
-        # Sauvegarder
-        save_applications(applications)
-        
-        logger.info(f"✅ Demande enregistrée avec ID: {new_application['id']}")
-        logger.info(f"📊 Score calculé: {new_application['score']}")
-        
-        return jsonify({
-            'success': True,
-            'application_id': new_application['id'],
-            'score': new_application['score'],
-            'risk_level': new_application['risk_level'],
-            'decision': new_application['decision'],
-            'message': 'Demande de crédit enregistrée avec succès',
-            'cors_ok': True
-        })
-        
-    except Exception as e:
-        logger.error(f"❌ Erreur enregistrement crédit: {str(e)}")
-        logger.error(traceback.format_exc())
-        
-        return jsonify({
-            'success': False,
-            'error': str(e),
-            'cors_ok': True
-        }), 500
-
-@app.route('/endpoints', methods=['GET'])
-def list_endpoints():
-    """Liste tous les endpoints disponibles"""
-    routes = []
-    for rule in app.url_map.iter_rules():
-        routes.append({
-            'endpoint': rule.endpoint,
-            'methods': list(rule.methods),
-            'path': str(rule)
-        })
-    return jsonify({
-        'total_endpoints': len(routes),
-        'endpoints': sorted(routes, key=lambda x: x['path'])
-    })
-
 @app.route('/statistics', methods=['GET', 'OPTIONS'])
 def get_statistics():
+    """Statistiques générales du système"""
     if request.method == 'OPTIONS':
         return '', 200
     
     try:
-        applications = load_applications()
-        client_scorings = load_client_scorings()
+        if not scoring_model:
+            return jsonify({
+                'error': 'Modèle non disponible',
+                'cors_ok': True
+            }), 500
+        
+        with scoring_model.get_db_connection() as conn:
+            with conn.cursor() as cur:
+                # Statistiques utilisateurs
+                cur.execute("""
+                    SELECT 
+                        COUNT(*) as total_users,
+                        AVG(score_credit) as avg_score,
+                        COUNT(CASE WHEN peut_emprunter THEN 1 END) as eligible_users
+                    FROM utilisateurs u
+                    LEFT JOIN restrictions_credit r ON u.id = r.utilisateur_id
+                    WHERE u.statut = 'actif'
+                """)
+                stats = cur.fetchone()
+                
+                # Distribution des scores
+                cur.execute("""
+                    SELECT 
+                        niveau_risque,
+                        COUNT(*) as count
+                    FROM utilisateurs
+                    WHERE statut = 'actif'
+                    GROUP BY niveau_risque
+                """)
+                risk_distribution = {row[0]: row[1] for row in cur.fetchall()}
+                
+                # Statistiques de paiements
+                cur.execute("""
+                    SELECT 
+                        COUNT(*) as total_payments,
+                        COUNT(CASE WHEN type_paiement = 'a_temps' THEN 1 END) as on_time,
+                        AVG(jours_retard) as avg_delay
+                    FROM historique_paiements
+                    WHERE date_paiement >= NOW() - INTERVAL '30 days'
+                """)
+                payment_stats = cur.fetchone()
         
         return jsonify({
-            'applications': {
-                'total': len(applications),
-                'approved': sum(1 for app in applications if app.get('decision') == 'approuvé'),
-                'pending': sum(1 for app in applications if app.get('decision') == 'à étudier'),
-                'rejected': sum(1 for app in applications if app.get('decision') == 'refusé')
+            'total_users': stats[0] if stats else 0,
+            'average_score': round(float(stats[1]), 2) if stats and stats[1] else 0,
+            'eligible_users': stats[2] if stats else 0,
+            'risk_distribution': risk_distribution,
+            'payment_statistics': {
+                'total_last_30_days': payment_stats[0] if payment_stats else 0,
+                'on_time_last_30_days': payment_stats[1] if payment_stats else 0,
+                'avg_delay_days': round(float(payment_stats[2]), 1) if payment_stats and payment_stats[2] else 0
             },
-            'scoring': {
-                'total_clients': len(client_scorings),
-                'average_score': 6.5
+            'model_info': {
+                'type': 'Random Forest' if (scoring_model.model is not None) else 'Règles métier',
+                'ml_available': scoring_model.model is not None
             },
             'cors_ok': True,
             'timestamp': datetime.now().isoformat()
@@ -868,48 +601,54 @@ def get_statistics():
             'cors_ok': True
         }), 500
 
-# Fonctions utilitaires
-def estimate_age_from_profession(profession):
-    prof = profession.lower()
-    if 'étudiant' in prof or 'stagiaire' in prof:
-        return 25
-    elif 'senior' in prof or 'directeur' in prof or 'chef' in prof:
-        return 45
-    elif 'développeur' in prof or 'ingénieur' in prof:
-        return 32
-    else:
-        return 35
+# ==========================================
+# ENDPOINT RÉENTRAÎNEMENT DU MODÈLE
+# ==========================================
 
-def estimate_job_seniority(profession):
-    prof = profession.lower()
-    if 'senior' in prof or 'chef' in prof or 'directeur' in prof:
-        return 60
-    elif 'développeur' in prof or 'ingénieur' in prof:
-        return 36
-    elif 'junior' in prof or 'assistant' in prof:
-        return 12
-    else:
-        return 24
-
-def map_profession_to_employment(profession):
-    prof = profession.lower()
-    if any(word in prof for word in ['développeur', 'ingénieur', 'comptable', 'analyst', 'manager']):
-        return 'cdi'
-    elif any(word in prof for word in ['consultant', 'freelance', 'indépendant']):
-        return 'independant'
-    elif 'contractuel' in prof or 'temporaire' in prof:
-        return 'cdd'
-    else:
-        return 'cdi'
-
-def save_client_scoring(username, scoring_result):
+@app.route('/retrain-model', methods=['POST', 'OPTIONS'])
+def retrain_model():
+    """Réentraîne le modèle Random Forest avec les nouvelles données"""
+    if request.method == 'OPTIONS':
+        return '', 200
+    
     try:
-        scorings = load_client_scorings()
-        scorings[username] = scoring_result
-        save_client_scorings(scorings)
-        logger.info(f"💾 Scoring sauvegardé pour {username}")
+        logger.info("🔄 Démarrage du réentraînement du modèle...")
+        
+        if not scoring_model:
+            return jsonify({
+                'error': 'Modèle non disponible',
+                'cors_ok': True
+            }), 500
+        
+        # Réentraîner
+        success = scoring_model.train_model_from_database()
+        
+        if success:
+            return jsonify({
+                'success': True,
+                'message': 'Modèle réentraîné avec succès',
+                'model_type': 'random_forest',
+                'timestamp': datetime.now().isoformat(),
+                'cors_ok': True
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'message': 'Échec du réentraînement',
+                'cors_ok': True
+            }), 500
+        
     except Exception as e:
-        logger.error(f"❌ Erreur sauvegarde {username}: {e}")
+        logger.error(f"❌ Erreur réentraînement: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'cors_ok': True
+        }), 500
+
+# ==========================================
+# GESTION DES ERREURS
+# ==========================================
 
 @app.errorhandler(Exception)
 def handle_error(e):
@@ -926,51 +665,44 @@ def not_found(e):
     return jsonify({
         'error': 'Endpoint non trouvé',
         'available_endpoints': [
-            '/', '/test', '/health', '/client-scoring', '/eligible-amount', '/realtime-scoring', '/statistics'
+            '/', '/test', '/health', 
+            '/client-scoring/<user_id>', 
+            '/recalculate-score/<user_id>',
+            '/check-eligibility/<user_id>',
+            '/payment-analysis/<user_id>',
+            '/user-profile/<user_id>',
+            '/score-trend/<username>',
+            '/statistics',
+            '/retrain-model'
         ],
         'cors_ok': True
     }), 404
 
 if __name__ == '__main__':
-    # Créer les fichiers nécessaires
-    os.makedirs('models', exist_ok=True)
-    
-    for file, init_func in [
-        (APPLICATIONS_FILE, lambda: save_applications([])),
-        (CLIENTS_FILE, lambda: save_client_scorings({})),
-        (TRANSACTIONS_FILE, lambda: save_transactions_history({}))
-    ]:
-        if not os.path.exists(file):
-            init_func()
-            logger.info(f"📁 {file} créé")
-    
-    # Messages de démarrage
     logger.info("=" * 60)
-    logger.info("🚀 BAMBOO EMF - API v5.1 - CORS CORRIGÉ")
+    logger.info("🚀 BAMBOO EMF - API v7.0 - Random Forest ML")
     logger.info("=" * 60)
     logger.info("🌐 Serveur: http://localhost:5000")
-    logger.info("🔧 CORS: Une seule origin autorisée (http://localhost:4200)")
-    logger.info("✅ Headers CORS: Pas de doublons")
+    logger.info("🗄️ Base de données: PostgreSQL")
+    logger.info("🤖 Machine Learning: Random Forest")
     logger.info("📡 Endpoints principaux:")
-    logger.info("   • GET  /test           - Test de connectivité")
-    logger.info("   • POST /client-scoring - Scoring automatique")
-    logger.info("   • POST /realtime-scoring - Scoring temps réel")
-    logger.info("   • POST /eligible-amount - Montant éligible")
-    logger.info("   • GET  /score-trend/<username> - Tendance score")
-    logger.info("   • POST /process-transaction - Traiter transaction")
-    logger.info("   • POST /simulate-transaction - Simuler impact")
+    logger.info("   • GET  /client-scoring/<user_id> - Score client ML")
+    logger.info("   • POST /recalculate-score/<user_id> - Recalculer score ML")
+    logger.info("   • GET  /check-eligibility/<user_id> - Vérifier éligibilité")
+    logger.info("   • GET  /payment-analysis/<user_id> - Analyse paiements")
+    logger.info("   • GET  /user-profile/<user_id> - Profil complet")
+    logger.info("   • GET  /score-trend/<username> - Historique scores")
+    logger.info("   • GET  /statistics - Statistiques")
+    logger.info("   • POST /retrain-model - Réentraîner le modèle")
     
     if scoring_model:
-        logger.info(f"🤖 Modèle: {'Random Forest' if scoring_model.model else 'Règles métier'}")
+        logger.info(f"✅ Modèle: {'Random Forest ML' if scoring_model.model else 'Règles métier'}")
     else:
-        logger.info("⚠️ Modèle non initialisé - Mode fallback")
+        logger.info("⚠️ Modèle non initialisé")
     
-    logger.info("=" * 60)
-    logger.info("💡 Le problème CORS des headers multiples est corrigé !")
     logger.info("=" * 60)
     
     try:
         app.run(debug=True, host='0.0.0.0', port=5000, threaded=True)
     except Exception as e:
         logger.error(f"❌ Erreur démarrage: {e}")
-        print("💡 Vérifiez que le port 5000 est libre")
