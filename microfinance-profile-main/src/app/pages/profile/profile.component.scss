@@ -1,1968 +1,1108 @@
-@use "sass:color";
-@import url('https://fonts.googleapis.com/icon?family=Material+Icons');
+// ========================================
+// VARIABLES & THEME
+// ========================================
 
-// Variables CSS pour la gestion responsive de la sidebar
-:root {
-  --sidebar-width: 280px;
-  --sidebar-collapsed-width: 80px;
-  --sidebar-tablet-width: 260px;
-  --sidebar-tablet-collapsed-width: 72px;
-  --sidebar-mobile-width: 320px;
-  
-  --content-margin-desktop: 300px;
-  --content-margin-desktop-collapsed: 100px;
-  --content-margin-tablet: 280px;
-  --content-margin-tablet-collapsed: 92px;
-  --content-margin-mobile: 0px;
-  
-  --container-max-width: 1400px;
-  --container-padding: 20px;
-  --container-padding-tablet: 16px;
-  --container-padding-mobile: 12px;
-}
+$color-primary-dark: #1b5e20;
+$color-primary: #2e7d32;
+$color-primary-light: #66bb6a;
+$color-accent: #81c784;
+$color-gold: #d4af37;
+$color-gold-light: #f4e4c1;
 
-// Variables SCSS optimisées
-$primary-green: #4caf50;
-$secondary-green: #2e7d32;
-$light-green: #e8f5e9;
-$success: #4caf50;
-$warning: #ff9800;
-$danger: #f44336;
-$info: #2196f3;
-$text-primary: #212121;
-$text-secondary: #757575;
-$background: #f8fafc;
-$white: #ffffff;
-$shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.12);
-$shadow-md: 0 2px 6px rgba(0, 0, 0, 0.15);
-$shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.15);
+$color-white: #ffffff;
+$color-bg: #f8faf9;
+$color-bg-card: #ffffff;
+$color-text-primary: #2d3748;
+$color-text-secondary: #718096;
+$color-border: #e2e8f0;
+$color-shadow: rgba(46, 125, 50, 0.08);
 
-// Mixins pour le texte optimisés
-@mixin text-compact {
-  font-size: clamp(0.75rem, 1.8vw, 0.8rem);
-  line-height: 1.35;
-  font-weight: 500;
-}
+$color-success: #2e7d32;
+$color-warning: #f57c00;
+$color-danger: #d32f2f;
+$color-info: #1976d2;
 
-@mixin text-xs {
-  font-size: clamp(0.65rem, 1.4vw, 0.7rem);
-  line-height: 1.25;
-  font-weight: 400;
-}
+$border-radius-sm: 6px;
+$border-radius-md: 8px;
+$border-radius-lg: 12px;
+$border-radius-xl: 16px;
 
-@mixin text-sm {
-  font-size: clamp(0.7rem, 1.6vw, 0.75rem);
-  line-height: 1.3;
-  font-weight: 500;
-}
+$spacing-xs: 0.4rem;
+$spacing-sm: 0.6rem;
+$spacing-md: 0.8rem;
+$spacing-lg: 1.2rem;
+$spacing-xl: 1.5rem;
 
-// Mixins pour les cartes optimisés
-@mixin card-compact {
-  background: $white;
-  border-radius: clamp(6px, 1.5vw, 8px);
-  padding: clamp(8px, 2.5vw, 12px);
+$font-size-xs: 0.7rem;
+$font-size-sm: 0.8rem;
+$font-size-md: 0.9rem;
+$font-size-lg: 1rem;
+$font-size-xl: 1.1rem;
+$font-size-2xl: 1.3rem;
+$font-size-3xl: 1.6rem;
+
+$shadow-sm: 0 1px 4px $color-shadow;
+$shadow-md: 0 2px 8px $color-shadow;
+$shadow-lg: 0 4px 12px rgba(46, 125, 50, 0.12);
+$shadow-xl: 0 6px 16px rgba(46, 125, 50, 0.15);
+
+$transition-base: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+$transition-fast: all 0.2s ease;
+
+// ========================================
+// MIXINS
+// ========================================
+
+@mixin card-base {
+  background: $color-bg-card;
+  border-radius: $border-radius-md;
   box-shadow: $shadow-sm;
-  transition: all 0.3s ease;
-  border: 1px solid #f0f0f0;
-}
-
-@mixin card-medium {
-  background: $white;
-  border-radius: clamp(8px, 2vw, 12px);
-  padding: clamp(12px, 3.5vw, 16px);
-  box-shadow: $shadow-md;
-  transition: all 0.3s ease;
-}
-
-@mixin hover-lift-subtle {
+  transition: $transition-base;
+  
   &:hover {
-    transform: translateY(-1px);
     box-shadow: $shadow-md;
+    transform: translateY(-1px);
   }
 }
 
-// Container principal avec gestion intelligente de la sidebar
-.dashboard-container {
-  width: 65%;
-  max-width: var(--container-max-width);
-  padding: var(--container-padding);
-  background: $background;
-  min-height: 100vh;
-  box-sizing: border-box;
-  margin-left: 45%;
-  
-  margin-left: var(--content-margin-desktop);
-  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  
-  .sidebar.collapsed ~ & {
-    margin-left: var(--content-margin-desktop-collapsed);
-  }
-  
-  @media (min-width: 1400px) {
-    --content-margin-desktop: 320px;
-    --content-margin-desktop-collapsed: 110px;
-    padding: 20px;
-  }
-  
-  @media (min-width: 1200px) and (max-width: 1399px) {
-    --content-margin-desktop: 300px;
-    --content-margin-desktop-collapsed: 100px;
-    padding: 18px;
-  }
-  
-  @media (min-width: 1025px) and (max-width: 1199px) {
-    --content-margin-desktop: 280px;
-    --content-margin-desktop-collapsed: 92px;
-    padding: 16px;
-  }
-  
-  @media (min-width: 769px) and (max-width: 1024px) {
-    margin-left: var(--content-margin-tablet);
-    padding: var(--container-padding-tablet);
-    
-    .sidebar.collapsed ~ & {
-      margin-left: var(--content-margin-tablet-collapsed);
-    }
-  }
-  
-  @media (max-width: 768px) {
-    margin-left: var(--content-margin-mobile);
-    padding: var(--container-padding-mobile);
-    width: 100%;
-    
-    .sidebar ~ & {
-      margin-left: 0;
-    }
-  }
-  
-  @media (max-width: 480px) {
-    padding: clamp(6px, 1.5vw, 10px);
-  }
-  
-  overflow-x: hidden;
-  position: relative;
-}
-
-// Header avec responsive amélioré et taille réduite
-.dashboard-header {
-  @include card-medium;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: clamp(12px, 3vw, 16px);
-  background: linear-gradient(135deg, $white 0%, $light-green 100%);
-  
-  @media (max-width: 900px) {
-    flex-direction: column;
-    gap: clamp(8px, 2vw, 12px);
-    text-align: center;
-  }
-
-  .user-section {
-    display: flex;
-    align-items: center;
-    gap: clamp(8px, 2vw, 12px);
-    
-    @media (max-width: 600px) {
-      flex-direction: column;
-      gap: clamp(6px, 1.5vw, 8px);
-    }
-
-    .user-avatar {
-      position: relative;
-      width: clamp(36px, 9vw, 48px);
-      height: clamp(36px, 9vw, 48px);
-      border-radius: 50%;
-      overflow: hidden;
-      cursor: pointer;
-      box-shadow: $shadow-sm;
-      transition: transform 0.3s ease;
-      flex-shrink: 0;
-
-      &:hover {
-        transform: scale(1.05);
-
-        .avatar-overlay {
-          opacity: 1;
-        }
-      }
-
-      img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-      }
-
-      .avatar-placeholder {
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(135deg, $primary-green, $secondary-green);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: $white;
-
-        .material-icons {
-          font-size: clamp(16px, 4vw, 20px);
-        }
-      }
-
-      .avatar-overlay {
-        position: absolute;
-        inset: 0;
-        background: rgba(0, 0, 0, 0.5);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        opacity: 0;
-        transition: opacity 0.3s ease;
-        color: $white;
-
-        .material-icons {
-          font-size: clamp(12px, 3vw, 16px);
-        }
-      }
-    }
-
-    .user-info {
-      min-width: 0;
-      flex: 1;
-      
-      h1 {
-        margin: 0 0 clamp(1px, 0.5vw, 2px) 0;
-        font-size: clamp(1rem, 3.5vw, 1.25rem);
-        color: $text-primary;
-        font-weight: 600;
-        line-height: 1.2;
-      }
-
-      p {
-        margin: 0 0 clamp(4px, 1vw, 6px) 0;
-        color: $text-secondary;
-        @include text-compact;
-      }
-      
-      .credit-eligibility-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: clamp(2px, 0.75vw, 3px);
-        padding: clamp(2px, 0.75vw, 3px) clamp(4px, 1.25vw, 6px);
-        border-radius: clamp(8px, 2vw, 12px);
-        @include text-xs;
-        font-weight: 500;
-        position: relative;
-        
-        &.eligible {
-          background: rgba(76, 175, 80, 0.1);
-          color: #2e7d32;
-          border: 1px solid rgba(76, 175, 80, 0.3);
-        }
-        
-        &.blocked {
-          background: rgba(244, 67, 54, 0.1);
-          color: #c62828;
-          border: 1px solid rgba(244, 67, 54, 0.3);
-        }
-        
-        .material-icons {
-          font-size: clamp(10px, 2.5vw, 12px);
-        }
-      }
-    }
-  }
-
-  .credit-score-card {
-    text-align: center;
-    padding: clamp(8px, 2.5vw, 12px) clamp(12px, 3vw, 16px);
-    background: $white;
-    border-radius: clamp(6px, 1.5vw, 8px);
-    box-shadow: $shadow-sm;
-    min-width: clamp(120px, 30vw, 160px);
-    flex-shrink: 0;
-    
-    @media (max-width: 900px) {
-      width: 100%;
-      max-width: 240px;
-      margin: 0 auto;
-    }
-
-    .score-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: clamp(4px, 1vw, 6px);
-      
-      h3 {
-        margin: 0;
-        @include text-compact;
-        color: $text-secondary;
-        font-weight: 500;
-      }
-      
-      .refresh-btn {
-        background: none;
-        border: none;
-        padding: clamp(2px, 0.75vw, 3px);
-        border-radius: 4px;
-        cursor: pointer;
-        color: $primary-green;
-        transition: background 0.2s;
-        
-        &:hover {
-          background: $light-green;
-        }
-        
-        .material-icons {
-          font-size: clamp(12px, 3vw, 14px);
-        }
-      }
-    }
-
-    .score-display {
-      margin-bottom: clamp(6px, 1.5vw, 8px);
-      
-      .score-value {
-        font-size: clamp(1.25rem, 6vw, 1.5rem);
-        font-weight: 700;
-        color: $primary-green;
-        line-height: 1.1;
-      }
-      
-      .score-status {
-        @include text-compact;
-        font-weight: 500;
-        color: $text-secondary;
-        margin-top: clamp(1px, 0.25vw, 2px);
-      }
-      
-      .score-change {
-        @include text-xs;
-        font-weight: 600;
-        margin-top: clamp(1px, 0.25vw, 2px);
-        
-        &.positive {
-          color: $success;
-        }
-        
-        &.negative {
-          color: $danger;
-        }
-      }
-    }
-
-    .score-details {
-      display: flex;
-      flex-direction: column;
-      gap: clamp(2px, 0.75vw, 3px);
-      
-      .detail-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        @include text-xs;
-        
-        span:first-child {
-          color: $text-secondary;
-        }
-        
-        strong {
-          color: $text-primary;
-          font-weight: 600;
-        }
-        
-        .realtime-indicator {
-          color: $success;
-        }
-      }
-    }
-  }
-}
-
-// Vue d'ensemble financière avec grid intelligent et taille réduite
-.financial-overview {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(clamp(140px, 35vw, 180px), 1fr));
-  gap: clamp(8px, 2vw, 12px);
-  margin-bottom: clamp(16px, 4vw, 20px);
-  
-  @media (max-width: 600px) {
-    grid-template-columns: 1fr 1fr;
-    gap: clamp(6px, 1.5vw, 8px);
-  }
-
-  .overview-card {
-    @include card-compact;
-    display: flex;
-    align-items: center;
-    gap: clamp(6px, 1.5vw, 8px);
-    @include hover-lift-subtle;
-
-    .material-icons {
-      font-size: clamp(18px, 4.5vw, 22px);
-      color: $primary-green;
-      flex-shrink: 0;
-    }
-
-    &.primary {
-      background: linear-gradient(135deg, $primary-green, $secondary-green);
-      color: $white;
-
-      .material-icons {
-        color: $white;
-      }
-
-      .label {
-        color: rgba(255, 255, 255, 0.9);
-      }
-    }
-    
-    &.debt-card {
-      border-left: clamp(2px, 0.5vw, 3px) solid $warning;
-      
-      &.high-debt {
-        border-left-color: $danger;
-        background: linear-gradient(135deg, rgba(244, 67, 54, 0.05), transparent);
-      }
-    }
-
-    .card-content {
-      flex: 1;
-      min-width: 0;
-
-      .label {
-        display: block;
-        @include text-xs;
-        color: $text-secondary;
-        margin-bottom: clamp(1px, 0.25vw, 2px);
-        font-weight: 500;
-      }
-
-      .value {
-        display: block;
-        font-size: clamp(0.9rem, 3vw, 1.1rem);
-        font-weight: 600;
-        color: $text-primary;
-        margin-bottom: clamp(1px, 0.25vw, 2px);
-        line-height: 1.2;
-        
-        &.debt-amount {
-          color: $warning;
-        }
-      }
-      
-      .subtitle {
-        @include text-xs;
-        color: $text-secondary;
-      }
-    }
-    
-    .debt-progress-mini {
-      margin-top: clamp(3px, 0.75vw, 4px);
-      
-      .progress-bar {
-        height: clamp(2px, 0.5vw, 3px);
-        background: rgba(0,0,0,0.1);
-        border-radius: clamp(1px, 0.25vw, 2px);
-        overflow: hidden;
-        
-        .progress-fill {
-          height: 100%;
-          background: $warning;
-          transition: all 0.3s ease;
-          
-          &.warning {
-            background: $warning;
-          }
-          
-          &.danger {
-            background: $danger;
-          }
-        }
-      }
-    }
-  }
-}
-
-// Section de gestion des crédits avec layout adaptatif et taille optimisée
-.credit-management-section {
-  margin-bottom: clamp(16px, 4vw, 20px);
-
-  .section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: clamp(8px, 2.5vw, 12px);
-    flex-wrap: wrap;
-    gap: clamp(6px, 1.5vw, 8px);
-
-    h2 {
-      display: flex;
-      align-items: center;
-      gap: clamp(4px, 1.25vw, 6px);
-      font-size: clamp(0.9rem, 3.5vw, 1.1rem);
-      margin: 0;
-      color: $text-primary;
-      font-weight: 600;
-
-      .material-icons {
-        color: $primary-green;
-        font-size: clamp(16px, 4vw, 18px);
-      }
-    }
-    
-    .section-actions {
-      .btn-secondary {
-        display: flex;
-        align-items: center;
-        gap: clamp(2px, 0.75vw, 3px);
-        padding: clamp(3px, 1vw, 4px) clamp(6px, 2vw, 8px);
-        background: $light-green;
-        border: 1px solid $primary-green;
-        border-radius: clamp(4px, 1vw, 5px);
-        color: $primary-green;
-        cursor: pointer;
-        @include text-xs;
-        font-weight: 500;
-        transition: all 0.2s;
-        
-        &:hover {
-          background: $primary-green;
-          color: white;
-        }
-        
-        .material-icons {
-          font-size: clamp(10px, 2.5vw, 12px);
-        }
-      }
-    }
-  }
-
-  .credits-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(clamp(220px, 55vw, 280px), 1fr));
-    gap: clamp(8px, 2.5vw, 12px);
-    
-    @media (max-width: 600px) {
-      grid-template-columns: 1fr;
-      gap: clamp(6px, 1.5vw, 8px);
-    }
-  }
-
-  .credit-card.enhanced {
-    @include card-compact;
-    border: 1px solid #e0e0e0;
-    overflow: hidden;
-    transition: all 0.3s ease;
-
-    @include hover-lift-subtle;
-
-    &[data-status="paid"] {
-      opacity: 0.7;
-      background: linear-gradient(135deg, rgba(76, 175, 80, 0.05), white);
-    }
-
-    &[data-status="overdue"] {
-      border-color: $danger;
-      background: linear-gradient(135deg, rgba(244, 67, 54, 0.05), white);
-    }
-
-    .credit-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: clamp(6px, 1.5vw, 8px);
-      flex-wrap: wrap;
-      gap: clamp(4px, 1.25vw, 6px);
-
-      h3 {
-        margin: 0;
-        font-size: clamp(0.8rem, 3vw, 0.9rem);
-        color: $text-primary;
-        font-weight: 600;
-      }
-
-      .credit-status-badge {
-        display: flex;
-        align-items: center;
-        gap: clamp(2px, 0.75vw, 3px);
-        padding: clamp(2px, 0.5vw, 3px) clamp(4px, 1.25vw, 6px);
-        border-radius: clamp(6px, 1.5vw, 8px);
-        @include text-xs;
-        font-weight: 500;
-        
-        &.status-active {
-          background: $light-green;
-          color: $success;
-        }
-
-        &.status-paid {
-          background: #e8f5e9;
-          color: $success;
-        }
-
-        &.status-overdue {
-          background: #ffebee;
-          color: $danger;
-        }
-
-        .material-icons {
-          font-size: clamp(8px, 2vw, 10px);
-        }
-      }
-    }
-
-    .credit-amounts {
-      margin-bottom: clamp(6px, 1.5vw, 8px);
-
-      .amount-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: clamp(2px, 0.75vw, 3px) 0;
-        @include text-xs;
-
-        &.primary {
-          padding: clamp(3px, 1vw, 4px) 0;
-          border-top: 1px solid #f0f0f0;
-          margin-top: clamp(3px, 1vw, 4px);
-          font-weight: 600;
-        }
-
-        .amount-label {
-          color: $text-secondary;
-        }
-
-        .amount-value {
-          font-weight: 600;
-          color: $text-primary;
-          
-          &.original {
-            color: $info;
-          }
-          
-          &.total {
-            color: $text-primary;
-          }
-          
-          &.remaining {
-            color: $danger;
-          }
-        }
-      }
-    }
-
-    .credit-progress {
-      margin-bottom: clamp(6px, 1.5vw, 8px);
-
-      .progress-bar {
-        height: clamp(3px, 1vw, 4px);
-        background: #e0e0e0;
-        border-radius: clamp(2px, 0.5vw, 3px);
-        overflow: hidden;
-        margin-bottom: clamp(2px, 0.75vw, 3px);
-
-        .progress-fill {
-          height: 100%;
-          background: linear-gradient(90deg, $primary-green, $secondary-green);
-          transition: width 0.5s ease;
-        }
-      }
-
-      .progress-label {
-        @include text-xs;
-        color: $text-secondary;
-        text-align: center;
-      }
-    }
-
-    .credit-dates {
-      display: flex;
-      flex-direction: column;
-      gap: clamp(2px, 0.75vw, 3px);
-      margin-bottom: clamp(6px, 1.5vw, 8px);
-
-      .date-info {
-        display: flex;
-        align-items: center;
-        gap: clamp(3px, 1vw, 4px);
-        @include text-xs;
-        color: $text-secondary;
-
-        .material-icons {
-          font-size: clamp(10px, 2.5vw, 12px);
-        }
-        
-        &.due-date {
-          color: $warning;
-        }
-      }
-    }
-
-    .credit-actions {
-      display: flex;
-      gap: clamp(4px, 1.25vw, 6px);
-
-      .btn-primary {
-        flex: 1;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: clamp(2px, 0.75vw, 3px);
-        padding: clamp(4px, 1.5vw, 6px) clamp(6px, 2vw, 8px);
-        background: $primary-green;
-        color: white;
-        border: none;
-        border-radius: clamp(3px, 1vw, 4px);
-        @include text-xs;
-        font-weight: 500;
-        cursor: pointer;
-        transition: background 0.2s;
-
-        &:hover {
-          background: $secondary-green;
-        }
-
-        .material-icons {
-          font-size: clamp(10px, 2.5vw, 12px);
-        }
-      }
-    }
-    
-    .debt-impact-indicator {
-      margin-top: clamp(4px, 1.25vw, 6px);
-      padding: clamp(3px, 1vw, 4px) clamp(4px, 1.5vw, 6px);
-      background: rgba(255, 152, 0, 0.1);
-      border-radius: clamp(3px, 0.75vw, 4px);
-      @include text-xs;
-      color: #e65100;
-      display: flex;
-      align-items: center;
-      gap: clamp(2px, 0.75vw, 3px);
-
-      .material-icons {
-        font-size: clamp(8px, 2vw, 10px);
-      }
-    }
-  }
-  
-  .more-credits-notice {
-    text-align: center;
-    padding: clamp(6px, 2vw, 8px);
-    background: #f8f9fa;
-    border-radius: clamp(4px, 1.25vw, 6px);
-    margin-top: clamp(6px, 2vw, 8px);
-    
-    p {
-      margin: 0 0 clamp(3px, 1vw, 4px) 0;
-      @include text-compact;
-      color: $text-secondary;
-    }
-    
-    .btn-link {
-      background: none;
-      border: none;
-      color: $primary-green;
-      @include text-xs;
-      font-weight: 500;
-      cursor: pointer;
-      text-decoration: underline;
-      
-      &:hover {
-        color: $secondary-green;
-      }
-    }
-  }
-}
-
-// Section solde de compte avec layout adaptatif et taille optimisée
-.account-balance-section {
-  margin-bottom: clamp(16px, 4vw, 20px);
-
-  .account-balance-card {
-    @include card-medium;
-
-    .card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: clamp(12px, 3vw, 16px);
-      flex-wrap: wrap;
-      gap: clamp(6px, 1.5vw, 8px);
-
-      h2 {
-        display: flex;
-        align-items: center;
-        gap: clamp(4px, 1.25vw, 6px);
-        font-size: clamp(1rem, 4vw, 1.2rem);
-        margin: 0;
-        color: $text-primary;
-        font-weight: 600;
-
-        .material-icons {
-          color: $primary-green;
-          font-size: clamp(16px, 4.5vw, 20px);
-        }
-      }
-
-      .toggle-btn {
-        background: $light-green;
-        border: 1px solid $primary-green;
-        color: $primary-green;
-        padding: clamp(4px, 1.25vw, 6px);
-        border-radius: clamp(4px, 1.25vw, 6px);
-        cursor: pointer;
-        transition: all 0.2s;
-
-        &:hover {
-          background: $primary-green;
-          color: white;
-        }
-
-        .material-icons {
-          font-size: clamp(14px, 4vw, 16px);
-        }
-      }
-    }
-
-    .balance-overview {
-      .balance-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(clamp(150px, 40vw, 200px), 1fr));
-        gap: clamp(10px, 3vw, 14px);
-        margin-bottom: clamp(16px, 4vw, 20px);
-        
-        @media (max-width: 600px) {
-          grid-template-columns: 1fr;
-          gap: clamp(8px, 2.5vw, 10px);
-        }
-
-        .balance-item {
-          @include card-compact;
-          display: flex;
-          align-items: center;
-          gap: clamp(8px, 2.5vw, 12px);
-          
-          @include hover-lift-subtle;
-
-          .balance-icon {
-            width: clamp(32px, 8vw, 40px);
-            height: clamp(32px, 8vw, 40px);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-
-            .material-icons {
-              font-size: clamp(16px, 4vw, 20px);
-              color: white;
-            }
-          }
-
-          &.current .balance-icon {
-            background: linear-gradient(135deg, $primary-green, $secondary-green);
-          }
-
-          &.total-credited .balance-icon {
-            background: linear-gradient(135deg, $info, #1565c0);
-          }
-
-          &.total-used .balance-icon {
-            background: linear-gradient(135deg, $warning, #e65100);
-          }
-
-          .balance-content {
-            flex: 1;
-            min-width: 0;
-
-            .balance-label {
-              display: block;
-              @include text-xs;
-              color: $text-secondary;
-              font-weight: 500;
-              margin-bottom: clamp(1px, 0.5vw, 2px);
-            }
-
-            .balance-value {
-              display: block;
-              font-size: clamp(0.95rem, 4vw, 1.15rem);
-              font-weight: 700;
-              margin-bottom: clamp(1px, 0.5vw, 2px);
-              line-height: 1.2;
-
-              &.current {
-                color: $primary-green;
-              }
-
-              &.credited {
-                color: $info;
-              }
-
-              &.used {
-                color: $warning;
-              }
-            }
-
-            .balance-status,
-            .balance-info {
-              @include text-xs;
-              color: $text-secondary;
-
-              &.positive {
-                color: $success;
-                font-weight: 500;
-              }
-
-              &.zero {
-                color: $warning;
-                font-weight: 500;
-              }
-            }
-          }
-        }
-      }
-
-      // Message sans crédit responsive optimisé
-      .no-credit-message {
-        text-align: center;
-        padding: clamp(16px, 4.5vw, 24px) clamp(12px, 3vw, 16px);
-        background: #f8f9fa;
-        border-radius: clamp(6px, 1.5vw, 8px);
-        border: 2px dashed #dee2e6;
-
-        .no-credit-icon {
-          margin-bottom: clamp(8px, 2.5vw, 12px);
-
-          .material-icons {
-            font-size: clamp(2rem, 6vw, 2.5rem);
-            color: $text-secondary;
-            opacity: 0.5;
-          }
-        }
-
-        h3 {
-          margin: 0 0 clamp(4px, 1.25vw, 6px) 0;
-          font-size: clamp(0.9rem, 3.5vw, 1rem);
-          color: $text-primary;
-          font-weight: 600;
-        }
-
-        p {
-          margin: 0 0 clamp(12px, 3vw, 16px) 0;
-          @include text-compact;
-          color: $text-secondary;
-        }
-
-        .btn-primary {
-          display: inline-flex;
-          align-items: center;
-          gap: clamp(4px, 1.25vw, 6px);
-          padding: clamp(6px, 2vw, 8px) clamp(12px, 3vw, 16px);
-          background: $primary-green;
-          color: white;
-          border: none;
-          border-radius: clamp(4px, 1.25vw, 6px);
-          @include text-compact;
-          font-weight: 500;
-          cursor: pointer;
-          transition: all 0.2s;
-
-          &:hover:not(:disabled) {
-            background: $secondary-green;
-            transform: translateY(-1px);
-          }
-
-          &:disabled {
-            background: #a5d6a7;
-            cursor: not-allowed;
-            transform: none;
-          }
-
-          .material-icons {
-            font-size: clamp(12px, 3.5vw, 14px);
-          }
-        }
-      }
-
-      // Barre de progression du solde optimisée
-      .balance-progress {
-        margin: clamp(12px, 3vw, 16px) 0;
-
-        .progress-label {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: clamp(4px, 1.25vw, 6px);
-
-          span:first-child {
-            @include text-compact;
-            color: $text-secondary;
-            font-weight: 500;
-          }
-
-          .progress-percentage {
-            @include text-compact;
-            color: $text-primary;
-            font-weight: 600;
-          }
-        }
-
-        .progress-bar {
-          height: clamp(6px, 1.5vw, 8px);
-          background: #e9ecef;
-          border-radius: clamp(4px, 1vw, 6px);
-          overflow: hidden;
-          position: relative;
-
-          .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, $primary-green, $secondary-green);
-            border-radius: clamp(4px, 1vw, 6px);
-            transition: width 0.8s ease;
-            position: relative;
-
-            &::after {
-              content: '';
-              position: absolute;
-              top: 0;
-              left: 0;
-              right: 0;
-              bottom: 0;
-              background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-              animation: shimmer 2s infinite;
-            }
-          }
-        }
-
-        .progress-info {
-          display: flex;
-          justify-content: space-between;
-          margin-top: clamp(4px, 1.25vw, 6px);
-
-          .available,
-          .used {
-            @include text-xs;
-            font-weight: 500;
-          }
-
-          .available {
-            color: $success;
-          }
-
-          .used {
-            color: $warning;
-          }
-        }
-      }
-    }
-
-    // Détails du compte optimisés
-    .account-details {
-      border-top: 1px solid #e9ecef;
-      padding-top: clamp(12px, 3vw, 16px);
-      margin-top: clamp(12px, 3vw, 16px);
-      animation: slideDown 0.3s ease-out;
-
-      .details-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: clamp(8px, 2.5vw, 12px);
-        flex-wrap: wrap;
-        gap: clamp(6px, 1.5vw, 8px);
-
-        h3 {
-          margin: 0;
-          font-size: clamp(0.9rem, 3.5vw, 1rem);
-          color: $text-primary;
-          font-weight: 600;
-          display: flex;
-          align-items: center;
-          gap: clamp(3px, 1vw, 4px);
-
-          .material-icons {
-            font-size: clamp(12px, 3.5vw, 14px);
-          }
-        }
-
-        .transaction-stats {
-          display: flex;
-          gap: clamp(4px, 1.25vw, 6px);
-          align-items: center;
-          flex-wrap: wrap;
-
-          .transaction-count {
-            background: $light-green;
-            color: $primary-green;
-            padding: clamp(2px, 0.5vw, 3px) clamp(4px, 1.25vw, 6px);
-            border-radius: clamp(6px, 1.5vw, 8px);
-            @include text-xs;
-            font-weight: 600;
-          }
-
-          .last-transaction {
-            @include text-xs;
-            color: $text-secondary;
-          }
-        }
-      }
-
-      // Conteneur des transactions optimisé
-      .transactions-container {
-        .transactions-list {
-          max-height: clamp(200px, 50vh, 280px);
-          overflow-y: auto;
-          margin-bottom: clamp(8px, 2.5vw, 12px);
-          border-radius: clamp(4px, 1.25vw, 6px);
-          background: #fafafa;
-          padding: clamp(3px, 0.75vw, 4px);
-
-          &::-webkit-scrollbar {
-            width: clamp(2px, 0.75vw, 3px);
-          }
-
-          &::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: clamp(1px, 0.25vw, 2px);
-          }
-
-          &::-webkit-scrollbar-thumb {
-            background: $primary-green;
-            border-radius: clamp(1px, 0.25vw, 2px);
-          }
-
-          .transaction-item {
-            display: flex;
-            align-items: center;
-            gap: clamp(6px, 1.5vw, 8px);
-            padding: clamp(6px, 2vw, 8px);
-            background: white;
-            margin-bottom: clamp(2px, 0.75vw, 3px);
-            border-radius: clamp(3px, 0.75vw, 4px);
-            transition: all 0.2s ease;
-
-            &:hover {
-              background: #f8f9fa;
-              transform: translateX(1px);
-            }
-
-            &:last-child {
-              margin-bottom: 0;
-            }
-
-            &.credit {
-              border-left: clamp(2px, 0.5vw, 3px) solid $success;
-            }
-
-            &.debit {
-              border-left: clamp(2px, 0.5vw, 3px) solid $danger;
-            }
-
-            .transaction-icon {
-              width: clamp(20px, 5vw, 24px);
-              height: clamp(20px, 5vw, 24px);
-              border-radius: 50%;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              background: #f5f5f5;
-              flex-shrink: 0;
-
-              .material-icons {
-                font-size: clamp(10px, 2.75vw, 12px);
-              }
-            }
-
-            .transaction-content {
-              flex: 1;
-              display: flex;
-              justify-content: space-between;
-              align-items: center;
-              min-width: 0;
-              gap: clamp(6px, 1.5vw, 8px);
-
-              @media (max-width: 600px) {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: clamp(3px, 0.75vw, 4px);
-              }
-
-              .transaction-info {
-                display: flex;
-                flex-direction: column;
-                gap: clamp(1px, 0.25vw, 2px);
-                min-width: 0;
-                flex: 1;
-
-                .transaction-description {
-                  font-weight: 500;
-                  color: $text-primary;
-                  @include text-compact;
-                  white-space: nowrap;
-                  overflow: hidden;
-                  text-overflow: ellipsis;
-                }
-
-                .transaction-date {
-                  @include text-xs;
-                  color: $text-secondary;
-                }
-
-                .transaction-id {
-                  @include text-xs;
-                  color: $text-secondary;
-                  font-family: 'Courier New', monospace;
-                }
-              }
-
-              .transaction-amounts {
-                display: flex;
-                flex-direction: column;
-                align-items: flex-end;
-                gap: clamp(1px, 0.25vw, 2px);
-                flex-shrink: 0;
-
-                @media (max-width: 600px) {
-                  align-items: flex-start;
-                  width: 100%;
-                }
-
-                .transaction-amount {
-                  font-weight: 600;
-                  @include text-compact;
-                }
-
-                .transaction-balance {
-                  @include text-xs;
-                  color: $text-secondary;
-                }
-
-                .transaction-type {
-                  @include text-xs;
-                  padding: clamp(1px, 0.25vw, 2px) clamp(3px, 1vw, 4px);
-                  border-radius: clamp(4px, 1vw, 6px);
-                  font-weight: 500;
-
-                  &.credit {
-                    background: rgba(76, 175, 80, 0.1);
-                    color: $success;
-                  }
-
-                  &.debit {
-                    background: rgba(244, 67, 54, 0.1);
-                    color: $danger;
-                  }
-                }
-              }
-            }
-          }
-        }
-
-        .no-transactions {
-          text-align: center;
-          padding: clamp(16px, 4.5vw, 24px) clamp(8px, 2.5vw, 12px);
-          color: $text-secondary;
-
-          .material-icons {
-            font-size: clamp(1.5rem, 4.5vw, 2rem);
-            margin-bottom: clamp(6px, 1.5vw, 8px);
-            opacity: 0.5;
-          }
-
-          h4 {
-            margin: 0 0 clamp(4px, 1.25vw, 6px) 0;
-            font-size: clamp(0.8rem, 3vw, 0.9rem);
-            font-weight: 600;
-          }
-
-          p {
-            margin: 0;
-            @include text-compact;
-          }
-        }
-      }
-
-      // Actions rapides optimisées
-      .quick-actions {
-        border-top: 1px solid #e9ecef;
-        padding-top: clamp(8px, 2.5vw, 12px);
-        margin-top: clamp(8px, 2.5vw, 12px);
-
-        .actions-header {
-          margin-bottom: clamp(6px, 1.5vw, 8px);
-
-          h4 {
-            margin: 0 0 clamp(2px, 0.75vw, 3px) 0;
-            font-size: clamp(0.8rem, 3vw, 0.9rem);
-            color: $text-primary;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: clamp(3px, 1vw, 4px);
-
-            .material-icons {
-              font-size: clamp(12px, 3vw, 14px);
-              color: $primary-green;
-            }
-          }
-
-          .actions-subtitle {
-            @include text-xs;
-            color: $text-secondary;
-          }
-        }
-
-        .actions-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(clamp(70px, 20vw, 90px), 1fr));
-          gap: clamp(4px, 1.25vw, 6px);
-
-          @media (max-width: 600px) {
-            grid-template-columns: repeat(2, 1fr);
-            gap: clamp(3px, 1vw, 4px);
-          }
-
-          .action-btn {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: clamp(2px, 0.75vw, 3px);
-            padding: clamp(6px, 2vw, 8px) clamp(3px, 1vw, 4px);
-            background: white;
-            border: 1px solid #e9ecef;
-            border-radius: clamp(4px, 1.25vw, 6px);
-            cursor: pointer;
-            transition: all 0.3s ease;
-
-            &:hover:not(:disabled) {
-              border-color: $primary-green;
-              background: $light-green;
-              transform: translateY(-1px);
-            }
-
-            &:disabled {
-              opacity: 0.5;
-              cursor: not-allowed;
-              transform: none;
-            }
-
-            &.custom-amount {
-              border-color: $info;
-
-              &:hover:not(:disabled) {
-                border-color: $info;
-                background: rgba(33, 150, 243, 0.1);
-              }
-
-              .material-icons {
-                color: $info;
-              }
-            }
-
-            .material-icons {
-              font-size: clamp(14px, 4vw, 16px);
-              color: $primary-green;
-            }
-
-            .action-amount {
-              @include text-xs;
-              font-weight: 600;
-              color: $text-primary;
-              text-align: center;
-            }
-
-            .action-label {
-              @include text-xs;
-              color: $text-secondary;
-              text-align: center;
-            }
-          }
-        }
-
-        .use-all-section {
-          margin-top: clamp(6px, 1.5vw, 8px);
-          text-align: center;
-
-          .use-all-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: clamp(3px, 1vw, 4px);
-            padding: clamp(4px, 1.5vw, 6px) clamp(8px, 2.5vw, 12px);
-            background: linear-gradient(135deg, $warning, color.scale($warning, $lightness: -20%));
-            color: white;
-            border: none;
-            border-radius: clamp(4px, 1.25vw, 6px);
-            @include text-compact;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s ease;
-
-            &:hover {
-              background: linear-gradient(135deg, color.scale($warning, $lightness: -20%), color.scale($warning, $lightness: -30%));
-              transform: translateY(-1px);
-            }
-
-            .material-icons {
-              font-size: clamp(12px, 3vw, 14px);
-            }
-          }
-        }
-      }
-
-      // Résumé du compte optimisé
-      .account-summary {
-        border-top: 1px solid #e9ecef;
-        padding-top: clamp(8px, 2.5vw, 12px);
-        margin-top: clamp(8px, 2.5vw, 12px);
-
-        h4 {
-          margin: 0 0 clamp(6px, 1.5vw, 8px) 0;
-          font-size: clamp(0.8rem, 3vw, 0.9rem);
-          color: $text-primary;
-          font-weight: 600;
-          display: flex;
-          align-items: center;
-          gap: clamp(3px, 1vw, 4px);
-
-          .material-icons {
-            font-size: clamp(12px, 3vw, 14px);
-            color: $primary-green;
-          }
-        }
-
-        .summary-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(clamp(90px, 25vw, 120px), 1fr));
-          gap: clamp(6px, 2vw, 8px);
-
-          @media (max-width: 600px) {
-            grid-template-columns: 1fr;
-            gap: clamp(4px, 1.5vw, 6px);
-          }
-
-          .summary-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: clamp(4px, 1.25vw, 6px) clamp(6px, 2vw, 8px);
-            background: white;
-            border-radius: clamp(3px, 1vw, 4px);
-            border: 1px solid #e9ecef;
-
-            .summary-label {
-              @include text-xs;
-              color: $text-secondary;
-            }
-
-            .summary-value {
-              @include text-compact;
-              font-weight: 600;
-              color: $text-primary;
-            }
-          }
-        }
-      }
-    }
-  }
-}
-
-// Section restrictions optimisée
-.credit-restrictions-section {
-  margin: clamp(12px, 3vw, 16px) 0;
-  padding: clamp(8px, 2.5vw, 12px);
-  background: #f8f9fa;
-  border-radius: clamp(6px, 1.5vw, 8px);
-
-  .section-header {
-    margin-bottom: clamp(6px, 1.5vw, 8px);
-
-    h2 {
-      display: flex;
-      align-items: center;
-      gap: clamp(4px, 1.25vw, 6px);
-      font-size: clamp(0.9rem, 3.5vw, 1rem);
-      margin: 0;
-      color: $text-primary;
-      font-weight: 600;
-
-      .material-icons {
-        color: $primary-green;
-        font-size: clamp(14px, 3.5vw, 16px);
-      }
-    }
-  }
-
-  .restrictions-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(clamp(200px, 50vw, 250px), 1fr));
-    gap: clamp(8px, 2.5vw, 12px);
-
-    .restriction-card {
-      background: white;
-      padding: clamp(8px, 2.5vw, 12px);
-      border-radius: clamp(4px, 1.25vw, 6px);
-      border: 1px solid #e0e0e0;
-
-      &.blocked {
-        border-color: $danger;
-        background: linear-gradient(135deg, rgba(244, 67, 54, 0.05), white);
-      }
-
-      .restriction-header {
-        display: flex;
-        align-items: center;
-        gap: clamp(4px, 1.25vw, 6px);
-        margin-bottom: clamp(6px, 1.5vw, 8px);
-
-        .material-icons {
-          font-size: clamp(14px, 3.5vw, 16px);
-        }
-
-        h3 {
-          margin: 0;
-          font-size: clamp(0.8rem, 3vw, 0.9rem);
-          font-weight: 600;
-        }
-      }
-
-      .restriction-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: clamp(3px, 1vw, 4px) 0;
-        @include text-compact;
-        border-bottom: 1px solid #f0f0f0;
-
-        &:last-child {
-          border-bottom: none;
-        }
-
-        .restriction-label {
-          color: $text-secondary;
-        }
-
-        .restriction-value {
-          font-weight: 600;
-          color: $text-primary;
-
-          &.warning {
-            color: $warning;
-          }
-
-          &.danger {
-            color: $danger;
-          }
-        }
-      }
-
-      .restriction-reasons {
-        margin-top: clamp(6px, 1.5vw, 8px);
-
-        h4 {
-          margin: 0 0 clamp(3px, 1vw, 4px) 0;
-          @include text-compact;
-          font-weight: 600;
-          color: $danger;
-        }
-
-        ul {
-          margin: 0;
-          padding-left: clamp(8px, 2.5vw, 12px);
-
-          li {
-            @include text-xs;
-            color: $text-secondary;
-            margin-bottom: clamp(1px, 0.25vw, 2px);
-          }
-        }
-      }
-    }
-
-    .improvement-suggestions {
-      background: white;
-      padding: clamp(8px, 2.5vw, 12px);
-      border-radius: clamp(4px, 1.25vw, 6px);
-      border: 1px solid #e0e0e0;
-
-      h3 {
-        margin: 0 0 clamp(6px, 1.5vw, 8px) 0;
-        font-size: clamp(0.8rem, 3vw, 0.9rem);
-        font-weight: 600;
-        color: $text-primary;
-        display: flex;
-        align-items: center;
-        gap: clamp(3px, 1vw, 4px);
-
-        .material-icons {
-          font-size: clamp(12px, 3vw, 14px);
-          color: $warning;
-        }
-      }
-
-      .suggestions-list {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-
-        li {
-          display: flex;
-          align-items: flex-start;
-          gap: clamp(4px, 1.25vw, 6px);
-          padding: clamp(4px, 1.25vw, 6px) 0;
-          @include text-xs;
-          border-bottom: 1px solid #f0f0f0;
-
-          &:last-child {
-            border-bottom: none;
-          }
-
-          .material-icons {
-            font-size: clamp(10px, 2.5vw, 12px);
-            margin-top: clamp(0.5px, 0.125vw, 1px);
-            flex-shrink: 0;
-          }
-        }
-      }
-    }
-  }
-}
-
-// Modals avec design responsive optimisé
-.modal-backdrop {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 999;
-  backdrop-filter: blur(3px);
-}
-
-.quick-credit-modal,
-.custom-amount-modal,
-.active-credits-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 1000;
+@mixin flex-center {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: clamp(6px, 1.5vw, 16px);
-
-  .modal-content {
-    position: relative;
-    width: 100%;
-    max-width: clamp(280px, 85vw, 420px);
-    background: white;
-    border-radius: clamp(6px, 1.5vw, 12px);
-    box-shadow: $shadow-lg;
-    z-index: 1001;
-    max-height: 90vh;
-    overflow-y: auto;
-
-    &.large {
-      max-width: clamp(320px, 90vw, 700px);
-    }
-
-    .modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: clamp(8px, 2.5vw, 12px) clamp(12px, 3vw, 16px);
-      background: $primary-green;
-      color: white;
-      position: sticky;
-      top: 0;
-      z-index: 1;
-
-      h2, h3 {
-        margin: 0;
-        display: flex;
-        align-items: center;
-        gap: clamp(3px, 1vw, 4px);
-        font-size: clamp(0.9rem, 3.5vw, 1.1rem);
-        font-weight: 600;
-
-        .material-icons {
-          font-size: clamp(14px, 3.5vw, 16px);
-        }
-      }
-
-      .close-btn {
-        background: rgba(255, 255, 255, 0.2);
-        border: none;
-        color: white;
-        border-radius: 50%;
-        width: clamp(24px, 6vw, 30px);
-        height: clamp(24px, 6vw, 30px);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: background 0.2s;
-
-        &:hover {
-          background: rgba(255, 255, 255, 0.3);
-        }
-
-        .material-icons {
-          font-size: clamp(12px, 3vw, 16px);
-        }
-      }
-    }
-
-    .modal-body {
-      padding: clamp(12px, 3vw, 16px);
-    }
-
-    .modal-footer {
-      display: flex;
-      gap: clamp(4px, 1.25vw, 6px);
-      padding: clamp(6px, 1.5vw, 8px) clamp(12px, 3vw, 16px);
-      border-top: 1px solid #e9ecef;
-
-      .btn-primary,
-      .btn-secondary {
-        padding: clamp(4px, 1.5vw, 6px) clamp(8px, 2.5vw, 12px);
-        border: none;
-        border-radius: clamp(3px, 1vw, 4px);
-        @include text-compact;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.2s;
-        display: flex;
-        align-items: center;
-        gap: clamp(2px, 0.75vw, 3px);
-
-        .material-icons {
-          font-size: clamp(10px, 2.5vw, 12px);
-        }
-      }
-
-      .btn-primary {
-        flex: 2;
-        background: $primary-green;
-        color: white;
-
-        &:hover:not(:disabled) {
-          background: $secondary-green;
-        }
-
-        &:disabled {
-          background: #a5d6a7;
-          cursor: not-allowed;
-        }
-      }
-
-      .btn-secondary {
-        flex: 1;
-        background: #6c757d;
-        color: white;
-
-        &:hover {
-          background: #5a6268;
-        }
-      }
-    }
-  }
 }
 
-// Animations optimisées
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-5px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+@mixin flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
-@keyframes shimmer {
-  0% {
-    transform: translateX(-100%);
-  }
-  100% {
-    transform: translateX(100%);
-  }
-}
-
-@keyframes spin {
-  from { 
-    transform: rotate(0deg); 
-  }
-  to { 
-    transform: rotate(360deg); 
-  }
-}
-
-// Classes utilitaires
-.text-truncate {
-  white-space: nowrap;
+@mixin truncate {
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.text-wrap {
-  word-wrap: break-word;
-  word-break: break-word;
+@mixin gradient-green {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
 }
 
-.is-loading {
-  pointer-events: none;
-  opacity: 0.7;
+@mixin gradient-gold {
+  background: linear-gradient(135deg, $color-gold 0%, $color-gold-light 100%);
 }
 
-.is-disabled {
-  pointer-events: none;
-  opacity: 0.5;
+// ========================================
+// BASE & RESET
+// ========================================
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
-// Helpers responsive
-.d-none-mobile {
-  @media (max-width: 768px) {
-    display: none !important;
-  }
+.dashboard-container {
+  max-width: 80%;
+  margin-left: 22%;
+  padding: $spacing-md;
+  background: $color-bg;
+  min-height: 100vh;
 }
 
-.d-block-mobile {
-  display: none !important;
-  
-  @media (max-width: 768px) {
-    display: block !important;
-  }
+// ========================================
+// HEADER
+// ========================================
+
+.dashboard-header {
+  @include card-base;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: $spacing-lg;
+  padding: $spacing-md;
+  margin-bottom: $spacing-md;
+  border: 1px solid rgba($color-primary-light, 0.2);
 }
 
-// Mode sombre (support préventif)
-@media (prefers-color-scheme: dark) {
-  .dashboard-container {
-    background: #1e1e1e;
-  }
+.user-section {
+  display: flex;
+  gap: $spacing-md;
+  align-items: center;
+}
 
-  .dashboard-header,
-  .overview-card,
-  .credit-card.enhanced,
-  .account-balance-card {
-    background: #2d2d2d;
-    border-color: #444;
-    color: #ffffff;
+.user-avatar {
+  position: relative;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  overflow: hidden;
+  cursor: pointer;
+  border: 2px solid $color-primary-light;
+  box-shadow: 0 2px 6px rgba($color-primary, 0.2);
+  transition: $transition-base;
 
-    .text-primary {
-      color: #ffffff;
+  &:hover {
+    transform: scale(1.05);
+    border-color: $color-gold;
+    
+    .avatar-overlay {
+      opacity: 1;
     }
+  }
 
-    .text-secondary {
-      color: #b0b0b0;
-    }
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
   }
 }
 
-// Support écrans haute densité
-@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-  .user-avatar img,
-  .profile-avatar img {
-    image-rendering: -webkit-optimize-contrast;
-    image-rendering: crisp-edges;
-  }
-}
-// Accessibilité - Réduction de mouvement
-@media (prefers-reduced-motion: reduce) {
-  * {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+.avatar-placeholder {
+  @include flex-center;
+  @include gradient-green;
+  width: 100%;
+  height: 100%;
+
+  i {
+    font-size: 30px;
+    color: $color-white;
   }
 }
 
-/* À ajouter dans profile.component.scss ou dans les styles du HTML */
+.avatar-overlay {
+  @include flex-center;
+  position: absolute;
+  inset: 0;
+  background: rgba($color-primary-dark, 0.85);
+  opacity: 0;
+  transition: $transition-base;
 
-/* ==========================================
-   STYLES POUR LES BADGES DE PAIEMENT
-   ========================================== */
+  i {
+    font-size: 20px;
+    color: $color-white;
+  }
+}
 
-.payment-status-badge {
+.user-info {
+  flex: 1;
+
+  h1 {
+    margin: 0 0 $spacing-xs 0;
+    font-size: $font-size-xl;
+    color: $color-primary-dark;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+
+  p {
+    margin: 0 0 $spacing-xs 0;
+    color: $color-text-secondary;
+    font-size: $font-size-xs;
+  }
+}
+
+.credit-eligibility-badge {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 12px;
-  background: linear-gradient(135deg, rgba(76, 175, 80, 0.1), rgba(76, 175, 80, 0.05));
-  border: 1px solid rgba(76, 175, 80, 0.3);
-  border-radius: 20px;
-  margin: 10px 0;
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: #2e7d32;
+  gap: $spacing-xs;
+  padding: $spacing-xs $spacing-sm;
+  border-radius: $border-radius-lg;
+  font-size: $font-size-xs;
+  font-weight: 600;
+  position: relative;
+  transition: $transition-base;
+
+  &.eligible {
+    background: rgba($color-primary-light, 0.15);
+    color: $color-primary-dark;
+    border: 1px solid rgba($color-primary-light, 0.3);
+  }
+
+  &.blocked {
+    background: rgba($color-danger, 0.1);
+    color: $color-danger;
+    border: 1px solid rgba($color-danger, 0.3);
+  }
+
+  i {
+    font-size: 14px;
+  }
 }
 
-.payment-status-badge i {
-  font-size: 18px;
-  color: #4CAF50;
+.restriction-tooltip {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  background: $color-primary-dark;
+  color: $color-white;
+  padding: $spacing-xs $spacing-sm;
+  border-radius: $border-radius-sm;
+  font-size: $font-size-xs;
+  white-space: nowrap;
+  z-index: 1000;
+  box-shadow: $shadow-lg;
+
+  &::before {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    left: 15px;
+    border: 4px solid transparent;
+    border-bottom-color: $color-primary-dark;
+  }
+}
+
+// ========================================
+// CREDIT SCORE CARD
+// ========================================
+
+.credit-score-card {
+  @include card-base;
+  padding: $spacing-sm;
+  border-radius: $border-radius-md;
+  min-width: 200px;
+  max-width: 240px;
+  background: linear-gradient(135deg, 
+    rgba($color-primary-light, 0.1) 0%, 
+    rgba($color-white, 1) 100%
+  );
+  border: 1px solid rgba($color-primary-light, 0.3);
+
+  .score-header {
+    @include flex-between;
+    margin-bottom: $spacing-xs;
+
+    h3 {
+      margin: 0;
+      font-size: $font-size-xs;
+      color: $color-primary-dark;
+      font-weight: 600;
+    }
+  }
+
+  .refresh-btn {
+    @include flex-center;
+    background: transparent;
+    border: 1px solid rgba($color-primary-light, 0.3);
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    transition: $transition-fast;
+
+    &:hover:not(:disabled) {
+      background: rgba($color-primary-light, 0.1);
+      border-color: $color-gold;
+      transform: scale(1.1);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    i {
+      font-size: 16px;
+    }
+
+    i.rotating {
+      animation: rotate 1s linear infinite;
+    }
+  }
+
+  .score-display {
+    text-align: center;
+    margin-bottom: $spacing-sm;
+  }
+
+  .score-value {
+    font-size: 2rem;
+    font-weight: 800;
+    color: $color-primary-dark;
+    line-height: 1;
+    text-shadow: 0 2px 4px rgba($color-primary, 0.1);
+  }
+
+  .score-status {
+    font-size: $font-size-sm;
+    font-weight: 600;
+    color: $color-primary;
+    margin: $spacing-xs 0;
+  }
+
+  .score-change {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px $spacing-xs;
+    border-radius: $border-radius-sm;
+    font-size: $font-size-xs;
+    font-weight: 700;
+    margin-top: $spacing-xs;
+
+    &.positive {
+      background: rgba($color-success, 0.15);
+      color: $color-success;
+    }
+
+    &.negative {
+      background: rgba($color-danger, 0.15);
+      color: $color-danger;
+    }
+  }
+
+  .score-details {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: $spacing-xs;
+    padding-top: $spacing-sm;
+    border-top: 1px solid rgba($color-primary-light, 0.2);
+
+    .detail-item {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      text-align: center;
+
+      span {
+        font-size: $font-size-xs;
+        color: $color-text-secondary;
+      }
+
+      strong {
+        font-size: $font-size-xs;
+        color: $color-primary-dark;
+        font-weight: 600;
+      }
+    }
+  }
+
+  .realtime-indicator {
+    color: $color-success !important;
+  }
+}
+
+// ========================================
+// FINANCIAL OVERVIEW
+// ========================================
+
+.financial-overview {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: $spacing-sm;
+  margin-bottom: $spacing-md;
+}
+
+.overview-card {
+  @include card-base;
+  padding: $spacing-md;
+  display: flex;
+  gap: $spacing-sm;
+  align-items: flex-start;
+  border: 1px solid $color-border;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 3px;
+    height: 100%;
+    background: $color-primary-light;
+    transition: $transition-base;
+  }
+
+  &:hover {
+    border-color: $color-primary-light;
+    
+    &::before {
+      width: 100%;
+      opacity: 0.05;
+    }
+  }
+
+  &.debt-card {
+    &.high-debt {
+      border-color: $color-danger;
+
+      &::before {
+        background: $color-danger;
+      }
+    }
+  }
+
+  i {
+    font-size: 1.5rem;
+    color: $color-primary-light;
+    opacity: 0.9;
+  }
+
+  .card-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+
+    .label {
+      font-size: $font-size-xs;
+      color: $color-text-secondary;
+      font-weight: 500;
+    }
+
+    .value {
+      font-size: $font-size-xl;
+      font-weight: 700;
+      color: $color-primary-dark;
+      line-height: 1;
+    }
+
+    .subtitle {
+      font-size: $font-size-xs;
+      color: $color-text-secondary;
+    }
+  }
+
+  .debt-amount {
+    color: $color-danger;
+  }
+
+  .debt-progress-mini {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: rgba($color-border, 0.5);
+
+    .progress-fill {
+      height: 100%;
+      transition: width 0.5s ease, background-color 0.3s;
+
+      &.warning {
+        background: $color-warning;
+      }
+
+      &.danger {
+        background: $color-danger;
+      }
+    }
+  }
+}
+
+// ========================================
+// SECTIONS
+// ========================================
+
+.recent-requests-section,
+.credit-management-section,
+.account-balance-section {
+  margin: $spacing-md 0;
+  padding: $spacing-md;
+  background: $color-white;
+  border-radius: $border-radius-md;
+  box-shadow: $shadow-sm;
+  border: 1px solid $color-border;
+}
+
+.section-header {
+  @include flex-between;
+  margin-bottom: $spacing-md;
+  padding-bottom: $spacing-sm;
+  border-bottom: 2px solid rgba($color-primary-light, 0.2);
+
+  h2 {
+    display: flex;
+    align-items: center;
+    gap: $spacing-xs;
+    margin: 0;
+    font-size: $font-size-lg;
+    color: $color-primary-dark;
+    font-weight: 700;
+
+    i {
+      font-size: 20px;
+      color: $color-primary-light;
+    }
+  }
+}
+
+.section-count {
+  @include flex-center;
+  background: rgba($color-primary-light, 0.15);
+  color: $color-primary-dark;
+  padding: 3px $spacing-sm;
+  border-radius: $border-radius-lg;
+  font-size: $font-size-xs;
+  font-weight: 700;
+  min-width: 24px;
+  height: 22px;
+  border: 1px solid rgba($color-primary-light, 0.3);
+}
+
+// ========================================
+// CARDS GRID
+// ========================================
+
+.requests-list,
+.credits-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: $spacing-sm;
+}
+
+.request-card,
+.credit-card {
+  @include card-base;
+  padding: $spacing-md;
+  border: 1px solid $color-border;
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: $color-primary-light;
+    border-radius: $border-radius-md $border-radius-md 0 0;
+  }
+
+  &.fully-paid {
+    border-color: rgba($color-success, 0.3);
+    background: linear-gradient(135deg, 
+      rgba($color-success, 0.03) 0%, 
+      $color-white 100%
+    );
+
+    &::before {
+      background: $color-success;
+    }
+  }
+
+  &[data-status="APPROVED"]::before {
+    background: $color-success;
+  }
+
+  &[data-status="REJECTED"]::before {
+    background: $color-danger;
+  }
+
+  &[data-status="IN_REVIEW"]::before {
+    background: $color-warning;
+  }
+}
+
+.request-header,
+.credit-header {
+  @include flex-between;
+  margin-bottom: $spacing-sm;
+  padding-bottom: $spacing-xs;
+  border-bottom: 1px solid $color-border;
+
+  h3 {
+    margin: 0;
+    font-size: $font-size-md;
+    color: $color-primary-dark;
+    font-weight: 600;
+  }
+}
+
+.request-info,
+.credit-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+
+  .request-number {
+    font-size: $font-size-xs;
+    color: $color-text-secondary;
+    font-family: 'Courier New', monospace;
+  }
+
+  .request-type {
+    font-weight: 600;
+    color: $color-primary-dark;
+    font-size: $font-size-sm;
+  }
+}
+
+.request-status-badge,
+.credit-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px $spacing-xs;
+  border-radius: $border-radius-lg;
+  font-size: $font-size-xs;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+
+  i {
+    font-size: 12px;
+  }
+
+  &.status-APPROVED {
+    background: rgba($color-success, 0.15);
+    color: $color-success;
+    border: 1px solid rgba($color-success, 0.3);
+  }
+
+  &.status-REJECTED {
+    background: rgba($color-danger, 0.15);
+    color: $color-danger;
+    border: 1px solid rgba($color-danger, 0.3);
+  }
+
+  &.status-IN_REVIEW {
+    background: rgba($color-warning, 0.15);
+    color: $color-warning;
+    border: 1px solid rgba($color-warning, 0.3);
+  }
+
+  &.status-SUBMITTED {
+    background: rgba($color-info, 0.15);
+    color: $color-info;
+    border: 1px solid rgba($color-info, 0.3);
+  }
+}
+
+// ========================================
+// PAYMENT STATUS
+// ========================================
+
+.payment-status-badge {
+  @include flex-center;
+  gap: $spacing-xs;
+  padding: $spacing-xs $spacing-sm;
+  background: linear-gradient(135deg, 
+    rgba($color-success, 0.1), 
+    rgba($color-success, 0.05)
+  );
+  border: 1px solid rgba($color-success, 0.3);
+  border-radius: $border-radius-md;
+  margin: $spacing-sm 0;
+  font-size: $font-size-xs;
+  font-weight: 600;
+  color: $color-success;
+
+  i {
+    font-size: 16px;
+  }
 }
 
 .payment-counter {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
-  padding: 10px 12px;
-  background: #f8f9fa;
-  border-radius: 8px;
-  margin-top: 12px;
-  font-size: 0.85rem;
-  color: #666;
+  gap: $spacing-xs;
+  padding: $spacing-xs;
+  background: rgba($color-primary-light, 0.05);
+  border-radius: $border-radius-sm;
+  margin: $spacing-sm 0;
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  border: 1px solid rgba($color-primary-light, 0.2);
+
+  i {
+    font-size: 14px;
+    color: $color-primary-light;
+  }
+
+  .last-payment {
+    margin-left: auto;
+    font-size: $font-size-xs;
+    color: $color-text-secondary;
+  }
 }
 
-.payment-counter i {
-  font-size: 18px;
-  color: #4CAF50;
+.credit-progress {
+  margin: $spacing-sm 0;
+  padding: $spacing-sm;
+  background: rgba($color-primary-light, 0.05);
+  border-radius: $border-radius-sm;
+  border: 1px solid rgba($color-primary-light, 0.15);
+
+  .progress-header {
+    @include flex-between;
+    margin-bottom: $spacing-xs;
+    font-size: $font-size-xs;
+    color: $color-text-secondary;
+
+    strong {
+      color: $color-primary;
+      font-size: $font-size-sm;
+      font-weight: 700;
+    }
+  }
+
+  .progress-bar {
+    width: 100%;
+    height: 6px;
+    background: rgba($color-border, 0.5);
+    border-radius: $border-radius-sm;
+    overflow: hidden;
+    margin-bottom: $spacing-xs;
+
+    .progress-fill {
+      height: 100%;
+      background: $color-primary-light;
+      border-radius: $border-radius-sm;
+      transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+  }
+
+  .progress-info {
+    font-size: $font-size-xs;
+    color: $color-text-secondary;
+    text-align: center;
+  }
 }
 
-.payment-counter .last-payment {
-  margin-left: auto;
-  font-size: 0.8rem;
-  color: #999;
-}
+// ========================================
+// BUTTONS
+// ========================================
 
-/* Amélioration des cartes de crédit avec statut payé */
-.credit-card.enhanced[data-status="paid"] {
-  opacity: 0.85;
-  background: linear-gradient(135deg, rgba(76, 175, 80, 0.05), white);
-  border: 1px solid rgba(76, 175, 80, 0.2);
-}
-
-.credit-card.enhanced[data-status="paid"] .credit-header h3 {
-  color: #4CAF50;
-}
-
-.amount-value.paid {
-  color: #4CAF50;
+.btn-primary,
+.btn-secondary,
+.btn-link {
+  @include flex-center;
+  gap: $spacing-xs;
+  padding: $spacing-xs $spacing-md;
+  border: none;
+  border-radius: $border-radius-sm;
+  font-size: $font-size-xs;
   font-weight: 600;
+  cursor: pointer;
+  transition: $transition-base;
+  text-decoration: none;
+
+  i {
+    font-size: 14px;
+  }
 }
 
-/* Badge pour les crédits entièrement payés */
-.credit-card.enhanced[data-status="paid"]::after {
-  content: '✓ Payé';
+.btn-primary {
+  @include gradient-green;
+  color: $color-white;
+  box-shadow: 0 1px 4px rgba($color-primary, 0.2);
+
+  &:hover:not(:disabled) {
+    background: linear-gradient(135deg, $color-primary-dark 0%, $color-primary 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba($color-primary, 0.3);
+  }
+
+  &:disabled {
+    background: $color-border;
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+}
+
+.btn-secondary {
+  background: transparent;
+  color: $color-primary-dark;
+  border: 1px solid $color-border;
+
+  &:hover:not(:disabled) {
+    background: rgba($color-primary-light, 0.05);
+    border-color: $color-primary-light;
+  }
+}
+
+.btn-link {
+  background: transparent;
+  color: $color-primary;
+  text-decoration: underline;
+  padding: $spacing-xs $spacing-sm;
+
+  &:hover {
+    color: $color-primary-dark;
+  }
+}
+
+.btn-primary-large {
+  @include flex-center;
+  gap: $spacing-sm;
+  padding: $spacing-md $spacing-lg;
+  font-size: $font-size-md;
+  border: none;
+  border-radius: $border-radius-md;
+  @include gradient-green;
+  color: $color-white;
+  font-weight: 700;
+  cursor: pointer;
+  transition: $transition-base;
+  box-shadow: $shadow-md;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: $shadow-lg;
+  }
+
+  &:disabled {
+    background: $color-border;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+
+  i {
+    font-size: 20px;
+  }
+}
+
+// ========================================
+// MODALS
+// ========================================
+
+.quick-credit-modal,
+.active-credits-modal,
+.success-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  @include flex-center;
+  padding: $spacing-md;
+}
+
+.modal-backdrop {
   position: absolute;
-  top: 15px;
-  right: 15px;
-  background: #4CAF50;
-  color: white;
-  padding: 4px 10px;
-  border-radius: 12px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  box-shadow: 0 2px 6px rgba(76, 175, 80, 0.3);
+  inset: 0;
+  background: rgba($color-primary-dark, 0.6);
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.3s ease-out;
 }
 
-.credit-card.enhanced {
+.modal-content {
   position: relative;
+  width: 100%;
+  max-width: 420px;
+  max-height: 85vh;
+  background: $color-white;
+  border-radius: $border-radius-md;
+  overflow: hidden;
+  animation: modalSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: $shadow-xl;
+  border: 1px solid rgba($color-primary-light, 0.2);
+
+  &.large {
+    max-width: 650px;
+  }
 }
 
-/* Animations pour les badges */
+.modal-header {
+  @include flex-between;
+  padding: $spacing-md;
+  @include gradient-green;
+  color: $color-white;
+  border-bottom: 2px solid $color-gold;
+
+  h2 {
+    display: flex;
+    align-items: center;
+    gap: $spacing-xs;
+    margin: 0;
+    font-size: $font-size-lg;
+    font-weight: 700;
+
+    i {
+      font-size: 20px;
+    }
+  }
+
+  &.success-header {
+    background: linear-gradient(135deg, $color-success 0%, $color-primary-light 100%);
+    padding: $spacing-lg;
+    text-align: center;
+    flex-direction: column;
+
+    .success-icon-container {
+      @include flex-center;
+      width: 50px;
+      height: 50px;
+      background: rgba($color-white, 0.2);
+      border-radius: 50%;
+      margin-bottom: $spacing-sm;
+
+      .success-icon {
+        font-size: 30px;
+      }
+    }
+  }
+}
+
+.close-btn {
+  @include flex-center;
+  background: rgba($color-white, 0.2);
+  border: none;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  color: $color-white;
+  transition: $transition-fast;
+
+  &:hover {
+    background: rgba($color-white, 0.3);
+    transform: scale(1.1);
+  }
+
+  i {
+    font-size: 16px;
+  }
+}
+
+.modal-body {
+  padding: $spacing-md;
+  max-height: calc(85vh - 140px);
+  overflow-y: auto;
+
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: $color-bg;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: $color-primary-light;
+    border-radius: 2px;
+
+    &:hover {
+      background: $color-primary;
+    }
+  }
+}
+
+.modal-footer {
+  padding: $spacing-md;
+  background: $color-bg;
+  border-top: 1px solid $color-border;
+  @include flex-center;
+}
+
+// ========================================
+// FORM ELEMENTS
+// ========================================
+
+.quick-credit-form {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+
+  label {
+    font-weight: 600;
+    color: $color-primary-dark;
+    font-size: $font-size-xs;
+  }
+
+  select,
+  input[type="number"] {
+    padding: $spacing-xs $spacing-sm;
+    border: 1px solid $color-border;
+    border-radius: $border-radius-sm;
+    font-size: $font-size-xs;
+    transition: $transition-fast;
+
+    &:focus {
+      outline: none;
+      border-color: $color-primary-light;
+      box-shadow: 0 0 0 2px rgba($color-primary-light, 0.1);
+    }
+  }
+}
+
+.credit-summary {
+  background: rgba($color-primary-light, 0.05);
+  padding: $spacing-md;
+  border-radius: $border-radius-sm;
+  border: 1px solid rgba($color-primary-light, 0.2);
+
+  h4 {
+    @include flex-center;
+    gap: $spacing-xs;
+    margin: 0 0 $spacing-sm 0;
+    font-size: $font-size-sm;
+    color: $color-primary-dark;
+    justify-content: flex-start;
+  }
+
+  .summary-item {
+    @include flex-between;
+    padding: $spacing-xs 0;
+    border-bottom: 1px solid rgba($color-border, 0.5);
+    font-size: $font-size-xs;
+
+    &:last-of-type {
+      border-bottom: none;
+    }
+
+    &.total {
+      padding-top: $spacing-sm;
+      margin-top: $spacing-xs;
+      border-top: 2px solid rgba($color-primary-light, 0.3);
+      font-weight: 700;
+      font-size: $font-size-sm;
+    }
+
+    .summary-value {
+      font-weight: 600;
+      color: $color-primary-dark;
+    }
+  }
+}
+
+// ========================================
+// ANIMATIONS
+// ========================================
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
 @keyframes slideInBadge {
   from {
     opacity: 0;
@@ -1974,238 +1114,881 @@ $shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.15);
   }
 }
 
-.payment-status-badge {
-  animation: slideInBadge 0.3s ease-out;
-}
-
-/* ==========================================
-   STYLES POUR LES BARRES DE PROGRESSION
-   ========================================== */
-
-.credit-progress-detailed {
-  margin: 1rem 0;
-}
-
-.credit-progress-detailed .progress-info {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-  font-size: 0.9rem;
-  color: #666;
-}
-
-.credit-progress-detailed .progress-info span:last-child {
-  font-weight: 600;
-  color: #4CAF50;
-}
-
-.progress-bar {
-  height: 8px;
-  background: rgba(0, 0, 0, 0.08);
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #FF9800, #F57C00);
-  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-  border-radius: 4px;
-}
-
-.progress-fill.paid {
-  background: linear-gradient(90deg, #4CAF50, #2e7d32);
-}
-
-/* État de paiement dans le modal détaillé */
-.credit-item-detailed[data-status="paid"]::before {
-  content: '✓';
-  position: absolute;
-  top: 50%;
-  left: -30px;
-  transform: translateY(-50%);
-  width: 40px;
-  height: 40px;
-  background: #4CAF50;
-  color: white;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 24px;
-  font-weight: bold;
-  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
-}
-
-/* ==========================================
-   INDICATEURS VISUELS AMÉLIORÉS
-   ========================================== */
-
-.payment-milestone {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px;
-  background: linear-gradient(135deg, #e8f5e9, #f1f8e9);
-  border-left: 3px solid #4CAF50;
-  border-radius: 4px;
-  margin-top: 10px;
-}
-
-.payment-milestone i {
-  color: #4CAF50;
-  font-size: 24px;
-}
-
-.payment-milestone-text {
-  flex: 1;
-}
-
-.payment-milestone-text h4 {
-  margin: 0 0 4px 0;
-  color: #2e7d32;
-  font-size: 0.9rem;
-}
-
-.payment-milestone-text p {
-  margin: 0;
-  color: #66bb6a;
-  font-size: 0.8rem;
-}
-
-/* Pulse animation pour les nouveaux paiements */
-@keyframes pulse {
+@keyframes celebrationPulse {
   0%, 100% {
-    opacity: 1;
+    transform: scale(1);
   }
   50% {
-    opacity: 0.6;
+    transform: scale(1.02);
   }
 }
 
-.new-payment-indicator {
-  animation: pulse 2s ease-in-out infinite;
-}
+// ========================================
+// SPECIAL COMPONENTS
+// ========================================
 
-/* ==========================================
-   TOOLTIPS POUR LES PAIEMENTS
-   ========================================== */
+.credit-score-display {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  padding: $spacing-md;
+  background: rgba($color-primary-light, 0.05);
+  border-radius: $border-radius-sm;
+  margin-bottom: $spacing-md;
+  border: 1px solid rgba($color-primary-light, 0.2);
 
-.payment-tooltip {
-  position: relative;
-  cursor: help;
-}
-
-.payment-tooltip:hover::after {
-  content: attr(data-tooltip);
-  position: absolute;
-  bottom: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 8px 12px;
-  background: #333;
-  color: white;
-  border-radius: 6px;
-  font-size: 0.8rem;
-  white-space: nowrap;
-  z-index: 1000;
-  margin-bottom: 5px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-}
-
-.payment-tooltip:hover::before {
-  content: '';
-  position: absolute;
-  bottom: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  border: 5px solid transparent;
-  border-top-color: #333;
-  margin-bottom: -5px;
-}
-
-/* ==========================================
-   RESPONSIVE
-   ========================================== */
-
-@media (max-width: 768px) {
-  .payment-counter {
+  .score-circle {
+    @include flex-center;
     flex-direction: column;
+    width: 60px;
+    height: 60px;
+    border: 3px solid $color-primary-light;
+    border-radius: 50%;
+    background: $color-white;
+    box-shadow: 0 2px 6px rgba($color-primary, 0.1);
+
+    .score-value {
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: $color-primary-dark;
+      line-height: 1;
+    }
+
+    .score-label {
+      font-size: $font-size-xs;
+      color: $color-text-secondary;
+    }
+  }
+
+  .score-info {
+    flex: 1;
+
+    h3 {
+      margin: 0 0 $spacing-xs 0;
+      font-size: $font-size-md;
+      color: $color-primary-dark;
+      font-weight: 700;
+    }
+
+    p {
+      margin: $spacing-xs 0;
+      color: $color-text-secondary;
+      font-size: $font-size-xs;
+    }
+
+    .ml-indicator {
+      @include flex-center;
+      gap: 4px;
+      font-size: $font-size-xs;
+      color: $color-primary;
+      font-weight: 600;
+      justify-content: flex-start;
+
+      i {
+        font-size: 12px;
+      }
+    }
+  }
+}
+
+.approved-amount {
+  text-align: center;
+  padding: $spacing-md;
+  background: linear-gradient(135deg, 
+    rgba($color-success, 0.08), 
+    rgba($color-success, 0.03)
+  );
+  border-radius: $border-radius-sm;
+  margin-bottom: $spacing-md;
+  border: 1px solid rgba($color-success, 0.2);
+
+  h3 {
+    margin: 0 0 $spacing-xs 0;
+    font-size: $font-size-sm;
+    color: $color-primary-dark;
+    font-weight: 600;
+  }
+
+  .amount-value {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: $color-success;
+    margin-bottom: $spacing-xs;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: $spacing-xs;
+
+    &::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      background: $color-gold;
+      border-radius: 50%;
+      box-shadow: 0 0 6px $color-gold;
+    }
+  }
+
+  .amount-note {
+    @include flex-center;
+    gap: $spacing-xs;
+    font-size: $font-size-xs;
+    color: $color-text-secondary;
+    margin: 0;
+
+    i {
+      font-size: 12px;
+      color: $color-gold;
+    }
+  }
+}
+
+.paid-congratulations {
+  @include flex-center;
+  gap: $spacing-xs;
+  padding: $spacing-sm;
+  background: linear-gradient(135deg, $color-success, $color-primary-light);
+  color: $color-white;
+  border-radius: $border-radius-sm;
+  font-weight: 600;
+  margin-top: $spacing-sm;
+  animation: celebrationPulse 2s infinite;
+  box-shadow: 0 2px 6px rgba($color-success, 0.3);
+  font-size: $font-size-xs;
+
+  i {
+    font-size: 18px;
+  }
+}
+
+.important-notice {
+  background: rgba($color-warning, 0.05);
+  border-left: 2px solid $color-warning;
+  padding: $spacing-md;
+  border-radius: $border-radius-sm;
+
+  h5 {
+    @include flex-center;
+    gap: $spacing-xs;
+    margin: 0 0 $spacing-sm 0;
+    color: $color-warning;
+    font-size: $font-size-sm;
+    font-weight: 700;
+    justify-content: flex-start;
+
+    i {
+      font-size: 16px;
+    }
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-xs;
+
+    li {
+      font-size: $font-size-xs;
+      color: $color-text-secondary;
+      line-height: 1.4;
+      padding-left: $spacing-md;
+      position: relative;
+
+      &::before {
+        content: '→';
+        position: absolute;
+        left: 0;
+        color: $color-warning;
+        font-weight: 700;
+      }
+    }
+  }
+}
+
+// ========================================
+// SUCCESS MODAL STYLES
+// ========================================
+
+.success-message {
+  display: flex;
+  gap: $spacing-sm;
+  padding: $spacing-md;
+  background: rgba($color-success, 0.08);
+  border-radius: $border-radius-sm;
+  border-left: 2px solid $color-success;
+  margin-bottom: $spacing-lg;
+
+  i {
+    color: $color-success;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  p {
+    margin: 0;
+    color: $color-primary-dark;
+    font-size: $font-size-xs;
+    line-height: 1.5;
+  }
+}
+
+.next-steps {
+  margin-bottom: $spacing-lg;
+
+  h3 {
+    margin: 0 0 $spacing-md 0;
+    font-size: $font-size-md;
+    color: $color-primary-dark;
+    font-weight: 700;
+  }
+
+  .step {
+    display: flex;
+    gap: $spacing-sm;
+    margin-bottom: $spacing-md;
     align-items: flex-start;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  .step-number {
+    @include flex-center;
+    width: 28px;
+    height: 28px;
+    @include gradient-green;
+    color: $color-white;
+    border-radius: 50%;
+    font-weight: 700;
+    font-size: $font-size-sm;
+    flex-shrink: 0;
+    box-shadow: 0 1px 4px rgba($color-primary, 0.2);
+  }
+
+  .step-content {
+    flex: 1;
+
+    h4 {
+      margin: 0 0 $spacing-xs 0;
+      font-size: $font-size-sm;
+      color: $color-primary-dark;
+      font-weight: 600;
+    }
+
+    p {
+      margin: 0;
+      color: $color-text-secondary;
+      font-size: $font-size-xs;
+    }
+  }
+}
+
+.important-info {
+  display: flex;
+  gap: $spacing-sm;
+  padding: $spacing-md;
+  background: rgba($color-warning, 0.05);
+  border-radius: $border-radius-sm;
+  border-left: 2px solid $color-warning;
+
+  i {
+    color: $color-warning;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  h4 {
+    margin: 0 0 $spacing-xs 0;
+    color: $color-warning;
+    font-size: $font-size-sm;
+    font-weight: 700;
+  }
+
+  ul {
+    margin: 0;
+    padding-left: $spacing-md;
+    color: $color-text-secondary;
+
+    li {
+      margin-bottom: $spacing-xs;
+      font-size: $font-size-xs;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+  }
+}
+
+// ========================================
+// DETAILED MODAL STYLES
+// ========================================
+
+.credits-summary {
+  display: flex;
+  justify-content: space-around;
+  padding: $spacing-md;
+  background: rgba($color-primary-light, 0.05);
+  border-radius: $border-radius-sm;
+  margin-bottom: $spacing-lg;
+  border: 1px solid rgba($color-primary-light, 0.2);
+
+  .stat {
+    text-align: center;
+
+    .stat-value {
+      display: block;
+      font-size: $font-size-2xl;
+      font-weight: 800;
+      color: $color-primary-dark;
+      line-height: 1;
+      margin-bottom: $spacing-xs;
+    }
+
+    .stat-label {
+      font-size: $font-size-xs;
+      color: $color-text-secondary;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+  }
+}
+
+.credits-list-modal {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+}
+
+.credit-item-detailed {
+  background: rgba($color-primary-light, 0.03);
+  border-radius: $border-radius-sm;
+  padding: $spacing-md;
+  transition: $transition-base;
+  border: 1px solid $color-border;
+
+  &:hover {
+    background: $color-white;
+    box-shadow: $shadow-sm;
+    border-color: $color-primary-light;
+  }
+
+  &.fully-paid {
+    border-color: rgba($color-success, 0.4);
+    background: linear-gradient(135deg, 
+      rgba($color-success, 0.05) 0%, 
+      $color-white 100%
+    );
+  }
+}
+
+.credit-header-detailed {
+  @include flex-between;
+  margin-bottom: $spacing-sm;
+
+  h3 {
+    margin: 0;
+    font-size: $font-size-md;
+    color: $color-primary-dark;
+    font-weight: 600;
+  }
+}
+
+.credit-status-badge-detailed {
+  padding: 3px $spacing-sm;
+  border-radius: $border-radius-lg;
+  color: $color-white;
+  font-size: $font-size-xs;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.credit-amounts-detailed {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: $spacing-sm;
+  margin: $spacing-sm 0;
+}
+
+.amount-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+
+  span:first-child {
+    font-size: $font-size-xs;
+    color: $color-text-secondary;
+    font-weight: 500;
+  }
+
+  span:last-child {
+    font-size: $font-size-sm;
+    font-weight: 700;
+    color: $color-primary-dark;
+
+    &.paid {
+      color: $color-success;
+    }
+
+    &.remaining {
+      color: $color-danger;
+    }
+  }
+}
+
+.credit-progress-detailed {
+  margin: $spacing-sm 0;
+
+  .progress-info {
+    @include flex-between;
+    margin-bottom: $spacing-xs;
+    font-size: $font-size-xs;
+    color: $color-text-secondary;
+
+    span:last-child {
+      font-weight: 700;
+      color: $color-primary;
+    }
+  }
+}
+
+.credit-dates-detailed {
+  display: flex;
+  gap: $spacing-md;
+  margin: $spacing-sm 0;
+  flex-wrap: wrap;
+
+  .date-item {
+    display: flex;
+    align-items: center;
     gap: 4px;
-  }
-  
-  .payment-counter .last-payment {
-    margin-left: 0;
-    margin-top: 4px;
-  }
-  
-  .credit-card.enhanced[data-status="paid"]::after {
-    top: 10px;
-    right: 10px;
-    font-size: 0.7rem;
-    padding: 3px 8px;
+    font-size: $font-size-xs;
+    color: $color-text-secondary;
+
+    i {
+      font-size: 14px;
+      color: $color-primary-light;
+    }
   }
 }
 
-/* Carte nouveau client */
-.new-client-card {
+.credit-actions-detailed {
   display: flex;
-  align-items: center;
-  gap: 1.5rem;
-  padding: 2rem;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  margin: 1.5rem 0;
+  gap: $spacing-sm;
+  margin-top: $spacing-md;
+
+  .btn-primary,
+  .btn-secondary {
+    flex: 1;
+  }
 }
 
-.new-client-icon {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.2);
+.no-credits {
+  text-align: center;
+  padding: $spacing-xl * 2 $spacing-lg;
+
+  i {
+    font-size: 40px;
+    color: $color-primary-light;
+    opacity: 0.4;
+    margin-bottom: $spacing-md;
+  }
+
+  h3 {
+    margin: 0 0 $spacing-xs 0;
+    color: $color-primary-dark;
+    font-weight: 600;
+    font-size: $font-size-md;
+  }
+
+  p {
+    color: $color-text-secondary;
+    margin-bottom: $spacing-md;
+    font-size: $font-size-xs;
+  }
+}
+
+// ========================================
+// QUICK ACTION SECTION
+// ========================================
+
+.quick-action-section {
+  text-align: center;
+  margin: $spacing-lg 0;
+  padding: $spacing-lg;
+  background: linear-gradient(135deg, 
+    rgba($color-primary-light, 0.05) 0%, 
+    $color-white 100%
+  );
+  border-radius: $border-radius-md;
+  border: 1px solid rgba($color-primary-light, 0.2);
+
+  .action-note {
+    margin-top: $spacing-sm;
+    color: $color-danger;
+    font-size: $font-size-xs;
+    font-weight: 500;
+  }
+}
+
+// ========================================
+// NOTIFICATION STYLES
+// ========================================
+
+.custom-notification {
+  position: fixed;
+  top: 60px;
+  right: 15px;
+  max-width: 320px;
+  background: $color-white;
+  border-radius: $border-radius-sm;
+  box-shadow: $shadow-lg;
+  z-index: 1000;
+  animation: slideInRight 0.3s ease-out;
+  padding: $spacing-sm;
+  border: 1px solid $color-border;
+
+  &.success {
+    border-left: 3px solid $color-success;
+  }
+
+  &.error {
+    border-left: 3px solid $color-danger;
+  }
+
+  &.warning {
+    border-left: 3px solid $color-warning;
+  }
+
+  &.info {
+    border-left: 3px solid $color-info;
+  }
+
+  .notification-content {
+    display: flex;
+    align-items: center;
+    gap: $spacing-xs;
+
+    i {
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    p {
+      flex: 1;
+      margin: 0;
+      color: $color-text-primary;
+      font-size: $font-size-xs;
+    }
+
+    .close-btn {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      color: $color-text-secondary;
+      transition: $transition-fast;
+      width: auto;
+      height: auto;
+
+      &:hover {
+        color: $color-text-primary;
+      }
+
+      i {
+        font-size: 14px;
+      }
+    }
+  }
+
+  &.success .notification-content i {
+    color: $color-success;
+  }
+
+  &.error .notification-content i {
+    color: $color-danger;
+  }
+
+  &.warning .notification-content i {
+    color: $color-warning;
+  }
+
+  &.info .notification-content i {
+    color: $color-primary;
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+// ========================================
+// UTILITY CLASSES
+// ========================================
+
+.text-center {
+  text-align: center;
+}
+
+.text-left {
+  text-align: left;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.d-flex {
   display: flex;
+}
+
+.align-center {
   align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
 }
 
-.new-client-icon i {
-  font-size: 40px;
-  color: white;
+.justify-between {
+  justify-content: space-between;
 }
 
-.new-client-content {
-  flex: 1;
+.gap-sm {
+  gap: $spacing-sm;
 }
 
-.new-client-content h4 {
-  margin: 0 0 0.5rem 0;
-  font-size: 1.3rem;
-  color: white;
+.gap-md {
+  gap: $spacing-md;
 }
 
-.new-client-content p {
-  margin: 0.5rem 0;
-  font-size: 1rem;
-  opacity: 0.9;
+.gap-lg {
+  gap: $spacing-lg;
 }
 
-.client-note {
-  font-size: 0.9rem !important;
-  opacity: 0.7 !important;
-  font-style: italic;
+.mt-sm { margin-top: $spacing-sm; }
+.mt-md { margin-top: $spacing-md; }
+.mt-lg { margin-top: $spacing-lg; }
+.mb-sm { margin-bottom: $spacing-sm; }
+.mb-md { margin-bottom: $spacing-md; }
+.mb-lg { margin-bottom: $spacing-lg; }
+.p-sm { padding: $spacing-sm; }
+.p-md { padding: $spacing-md; }
+.p-lg { padding: $spacing-lg; }
+
+.loading {
+  animation: pulse 1.5s ease-in-out infinite;
 }
 
-/* Responsive */
+// ========================================
+// RESPONSIVE DESIGN
+// ========================================
+
+@media (max-width: 1024px) {
+  .dashboard-header {
+    grid-template-columns: 1fr;
+  }
+
+  .credit-score-card {
+    max-width: 100%;
+  }
+
+  .financial-overview {
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  }
+}
+
 @media (max-width: 768px) {
-  .new-client-card {
+  .dashboard-container {
+    padding: $spacing-xs;
+  }
+
+  .user-section {
     flex-direction: column;
     text-align: center;
   }
-  
-  .new-client-icon {
-    margin-bottom: 1rem;
+
+  .user-avatar {
+    width: 50px;
+    height: 50px;
+  }
+
+  .financial-overview,
+  .requests-list,
+  .credits-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .score-details {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-content {
+    max-width: 95%;
+
+    &.large {
+      max-width: 95%;
+    }
+  }
+
+  .modal-header {
+    padding: $spacing-sm;
+
+    h2 {
+      font-size: $font-size-md;
+    }
+  }
+
+  .modal-body {
+    padding: $spacing-sm;
+  }
+
+  .credit-score-display {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .btn-primary-large {
+    padding: $spacing-sm $spacing-md;
+    font-size: $font-size-sm;
+
+    i {
+      font-size: 18px;
+    }
+  }
+
+  .credit-amounts-detailed {
+    grid-template-columns: 1fr;
+  }
+
+  .credits-summary {
+    flex-direction: column;
+    gap: $spacing-sm;
+  }
+
+  .credit-actions,
+  .credit-actions-detailed {
+    flex-direction: column;
+  }
+
+  .next-steps .step {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .important-info {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .user-info h1 {
+    font-size: $font-size-lg;
+  }
+
+  .score-value {
+    font-size: 1.8rem;
+  }
+
+  .approved-amount .amount-value {
+    font-size: $font-size-xl;
+  }
+
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: $spacing-xs;
+  }
+
+  .custom-notification {
+    right: 10px;
+    left: 10px;
+    max-width: calc(100% - 20px);
+  }
+}
+
+// ========================================
+// PRINT STYLES
+// ========================================
+
+@media print {
+  .modal-backdrop,
+  .btn-primary,
+  .btn-secondary,
+  .btn-link,
+  .close-btn,
+  .refresh-btn {
+    display: none !important;
+  }
+
+  .modal-content {
+    box-shadow: none;
+    border: 1px solid $color-border;
+  }
+
+  .dashboard-container {
+    background: $color-white;
+  }
+}
+
+// ========================================
+// ACCESSIBILITY
+// ========================================
+
+button:focus,
+input:focus,
+select:focus,
+textarea:focus {
+  outline: 2px solid $color-primary-light;
+  outline-offset: 2px;
+}
+
+button:disabled,
+input:disabled,
+select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+a {
+  color: $color-primary;
+  text-decoration: none;
+  transition: $transition-fast;
+
+  &:hover {
+    color: $color-primary-dark;
+    text-decoration: underline;
+  }
+}
+
+// ========================================
+// LOADING STATES
+// ========================================
+
+.skeleton {
+  background: linear-gradient(90deg, 
+    rgba($color-primary-light, 0.1) 25%, 
+    rgba($color-primary-light, 0.05) 50%, 
+    rgba($color-primary-light, 0.1) 75%
+  );
+  background-size: 200% 100%;
+  animation: loading 1.5s ease-in-out infinite;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
   }
 }

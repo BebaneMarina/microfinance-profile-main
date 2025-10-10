@@ -39,7 +39,7 @@ interface BankInfo {
 })
 export class LoginComponent implements OnInit, OnDestroy {
   public currentDate = new Date().toLocaleString('fr-FR');
-  public currentUser = 'Système de Scoring Crédit Multi-Banques';
+  public currentUser = 'Système de Scoring Crédit ';
 
   loginForm!: FormGroup;
   isLoading = false;
@@ -50,11 +50,6 @@ export class LoginComponent implements OnInit, OnDestroy {
   showComparatorInfo = false;
 
   private readonly demoCredentials: DemoCredentials = {
-    theobawana: { 
-      email: 'theobawana@bamboo.ci', 
-      password: 'theo123',
-      role: 'Développeur Principal'
-    },
     admin: { 
       email: 'admin@bamboo.ci', 
       password: 'admin123',

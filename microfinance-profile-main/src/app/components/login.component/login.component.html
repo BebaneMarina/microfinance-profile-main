@@ -151,48 +151,6 @@
               </button>
             </div>
           </div>
-
-          <!-- Boutons de démonstration -->
-          <div class="demo-section" *ngIf="currentDate.includes('localhost')">
-            <div class="demo-title">
-              <i class="material-icons">settings</i>
-              Comptes de démonstration
-            </div>
-            <div class="demo-buttons">
-              <button 
-                type="button" 
-                (click)="fillDemoCredentials('theobawana')" 
-                class="demo-btn theo"
-              >
-                <i class="material-icons">code</i>
-                Theo
-              </button>
-              <button 
-                type="button" 
-                (click)="fillDemoCredentials('admin')" 
-                class="demo-btn admin"
-              >
-                <i class="material-icons">admin_panel_settings</i>
-                Admin
-              </button>
-              <button 
-                type="button" 
-                (click)="fillDemoCredentials('agent')" 
-                class="demo-btn agent"
-              >
-                <i class="material-icons">support_agent</i>
-                Agent
-              </button>
-              <button 
-                type="button" 
-                (click)="fillDemoCredentials('client')" 
-                class="demo-btn client"
-              >
-                <i class="material-icons">person</i>
-                Client
-              </button>
-            </div>
-          </div>
         </div>
       </div>
     </div>

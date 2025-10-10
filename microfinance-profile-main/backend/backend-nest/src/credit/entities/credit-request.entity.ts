@@ -1,16 +1,13 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
-import { Utilisateur } from '../../app/auth/entities/user.entity';
+import { Entity } from 'typeorm';
+import { Column } from 'typeorm';
+import { PrimaryGeneratedColumn } from 'typeorm';
 
-// Enums
 export enum RequestStatus {
-  DRAFT = 'draft',
-  SUBMITTED = 'submitted',
-  IN_REVIEW = 'in_review',
-  APPROVED = 'approved',
-  REJECTED = 'rejected',
-  CANCELLED = 'cancelled',
-  DISBURSED = 'disbursed',
-  COMPLETED = 'completed'
+  SUBMITTED = 'soumise',
+  IN_REVIEW = 'en_examen',
+  APPROVED = 'approuvee',
+  REJECTED = 'rejetee',
+  PENDING_DOCS = 'en_attente_documents'
 }
 
 export enum CreditType {
@@ -18,203 +15,122 @@ export enum CreditType {
   AVANCE_SALAIRE = 'avance_salaire',
   DEPANNAGE = 'depannage',
   INVESTISSEMENT = 'investissement',
-  AVANCE_FACTURE = 'avance_facture',
-  AVANCE_COMMANDE = 'avance_commande',
   TONTINE = 'tontine',
-  RETRAITE = 'retraite',
-  SPOT = 'spot'
+  RETRAITE = 'retraite'
 }
 
 export enum RiskLevel {
-  VERY_LOW = 'very_low',
-  LOW = 'low',
-  MEDIUM = 'medium',
-  HIGH = 'high',
-  VERY_HIGH = 'very_high'
+  VERY_LOW = 'tres_bas',
+  LOW = 'bas',
+  MEDIUM = 'moyen',
+  HIGH = 'eleve',
+  VERY_HIGH = 'tres_eleve'
 }
 
-@Entity('credit_requests')
+@Entity('demandes_credit_longues')
 export class CreditRequest {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ unique: true })
-  request_number: string;
+  @Column({ name: 'numero_demande' })
+  numero_demande: string;
 
-  @Column()
+  @Column({ name: 'utilisateur_id' })
   user_id: number;
 
-  @Column({
-    type: 'enum',
-    enum: CreditType
-  })
+  @Column({ name: 'type_credit', type: 'enum', enum: CreditType })
   credit_type: CreditType;
 
-  @Column({
-    type: 'enum',
-    enum: RequestStatus,
-    default: RequestStatus.DRAFT
-  })
-  status: RequestStatus;
+  @Column({ name: 'montant_demande', type: 'decimal', precision: 12, scale: 2 })
+  montant_demande: number;
 
-  @Column({ type: 'decimal', precision: 12, scale: 2 })
-  requested_amount: number;
+  @Column({ name: 'duree_mois' })
+  duree_mois: number;
 
-  @Column({ type: 'decimal', precision: 12, scale: 2, nullable: true })
-  approved_amount?: number;
+  @Column({ name: 'objectif', type: 'text' })
+  objectif: string;
 
-  @Column()
-  duration_months: number;
+  @Column({ type: 'varchar', length: 50, default: 'soumise' })
+  statut: string;
 
-  @Column({ type: 'decimal', precision: 5, scale: 2, nullable: true })
-  interest_rate?: number;
+  @Column({ name: 'date_soumission', type: 'timestamp', default: () => 'NOW()' })
+  date_soumission: Date;
 
-  @Column()
-  purpose: string;
+  @Column({ name: 'date_decision', type: 'timestamp', nullable: true })
+  date_decision?: Date;
 
-  @Column({ nullable: true })
-  repayment_mode?: string;
+  @Column({ name: 'decideur_id', nullable: true })
+  decideur_id?: number;
 
-  @Column({ nullable: true })
-  repayment_frequency?: string;
+  @Column({ name: 'montant_approuve', type: 'decimal', precision: 12, scale: 2, nullable: true })
+  montant_approuve?: number;
 
-  @Column({ nullable: true })
-  credit_score?: number;
+  @Column({ name: 'taux_approuve', type: 'decimal', precision: 5, scale: 2, nullable: true })
+  taux_approuve?: number;
 
-  @Column({
-    type: 'enum',
-    enum: RiskLevel,
-    nullable: true
-  })
-  risk_level?: RiskLevel;
+  @Column({ name: 'notes_decision', type: 'text', nullable: true })
+  notes_decision?: string;
+
+  @Column({ name: 'score_au_moment_demande', type: 'decimal', precision: 3, scale: 1, nullable: true })
+  score_au_moment_demande?: number;
+
+  @Column({ name: 'niveau_risque_evaluation', type: 'enum', enum: RiskLevel, nullable: true })
+  niveau_risque_evaluation?: RiskLevel;
 
   @Column({ type: 'decimal', precision: 5, scale: 2, nullable: true })
   probability?: number;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', length: 50, nullable: true })
   decision?: string;
 
-  @Column({ nullable: true })
-  decision_date?: Date;
+  @Column({ name: 'date_creation', type: 'timestamp', default: () => 'NOW()' })
+  date_creation: Date;
 
-  @Column({ nullable: true })
-  decision_by?: number;
+  @Column({ name: 'date_modification', type: 'timestamp', default: () => 'NOW()' })
+  date_modification: Date;
 
-  @Column({ nullable: true })
-  decision_notes?: string;
-
-  @Column({ nullable: true })
-  submission_date?: Date;
-
-  @CreateDateColumn()
-  created_at: Date;
-
-  @UpdateDateColumn()
-  updated_at: Date;
-
-  // Relations
-  @ManyToOne(() => Utilisateur, user => user.creditRequests)
-  @JoinColumn({ name: 'user_id' })
-  user: Utilisateur;
-
-  // Propriétés virtuelles pour compatibilité
-  recommendations?: string[];
-  scoringFactors?: any[];
-
-  // Getters pour la compatibilité camelCase
-  get userId(): number {
-    return this.user_id;
-  }
-
-  set userId(value: number) {
-    this.user_id = value;
-  }
-
+  // Getters pour compatibilité avec l'ancien code
   get requestNumber(): string {
-    return this.request_number;
+    return this.numero_demande;
   }
 
-  set requestNumber(value: string) {
-    this.request_number = value;
+  get status(): string {
+    return this.statut;
   }
 
-  get creditType(): CreditType {
-    return this.credit_type;
+  get submissionDate(): Date {
+    return this.date_soumission;
   }
 
-  set creditType(value: CreditType) {
-    this.credit_type = value;
+  get requested_amount(): number {
+    return Number(this.montant_demande);
   }
 
-  get requestedAmount(): number {
-    return this.requested_amount;
+  get approved_amount(): number | null {
+    return this.montant_approuve ? Number(this.montant_approuve) : null;
   }
 
-  set requestedAmount(value: number) {
-    this.requested_amount = value;
+  get duration_months(): number {
+    return this.duree_mois;
   }
 
-  get approvedAmount(): number | undefined {
-    return this.approved_amount;
-  }
-
-  set approvedAmount(value: number | undefined) {
-    this.approved_amount = value;
-  }
-
-  get durationMonths(): number {
-    return this.duration_months;
-  }
-
-  set durationMonths(value: number) {
-    this.duration_months = value;
+  get purpose(): string {
+    return this.objectif;
   }
 
   get creditScore(): number | undefined {
-    return this.credit_score;
-  }
-
-  set creditScore(value: number | undefined) {
-    this.credit_score = value;
+    return this.score_au_moment_demande ? Number(this.score_au_moment_demande) : undefined;
   }
 
   get riskLevel(): RiskLevel | undefined {
-    return this.risk_level;
+    return this.niveau_risque_evaluation;
   }
 
-  set riskLevel(value: RiskLevel | undefined) {
-    this.risk_level = value;
+  get created_at(): Date {
+    return this.date_creation;
   }
 
-  get decisionDate(): Date | undefined {
-    return this.decision_date;
-  }
-
-  set decisionDate(value: Date | undefined) {
-    this.decision_date = value;
-  }
-
-  get decisionBy(): number | undefined {
-    return this.decision_by;
-  }
-
-  set decisionBy(value: number | undefined) {
-    this.decision_by = value;
-  }
-
-  get submissionDate(): Date | undefined {
-    return this.submission_date;
-  }
-
-  set submissionDate(value: Date | undefined) {
-    this.submission_date = value;
-  }
-
-  get decisionNotes(): string | undefined {
-    return this.decision_notes;
-  }
-
-  set decisionNotes(value: string | undefined) {
-    this.decision_notes = value;
+  get updated_at(): Date {
+    return this.date_modification;
   }
 }

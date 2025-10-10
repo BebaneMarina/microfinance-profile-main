@@ -39,6 +39,7 @@
     width: var(--sidebar-collapsed-width);
 
     .logo-container {
+      width: 50%;
       justify-content: center;
     }
 
@@ -97,7 +98,7 @@
 }
 
 .logo-image {
-  width: clamp(32px, 8vw, 48px);
+  width: clamp(52px, 10vw, 58px);
   height: clamp(32px, 8vw, 48px);
   object-fit: contain;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));

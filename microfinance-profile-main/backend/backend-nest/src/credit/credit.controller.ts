@@ -1,4 +1,3 @@
-// src/credit/credit.controller.ts
 import { 
   Controller, 
   Get, 
@@ -8,7 +7,6 @@ import {
   Param, 
   Delete, 
   UseGuards, 
-  Req,
   Query,
   HttpStatus,
   HttpCode,
@@ -16,38 +14,159 @@ import {
 } from '@nestjs/common';
 import { CreditService } from './credit.service';
 import { CreateCreditRequestDto } from './dto/create-credit-request.dto';
-import { UpdateCreditRequestDto } from './dto/update-credit-request.dto';
 import { JwtAuthGuard } from '../app/auth/guards/jwt-auth.guard';
 import { GetUser } from '../decorators/get-user.decorator';
 import { RequestStatus } from './entities/credit-request.entity';
-import { CreditStatsService } from './credit-stats.service';
+import { HttpService } from '@nestjs/axios';
+import { firstValueFrom } from 'rxjs';
 
 @Controller('api/credit')
 export class CreditController {
   private readonly logger = new Logger(CreditController.name);
+  private readonly flaskUrl = 'http://localhost:5000';
   
   private readonly currentDate = new Date().toISOString();
   private readonly currentUser = 'theobawana';
 
   constructor(
     private readonly creditService: CreditService,
-    private readonly creditStatsService: CreditStatsService
+    private readonly httpService: HttpService
   ) {}
+
+  // ==========================================
+  // STATS COMPLETES
+  // ==========================================
+
+  @Get('user-stats/:userId')
+  async getUserStats(@Param('userId') userId: string) {
+    try {
+      this.logger.log(`Recuperation stats completes pour user: ${userId}`);
+      
+      const stats = await this.creditService.getUserCompleteStats(Number(userId));
+      
+      return {
+        success: true,
+        data: stats
+      };
+    } catch (error) {
+      this.logger.error(`Erreur stats: ${error.message}`);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
+  @Get('user-credits-detailed/:userId')
+  async getUserCreditsDetailed(@Param('userId') userId: string) {
+    try {
+      this.logger.log(`Recuperation credits detailles pour user: ${userId}`);
+      
+      const credits = await this.creditService.getUserCreditsWithPaymentStatus(Number(userId));
+      
+      return {
+        success: true,
+        data: credits,
+        count: credits.length
+      };
+    } catch (error) {
+      this.logger.error(`Erreur credits detailles: ${error.message}`);
+      return {
+        success: false,
+        error: error.message,
+        data: [],
+        count: 0
+      };
+    }
+  }
+
+  // ==========================================
+  // NOTIFICATIONS
+  // ==========================================
+
+  @Get('notifications/:userId')
+  async getUserNotifications(@Param('userId') userId: string, @Query() query: any) {
+    try {
+      this.logger.log(`Recuperation notifications pour user: ${userId}`);
+      
+      const unreadOnly = query.unread_only === 'true';
+      const limit = query.limit || 20;
+      
+      const response = await firstValueFrom(
+        this.httpService.get(
+          `${this.flaskUrl}/notifications/${userId}?unread_only=${unreadOnly}&limit=${limit}`
+        )
+      );
+      
+      return {
+        success: true,
+        data: response.data
+      };
+    } catch (error) {
+      this.logger.error(`Erreur notifications: ${error.message}`);
+      return {
+        success: false,
+        error: error.message,
+        data: {
+          notifications: [],
+          total: 0,
+          unread_count: 0
+        }
+      };
+    }
+  }
+
+  @Post('notifications/:notificationId/mark-read')
+  @HttpCode(HttpStatus.OK)
+  async markNotificationRead(@Param('notificationId') notificationId: string) {
+    try {
+      const response = await firstValueFrom(
+        this.httpService.post(`${this.flaskUrl}/notifications/${notificationId}/mark-read`, {})
+      );
+      
+      return {
+        success: true,
+        data: response.data
+      };
+    } catch (error) {
+      this.logger.error(`Erreur marquage notification: ${error.message}`);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
+  @Post('notifications/:userId/mark-all-read')
+  @HttpCode(HttpStatus.OK)
+  async markAllNotificationsRead(@Param('userId') userId: string) {
+    try {
+      const response = await firstValueFrom(
+        this.httpService.post(`${this.flaskUrl}/notifications/${userId}/mark-all-read`, {})
+      );
+      
+      return {
+        success: true,
+        data: response.data
+      };
+    } catch (error) {
+      this.logger.error(`Erreur marquage notifications: ${error.message}`);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
 
   // ==========================================
   // ENDPOINTS PRINCIPAUX
   // ==========================================
 
-  /**
-   * Calcule l'éligibilité d'un utilisateur
-   */
   @Post('calculate-eligibility')
   @HttpCode(HttpStatus.OK)
   async calculateEligibility(@Body() data: any) {
     try {
-      this.logger.log(`=== CALCUL ELIGIBILITE POUR ${this.currentUser} ===`);
-      this.logger.log(`Date: ${this.currentDate}`);
-      this.logger.log(`Données: ${JSON.stringify(data)}`);
+      this.logger.log(`Calcul eligibilite pour ${this.currentUser}`);
       
       const enrichedData = {
         ...data,
@@ -71,85 +190,24 @@ export class CreditController {
         eligibleAmount = Math.min(monthlyIncome * 0.3333, 2000000);
       }
       
-      const response = {
+      return {
         ...result,
         eligible_amount: Math.floor(eligibleAmount),
         max_duration: 1,
         username: this.currentUser,
         timestamp: this.currentDate
       };
-      
-      this.logger.log(`Résultat: Score=${response.score}, Montant éligible=${response.eligible_amount}`);
-      
-      return response;
     } catch (error) {
-      this.logger.error(`Erreur calcul éligibilité: ${error.message}`);
+      this.logger.error(`Erreur calcul eligibilite: ${error.message}`);
       throw error;
     }
   }
 
-  // credit.controller.ts - AJOUT ENDPOINT STATS
-
-/**
- * ✅ Récupère les statistiques complètes d'un utilisateur
- */
-@Get('user-stats/:userId')
-async getUserStats(@Param('userId') userId: string) {
-  try {
-    this.logger.log(`📊 Récupération stats complètes pour user: ${userId}`);
-    
-    const stats = await this.creditService.getUserCompleteStats(Number(userId));
-    
-    return {
-      success: true,
-      data: stats
-    };
-  } catch (error) {
-    this.logger.error(`❌ Erreur stats: ${error.message}`);
-    return {
-      success: false,
-      error: error.message
-    };
-  }
-}
-
-
-
-@Get('user-credits-detailed/:userId')
-async getUserCreditsDetailed(@Param('userId') userId: string) {
-  try {
-    this.logger.log(`Recuperation credits detailles pour user: ${userId}`);
-    
-    const credits = await this.creditService.getUserCreditsWithPaymentStatus(Number(userId));
-    
-    return {
-      success: true,
-      data: credits,
-      count: credits.length
-    };
-  } catch (error) {
-    this.logger.error(`Erreur credits detailles: ${error.message}`);
-    return {
-      success: false,
-      error: error.message,
-      data: [],
-      count: 0
-    };
-  }
-}
-
-
-  /**
-   * Crée une nouvelle demande de crédit
-   */
   @Post()
   @UseGuards(JwtAuthGuard)
   async create(@Body() createCreditRequestDto: CreateCreditRequestDto, @GetUser() user: any) {
     try {
-      this.logger.log(`=== NOUVELLE DEMANDE DE CREDIT ===`);
-      this.logger.log(`Utilisateur: ${this.currentUser}`);
-      this.logger.log(`Date: ${this.currentDate}`);
-      this.logger.log(`Type: ${createCreditRequestDto.creditType}`);
+      this.logger.log(`Nouvelle demande de credit`);
       
       const userId = user?.userId || 1;
       
@@ -179,46 +237,40 @@ async getUserCreditsDetailed(@Param('userId') userId: string) {
       
       const creditRequest = await this.creditService.create(createCreditRequestDto, userId);
       
-      this.logger.log(`Demande créée avec succès: ${creditRequest.requestNumber}`);
+      this.logger.log(`Demande creee: ${creditRequest.numero_demande}`);
       
       return {
         success: true,
-        message: 'Demande de crédit créée avec succès',
+        message: 'Demande de credit creee avec succes',
         data: {
           id: creditRequest.id,
-          requestNumber: creditRequest.requestNumber,
-          submissionDate: creditRequest.submissionDate,
-          status: creditRequest.status,
-          score: creditRequest.creditScore,
-          riskLevel: creditRequest.riskLevel,
+          requestNumber: creditRequest.numero_demande,
+          submissionDate: creditRequest.date_soumission,
+          status: creditRequest.statut,
+          score: creditRequest.score_au_moment_demande,
+          riskLevel: creditRequest.niveau_risque_evaluation,
           decision: creditRequest.decision
         }
       };
     } catch (error) {
-      this.logger.error(`Erreur création demande: ${error.message}`);
+      this.logger.error(`Erreur creation demande: ${error.message}`);
       return {
         success: false,
-        message: error.message || 'Erreur lors de la création de la demande',
+        message: error.message || 'Erreur lors de la creation',
         data: null
       };
     }
   }
 
   // ==========================================
-  // NOUVEAUX ENDPOINTS POSTGRESQL
+  // ENREGISTREMENT CREDIT
   // ==========================================
 
-  /**
-   * Enregistre un crédit approuvé dans PostgreSQL
-   */
   @Post('register-credit')
   @HttpCode(HttpStatus.OK)
   async registerCredit(@Body() creditData: any) {
     try {
-      this.logger.log(`=== ENREGISTREMENT CRÉDIT ===`);
-      this.logger.log(`Utilisateur: ${creditData.username}`);
-      this.logger.log(`Type: ${creditData.type}`);
-      this.logger.log(`Montant: ${creditData.amount}`);
+      this.logger.log(`Enregistrement credit`);
       
       const newCredit = {
         utilisateur_id: creditData.user_id,
@@ -242,23 +294,18 @@ async getUserCreditsDetailed(@Param('userId') userId: string) {
       return {
         success: true,
         credit: savedCredit,
-        message: 'Crédit enregistré avec succès'
+        message: 'Credit enregistre avec succes'
       };
       
     } catch (error) {
-      this.logger.error(`Erreur enregistrement crédit: ${error.message}`);
+      this.logger.error(`Erreur enregistrement credit: ${error.message}`);
       throw error;
     }
   }
 
-  /**
-   * Récupère les crédits d'un utilisateur
-   */
   @Get('user-credits/:username')
   async getUserCredits(@Param('username') username: string) {
     try {
-      this.logger.log(`Récupération crédits pour: ${username}`);
-      
       const user = await this.creditService.findUserByUsername(username);
       
       if (!user) {
@@ -270,19 +317,14 @@ async getUserCreditsDetailed(@Param('userId') userId: string) {
       return credits;
       
     } catch (error) {
-      this.logger.error(`Erreur récupération crédits: ${error.message}`);
+      this.logger.error(`Erreur recuperation credits: ${error.message}`);
       return [];
     }
   }
 
-  /**
-   * Récupère les restrictions d'un utilisateur
-   */
   @Get('restrictions/:username')
   async getUserRestrictions(@Param('username') username: string) {
     try {
-      this.logger.log(`Récupération restrictions pour: ${username}`);
-      
       const user = await this.creditService.findUserByUsername(username);
       
       if (!user) {
@@ -294,21 +336,16 @@ async getUserCreditsDetailed(@Param('userId') userId: string) {
       return restrictions;
       
     } catch (error) {
-      this.logger.error(`Erreur récupération restrictions: ${error.message}`);
+      this.logger.error(`Erreur restrictions: ${error.message}`);
       return this.getDefaultRestrictions();
     }
   }
 
-  /**
-   * Traite un paiement
-   */
   @Post('process-payment')
   @HttpCode(HttpStatus.OK)
   async processPayment(@Body() paymentData: any) {
     try {
-      this.logger.log(`=== TRAITEMENT PAIEMENT ===`);
-      this.logger.log(`Crédit ID: ${paymentData.credit_id}`);
-      this.logger.log(`Montant: ${paymentData.payment.amount}`);
+      this.logger.log(`Traitement paiement`);
       
       const result = await this.creditService.processPayment(paymentData);
       
@@ -318,65 +355,24 @@ async getUserCreditsDetailed(@Param('userId') userId: string) {
       
       return {
         success: true,
-        message: 'Paiement traité',
+        message: 'Paiement traite',
         score_impact: result.score_impact
       };
       
     } catch (error) {
-      this.logger.error(`Erreur traitement paiement: ${error.message}`);
+      this.logger.error(`Erreur paiement: ${error.message}`);
       throw error;
     }
   }
 
   // ==========================================
-  // ENDPOINTS EXISTANTS (conservés)
+  // ENDPOINTS EXISTANTS
   // ==========================================
-
-  @Post('validate-eligibility')
-  @HttpCode(HttpStatus.OK)
-  async validateEligibility(@Body() data: any) {
-    try {
-      this.logger.log(`Validation éligibilité pour ${this.currentUser}`);
-      
-      const enrichedData = {
-        ...data,
-        username: this.currentUser,
-        current_date: this.currentDate
-      };
-      
-      return await this.creditService.validateEligibility(enrichedData);
-    } catch (error) {
-      this.logger.error(`Erreur validation: ${error.message}`);
-      throw error;
-    }
-  }
-
-  @Post('calculate-score')
-  @HttpCode(HttpStatus.OK)
-  async calculateScore(@Body() data: any) {
-    try {
-      this.logger.log(`Calcul du score pour ${this.currentUser}`);
-      
-      const enrichedData = {
-        ...data,
-        username: this.currentUser,
-        current_date: this.currentDate
-      };
-      
-      return await this.creditService.calculateScore(enrichedData);
-    } catch (error) {
-      this.logger.error(`Erreur calcul score: ${error.message}`);
-      throw error;
-    }
-  }
 
   @Get()
   @UseGuards(JwtAuthGuard)
   async findAll(@GetUser() user: any, @Query() filters: any) {
     const userId = user?.userId || 1;
-    
-    this.logger.log(`Récupération des demandes pour utilisateur ${userId}`);
-    
     return this.creditService.findAll(userId, filters);
   }
 
@@ -384,65 +380,24 @@ async getUserCreditsDetailed(@Param('userId') userId: string) {
   @UseGuards(JwtAuthGuard)
   async findOne(@Param('id') id: string, @GetUser() user: any) {
     const userId = user?.userId || 1;
-    
-    this.logger.log(`Récupération de la demande ${id} pour utilisateur ${userId}`);
-    
     return this.creditService.findOne(+id, userId);
-  }
-
-  @Patch(':id')
-  @UseGuards(JwtAuthGuard)
-  async update(@Param('id') id: string, @Body() updateCreditRequestDto: UpdateCreditRequestDto, @GetUser() user: any) {
-    try {
-      this.logger.log(`Mise à jour de la demande ${id} par ${this.currentUser}`);
-      
-      if (updateCreditRequestDto.status) {
-        const status = updateCreditRequestDto.status as RequestStatus;
-        const userId = user?.userId || 1;
-        const notes = updateCreditRequestDto.decision_notes || '';
-        
-        return await this.creditService.updateStatus(+id, status, userId);
-      }
-      
-      return await this.creditService.findOne(+id);
-    } catch (error) {
-      this.logger.error(`Erreur mise à jour: ${error.message}`);
-      throw error;
-    }
   }
 
   @Get('types/list')
   async getCreditTypes() {
-    try {
-      this.logger.log(`Récupération des types de crédit pour ${this.currentUser}`);
-      
-      return await this.creditService.getCreditTypes();
-    } catch (error) {
-      this.logger.error(`Erreur récupération types: ${error.message}`);
-      throw error;
-    }
+    return await this.creditService.getCreditTypes();
   }
 
   @Get('statistics/summary')
   @UseGuards(JwtAuthGuard)
   async getStatistics(@GetUser() user: any, @Query() query: any) {
     const userId = user?.userId || 1;
-    
-    this.logger.log(`Récupération des statistiques pour utilisateur ${userId}`);
-    
     return this.creditService.getStatistics(userId, query?.period);
   }
 
   @Get('model/info')
   getModelInfo() {
-    try {
-      this.logger.log(`Récupération des infos du modèle`);
-      
-      return this.creditService.getModelInfo();
-    } catch (error) {
-      this.logger.error(`Erreur info modèle: ${error.message}`);
-      throw error;
-    }
+    return this.creditService.getModelInfo();
   }
 
   @Get('health/check')
@@ -452,26 +407,12 @@ async getUserCreditsDetailed(@Param('userId') userId: string) {
       timestamp: this.currentDate,
       user: this.currentUser,
       service: 'credit-service',
-      version: '1.0.0'
-    };
-  }
-
-  @Post('test/connection')
-  @HttpCode(HttpStatus.OK)
-  testConnection(@Body() data: any) {
-    this.logger.log(`Test de connexion reçu de ${data.username || 'anonyme'}`);
-    
-    return {
-      success: true,
-      message: 'Connexion réussie',
-      timestamp: this.currentDate,
-      currentUser: this.currentUser,
-      receivedData: data
+      version: '8.0'
     };
   }
 
   // ==========================================
-  // MÉTHODES UTILITAIRES PRIVÉES
+  // UTILITAIRES
   // ==========================================
 
   private calculateDueDate(creditType: string): Date {
