@@ -2,7 +2,7 @@
 """
 Script pour entraîner le modèle Random Forest
 """
-from scoring_model import PostgresCreditScoringModel
+from scoring_model import CreditScoringModel
 
 if __name__ == "__main__":
     # Configuration PostgreSQL
@@ -19,7 +19,7 @@ if __name__ == "__main__":
     print("=" * 60)
     
     # Initialiser et entraîner
-    model = PostgresCreditScoringModel(db_config)
+    model = CreditScoringModel(db_config)
     
     # Tester sur quelques utilisateurs
     print("\n" + "=" * 60)

@@ -19,7 +19,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-class PostgresCreditScoringModel:
+class CreditScoringModel:
     """
     Modele Random Forest avec recalcul automatique
     """

@@ -3,7 +3,7 @@ from flask_cors import CORS
 import logging
 from datetime import datetime
 import os
-from scoring_model import PostgresCreditScoringModel
+from scoring_model import CreditScoringModel
 
 app = Flask(__name__)
 
@@ -32,7 +32,7 @@ DB_CONFIG = {
 
 # Initialiser le modele
 try:
-    scoring_model = PostgresCreditScoringModel(DB_CONFIG)
+    scoring_model = CreditScoringModel(DB_CONFIG)
     logger.info("Modele de scoring initialise avec succes")
 except Exception as e:
     logger.error(f"Erreur initialisation modele: {str(e)}")
